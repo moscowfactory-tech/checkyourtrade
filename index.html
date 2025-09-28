@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeAnalyzer - Анализ торговых стратегий</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h2>TradeAnalyzer</h2>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="#home" class="nav-link active" data-section="home">Главная</a>
+                <a href="#constructor" class="nav-link" data-section="constructor">Конструктор стратегий</a>
+                <a href="#analysis" class="nav-link" data-section="analysis">Анализ сделки</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Home Section -->
+        <section id="home" class="section active">
+            <div class="hero">
+                <div class="container">
+                    <div class="hero-content">
+                        <h1 class="hero-title">Анализируйте торговые стратегии с помощью персональных чек-листов</h1>
+                        <p class="hero-description">Создавайте собственные торговые стратегии и анализируйте сделки с помощью настраиваемых чек-листов для более осознанной торговли</p>
+                        <div class="hero-buttons">
+                            <button class="btn btn--primary" data-section="constructor">Создать стратегию</button>
+                            <button class="btn btn--outline" data-section="analysis">Анализировать сделку</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="features">
+                <div class="container">
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">📋</div>
+                            <h3>Конструктор стратегий</h3>
+                            <p>Создавайте и настраивайте собственные торговые стратегии с персональными полями чек-листа</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">✅</div>
+                            <h3>Система чек-листов</h3>
+                            <p>Заполняйте чек-листы для анализа сделок и получайте структурированную обратную связь</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h3>Анализ факторов</h3>
+                            <p>Автоматический анализ положительных, нейтральных и отрицательных факторов вашей сделки</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Strategy Constructor Section -->
+        <section id="constructor" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Конструктор стратегий</h2>
+                    <p>Создавайте и управляйте своими торговыми стратегиями</p>
+                </div>
+
+                <div class="constructor-content">
+                    <div class="strategies-list">
+                        <div class="strategies-header">
+                            <h3>Мои стратегии</h3>
+                            <button class="btn btn--primary" id="createStrategyBtn">+ Создать стратегию</button>
+                        </div>
+                        <div class="strategies-grid" id="strategiesGrid">
+                            <!-- Strategies will be rendered here -->
+                        </div>
+                    </div>
+
+                    <!-- Strategy Form Modal -->
+                    <div class="modal hidden" id="strategyModal">
+                        <div class="modal-backdrop"></div>
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 id="modalTitle">Создать стратегию</h3>
+                                <button class="modal-close" id="closeModalBtn">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="strategyForm">
+                                    <div class="form-group">
+                                        <label class="form-label">Название стратегии</label>
+                                        <input type="text" class="form-control" id="strategyName" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Описание стратегии</label>
+                                        <textarea class="form-control" id="strategyDescription" rows="3"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="fields-header">
+                                            <label class="form-label">Пункты чек-листа</label>
+                                            <button type="button" class="btn btn--outline btn--sm" id="addFieldBtn">+ Добавить пункт</button>
+                                        </div>
+                                        <div class="fields-container" id="fieldsContainer">
+                                            <!-- Fields will be added here -->
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn--outline" id="cancelBtn">Отмена</button>
+                                <button type="submit" class="btn btn--primary" form="strategyForm">Сохранить стратегию</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analysis Section -->
+        <section id="analysis" class="section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Анализ сделки</h2>
+                    <p>Выберите стратегию и пройдите пошаговый анализ</p>
+                </div>
+
+                <div class="analysis-content">
+                    <div class="strategy-selector">
+                        <div class="form-group">
+                            <label class="form-label">Выберите стратегию</label>
+                            <select class="form-control" id="strategySelect">
+                                <option value="">-- Выберите стратегию --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Card-based Analysis Container -->
+                    <div class="card-analysis-container hidden" id="cardAnalysisContainer">
+                        <!-- Progress Indicator -->
+                        <div class="progress-container">
+                            <div class="progress-text" id="progressText">Карточка 1 из 3</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                        </div>
+
+                        <!-- Analysis Card -->
+                        <div class="analysis-card" id="analysisCard">
+                            <div class="card-content">
+                                <!-- Card content will be dynamically generated -->
+                            </div>
+
+                            <div class="card-navigation">
+                                <button class="btn btn--outline nav-btn" id="prevBtn">
+                                    <span>← Назад</span>
+                                </button>
+                                <button class="btn btn--primary nav-btn" id="nextBtn" disabled>
+                                    <span id="nextBtnText">Далее →</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-results hidden" id="analysisResults">
+                        <div class="results-header">
+                            <h3>Результаты анализа</h3>
+                        </div>
+                        <div class="results-grid">
+                            <div class="result-column positive">
+                                <h4>Положительные факторы</h4>
+                                <div class="factors-list" id="positiveFactors"></div>
+                            </div>
+                            <div class="result-column neutral">
+                                <h4>Нейтральные факторы</h4>
+                                <div class="factors-list" id="neutralFactors"></div>
+                            </div>
+                            <div class="result-column negative">
+                                <h4>Отрицательные факторы</h4>
+                                <div class="factors-list" id="negativeFactors"></div>
+                            </div>
+                        </div>
+                        <div class="results-summary">
+                            <div class="summary-stats" id="summaryStats"></div>
+                            <div class="recommendation" id="recommendation"></div>
+                        </div>
+                        <div class="results-actions">
+                            <button class="btn btn--outline" id="newAnalysisBtn">Начать новый анализ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
