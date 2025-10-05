@@ -1910,11 +1910,20 @@ main {
     flex-direction: column;
     text-align: center;
     gap: var(--space-12);
+    align-items: center;
   }
   
   .footer-bottom .btn {
     padding: var(--space-6) var(--space-12);
     font-size: var(--text-sm);
+  }
+  
+  .footer-content {
+    text-align: center;
+  }
+  
+  .footer-content p {
+    text-align: center;
   }
 
   .section-header {
@@ -2236,32 +2245,208 @@ main {
   text-align: center;
 }
 
-/* Very small screens */
-@media (max-width: 480px) {
-  .nav-actions .btn span:not(.btn-icon-space) {
-    display: none;
+/* User Dropdown Styles */
+.user-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.user-button:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
+
+.user-button i {
+  font-size: 16px;
+  color: var(--color-text-primary);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 280px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-16);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all var(--duration-normal) var(--ease-standard);
+}
+
+.user-dropdown.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin-bottom: var(--space-12);
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.user-avatar i {
+  font-size: 24px;
+  color: var(--color-primary);
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  display: block;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.user-status {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-2);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-12) 0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  transition: all var(--duration-fast) var(--ease-standard);
+  margin: var(--space-2) 0;
+}
+
+.dropdown-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-primary);
+}
+
+.dropdown-item i {
+  font-size: 14px;
+}
+
+/* Mobile Navigation Improvements */
+@media (max-width: 768px) {
+  .nav-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-8);
   }
   
   .nav-actions .btn {
-    padding: var(--space-8);
-    min-width: 40px;
-    justify-content: center;
-  }
-  
-  .nav-actions .btn .btn-icon-space {
-    display: none;
-  }
-  
-  .nav-brand h1 {
-    font-size: var(--text-base);
+    order: 3; /* Кнопка "Поддержать проект" идет последней */
+    font-size: var(--text-xs);
+    padding: var(--space-4) var(--space-8);
   }
   
   .theme-toggle {
+    order: 1;
+  }
+  
+  .user-button {
+    order: 2;
+  }
+  
+  .user-dropdown {
+    min-width: 260px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .nav-container {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  
+  .nav-brand {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .nav-brand h2 {
+    font-size: var(--text-base);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .nav-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    width: 100%;
+    justify-content: center;
+    margin-top: var(--space-8);
+    order: 2;
+  }
+  
+  .nav-actions .btn {
+    order: unset;
+    font-size: var(--text-xs);
+    padding: var(--space-4) var(--space-8);
+    flex: 1;
+    max-width: 120px;
+  }
+  
+  .nav-actions .btn span:not(.btn-icon-space) {
+    display: inline;
+  }
+  
+  .theme-toggle,
+  .user-button {
     width: 36px;
     height: 36px;
+    flex: none;
   }
   
   .theme-toggle i {
     font-size: 14px;
+  }
+  
+  .user-dropdown {
+    min-width: 240px;
+    right: 0;
+    left: auto;
   }
 }

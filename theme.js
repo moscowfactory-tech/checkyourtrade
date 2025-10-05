@@ -32,13 +32,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Обработчик клика по кнопке пользователя
-    userButton.addEventListener('click', function() {
-        userDropdown.classList.toggle('active');
-    });
+    if (userButton && userDropdown) {
+        userButton.addEventListener('click', function() {
+            userDropdown.classList.toggle('active');
+        });
+    }
     
     // Закрываем меню при клике вне его
     document.addEventListener('click', function(event) {
-        if (!userButton.contains(event.target) && !userDropdown.contains(event.target)) {
+        if (userButton && userDropdown && 
+            !userButton.contains(event.target) && 
+            !userDropdown.contains(event.target)) {
             userDropdown.classList.remove('active');
         }
     });
