@@ -95,6 +95,11 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
             }));
             
             console.log(`✅ Loaded ${savedAnalyses.length} analyses from database`);
+        
+        // Обновляем статистику пользователя
+        if (typeof window.updateUserStats === 'function') {
+            window.updateUserStats();
+        }
         } else {
             console.log('📝 No analyses found in database');
             savedAnalyses = [];
@@ -252,6 +257,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             } else if (dbStrategies && Array.isArray(dbStrategies)) {
                 strategies = dbStrategies;
                 console.log(`✅ Loaded ${strategies.length} strategies from database`);
+        
+        // Обновляем статистику пользователя
+        if (typeof window.updateUserStats === 'function') {
+            window.updateUserStats();
+        }
             } else {
                 console.log('📝 No strategies found in database');
             }

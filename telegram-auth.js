@@ -38,15 +38,27 @@ function initializeTelegramWebApp() {
 // Обновление интерфейса пользователя
 function updateUserInterface(user) {
     const userName = document.getElementById('userName');
+    const userStatus = document.getElementById('userStatus');
     const userAvatar = document.querySelector('.user-avatar i');
     
     if (userName && user) {
-        const displayName = user.first_name + (user.last_name ? ` ${user.last_name}` : '');
+        // Отображаем имя пользователя или username
+        let displayName = user.first_name;
+        if (user.last_name) {
+            displayName += ` ${user.last_name}`;
+        }
+        if (user.username) {
+            displayName += ` (@${user.username})`;
+        }
         userName.textContent = displayName;
     }
     
+    if (userStatus) {
+        userStatus.textContent = user ? 'Авторизован через Telegram' : 'Не авторизован';
+    }
+    
     // Можно добавить аватар пользователя если есть photo_url
-    if (user.photo_url && userAvatar) {
+    if (user && user.photo_url && userAvatar) {
         const img = document.createElement('img');
         img.src = user.photo_url;
         img.alt = 'User Avatar';
@@ -55,6 +67,9 @@ function updateUserInterface(user) {
         img.style.borderRadius = '50%';
         userAvatar.parentNode.replaceChild(img, userAvatar);
     }
+    
+    // Обновляем статистику
+    updateUserStats();
 }
 
 // Получение ID пользователя для базы данных
@@ -122,6 +137,51 @@ function hideTelegramMainButton() {
     }
 }
 
+// Функция обновления статистики пользователя
+function updateUserStats() {
+    const analysesCountEl = document.getElementById('analysesCount');
+    const strategiesCountEl = document.getElementById('strategiesCount');
+    
+    if (analysesCountEl && strategiesCountEl) {
+        // Получаем количество анализов
+        let analysesCount = 0;
+        if (typeof window.savedAnalyses !== 'undefined' && Array.isArray(window.savedAnalyses)) {
+            analysesCount = window.savedAnalyses.length;
+        } else {
+            // Пробуем получить из localStorage как fallback
+            const localAnalyses = localStorage.getItem('savedAnalyses');
+            if (localAnalyses) {
+                try {
+                    const parsed = JSON.parse(localAnalyses);
+                    analysesCount = Array.isArray(parsed) ? parsed.length : 0;
+                } catch (e) {
+                    analysesCount = 0;
+                }
+            }
+        }
+        
+        // Получаем количество стратегий
+        let strategiesCount = 0;
+        if (typeof window.strategies !== 'undefined' && Array.isArray(window.strategies)) {
+            strategiesCount = window.strategies.length;
+        } else {
+            // Пробуем получить из localStorage как fallback
+            const localStrategies = localStorage.getItem('strategies');
+            if (localStrategies) {
+                try {
+                    const parsed = JSON.parse(localStrategies);
+                    strategiesCount = Array.isArray(parsed) ? parsed.length : 0;
+                } catch (e) {
+                    strategiesCount = 0;
+                }
+            }
+        }
+        
+        analysesCountEl.textContent = analysesCount;
+        strategiesCountEl.textContent = strategiesCount;
+    }
+}
+
 // Экспорт функций
 window.initializeTelegramWebApp = initializeTelegramWebApp;
 window.getTelegramUserId = getTelegramUserId;
@@ -131,3 +191,4 @@ window.syncTelegramTheme = syncTelegramTheme;
 window.sendToTelegram = sendToTelegram;
 window.showTelegramMainButton = showTelegramMainButton;
 window.hideTelegramMainButton = hideTelegramMainButton;
+window.updateUserStats = updateUserStats;
