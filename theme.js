@@ -1,5 +1,14 @@
-// Управление темой
+// Theme management
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+}
+
+// Initialize theme on page load
 document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme') || 'dark'; // Темная тема по умолчанию
+    setTheme(savedTheme);
+    
     // Получаем элементы
     const themeToggle = document.getElementById('themeToggle');
     const userButton = document.getElementById('userButton');
@@ -7,31 +16,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     
-    // Проверяем предпочтения пользователя
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        document.documentElement.setAttribute('data-color-scheme', savedTheme);
-    } else {
-        // Проверяем системные настройки
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.setAttribute('data-color-scheme', 'dark');
-        }
-    }
-    
     // Обработчик переключения темы
-    themeToggle.addEventListener('click', function() {
-        const currentTheme = document.documentElement.getAttribute('data-color-scheme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
         
-        document.documentElement.setAttribute('data-color-scheme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        
-        // Анимация переключения
-        themeToggle.classList.add('theme-toggle-animation');
-        setTimeout(() => {
-            themeToggle.classList.remove('theme-toggle-animation');
-        }, 300);
-    });
+            // Анимация переключения
+            themeToggle.classList.add('theme-toggle-animation');
+            setTimeout(() => {
+                themeToggle.classList.remove('theme-toggle-animation');
+            }, 300);
+        });
+    }
     
     // Обработчик клика по кнопке пользователя
     userButton.addEventListener('click', function() {
