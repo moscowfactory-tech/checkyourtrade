@@ -798,8 +798,9 @@ select.form-control {
 .hamburger span {
   width: 24px;
   height: 2px;
-  background-color: var(--color-text);
-  transition: all var(--duration-fast) var(--ease-standard);
+  background-color: var(--color-text-primary);
+  transition: all 0.3s ease;
+  border-radius: 1px;
 }
 
 /* Main content */
@@ -1906,24 +1907,33 @@ main {
   }
   
   /* Footer mobile styles */
+  .footer {
+    text-align: center;
+  }
+  
+  .footer-content {
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .footer-content p {
+    text-align: center;
+    margin: 0 auto;
+  }
+  
   .footer-bottom {
     flex-direction: column;
     text-align: center;
     gap: var(--space-12);
     align-items: center;
+    justify-content: center;
   }
   
   .footer-bottom .btn {
     padding: var(--space-6) var(--space-12);
     font-size: var(--text-sm);
-  }
-  
-  .footer-content {
-    text-align: center;
-  }
-  
-  .footer-content p {
-    text-align: center;
+    margin: 0 auto;
   }
 
   .section-header {
@@ -2287,6 +2297,10 @@ main {
   transition: all var(--duration-normal) var(--ease-standard);
 }
 
+.user-dropdown.hidden {
+  display: none;
+}
+
 .user-dropdown.active {
   opacity: 1;
   visibility: visible;
@@ -2367,36 +2381,63 @@ main {
 
 /* Mobile Navigation Improvements */
 @media (max-width: 768px) {
-  .nav-actions {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: var(--space-8);
+  .nav-container {
+    position: relative;
   }
   
-  .nav-actions .btn {
-    order: 3; /* Кнопка "Поддержать проект" идет последней */
-    font-size: var(--text-xs);
-    padding: var(--space-4) var(--space-8);
+  .nav-brand {
+    flex: 1;
+  }
+  
+  .nav-brand h2 {
+    font-size: var(--text-lg);
+  }
+  
+  .nav-actions {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    gap: var(--space-6);
+    align-items: center;
   }
   
   .theme-toggle {
-    order: 1;
+    grid-column: 1;
+    grid-row: 1;
+    width: 36px;
+    height: 36px;
   }
   
   .user-button {
-    order: 2;
+    grid-column: 2;
+    grid-row: 1;
+    width: 36px;
+    height: 36px;
+  }
+  
+  .nav-actions .btn {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: var(--text-xs);
+    padding: var(--space-4) var(--space-8);
+    justify-self: stretch;
   }
   
   .user-dropdown {
     min-width: 260px;
+  }
+  
+  .hamburger {
+    display: flex;
   }
 }
 
 /* Very small screens */
 @media (max-width: 480px) {
   .nav-container {
-    flex-wrap: wrap;
     justify-content: space-between;
+    align-items: center;
   }
   
   .nav-brand {
@@ -2412,36 +2453,47 @@ main {
   }
   
   .nav-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: var(--space-6);
-    width: 100%;
-    justify-content: center;
-    margin-top: var(--space-8);
-    order: 2;
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    gap: var(--space-4);
+    align-items: center;
   }
   
-  .nav-actions .btn {
-    order: unset;
-    font-size: var(--text-xs);
-    padding: var(--space-4) var(--space-8);
-    flex: 1;
-    max-width: 120px;
-  }
-  
-  .nav-actions .btn span:not(.btn-icon-space) {
-    display: inline;
-  }
-  
-  .theme-toggle,
-  .user-button {
-    width: 36px;
-    height: 36px;
-    flex: none;
+  .theme-toggle {
+    grid-column: 1;
+    grid-row: 1;
+    width: 32px;
+    height: 32px;
   }
   
   .theme-toggle i {
-    font-size: 14px;
+    font-size: 12px;
+  }
+  
+  .user-button {
+    grid-column: 2;
+    grid-row: 1;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .user-button i {
+    font-size: 12px;
+  }
+  
+  .nav-actions .btn {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 10px;
+    padding: var(--space-2) var(--space-4);
+    white-space: nowrap;
+    min-width: 80px;
+  }
+  
+  .nav-actions .btn .btn-icon-space {
+    margin-left: var(--space-1);
+    margin-right: var(--space-1);
   }
   
   .user-dropdown {

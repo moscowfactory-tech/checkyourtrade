@@ -33,8 +33,28 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Обработчик клика по кнопке пользователя
     if (userButton && userDropdown) {
-        userButton.addEventListener('click', function() {
-            userDropdown.classList.toggle('active');
+        userButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('User button clicked'); // Для отладки
+            
+            // Убираем класс hidden и добавляем active
+            if (userDropdown.classList.contains('hidden')) {
+                userDropdown.classList.remove('hidden');
+                setTimeout(() => {
+                    userDropdown.classList.add('active');
+                }, 10);
+            } else if (userDropdown.classList.contains('active')) {
+                userDropdown.classList.remove('active');
+                setTimeout(() => {
+                    userDropdown.classList.add('hidden');
+                }, 300);
+            } else {
+                userDropdown.classList.remove('hidden');
+                setTimeout(() => {
+                    userDropdown.classList.add('active');
+                }, 10);
+            }
         });
     }
     
@@ -43,7 +63,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (userButton && userDropdown && 
             !userButton.contains(event.target) && 
             !userDropdown.contains(event.target)) {
-            userDropdown.classList.remove('active');
+            if (userDropdown.classList.contains('active')) {
+                userDropdown.classList.remove('active');
+                setTimeout(() => {
+                    userDropdown.classList.add('hidden');
+                }, 300);
+            }
         }
     });
     
