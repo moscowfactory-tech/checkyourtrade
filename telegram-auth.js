@@ -5,11 +5,10 @@ let isTelegramWebApp = false;
 // Инициализация Telegram WebApp
 function initializeTelegramWebApp() {
     try {
-        if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
+        if (window.Telegram && window.Telegram.WebApp) {
             isTelegramWebApp = true;
+            const tg = window.Telegram.WebApp;
             
-            // Настройка WebApp
             tg.ready();
             tg.expand();
             
@@ -34,6 +33,20 @@ function initializeTelegramWebApp() {
     
     return null;
 }
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    const user = initializeTelegramWebApp();
+    if (user) {
+        // Скрываем кнопку входа и показываем кнопку выхода
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (loginBtn && logoutBtn) {
+            loginBtn.classList.add('hidden');
+            logoutBtn.classList.remove('hidden');
+        }
+    }
+});
 
 // Обновление интерфейса пользователя
 function updateUserInterface(user) {

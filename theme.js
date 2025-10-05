@@ -1,6 +1,6 @@
 // Theme management
 function setTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-color-scheme', theme);
     localStorage.setItem('theme', theme);
 }
 
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Обработчик переключения темы
     if (themeToggle) {
         themeToggle.addEventListener('click', function() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const currentTheme = document.documentElement.getAttribute('data-color-scheme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             setTheme(newTheme);
         
