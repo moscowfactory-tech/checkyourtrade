@@ -4,12 +4,113 @@ let currentStrategy = null;
 let isEditMode = false;
 let fieldCounter = 0;
 let inputCounter = 0;
+let savedAnalyses = [];
+
+// Функции для работы с localStorage
+function saveStrategiesToLocalStorage() {
+    localStorage.setItem('strategies', JSON.stringify(strategies));
+    console.log('Strategies saved to localStorage:', strategies);
+}
+
+function loadStrategiesFromLocalStorage() {
+    const savedStrategies = localStorage.getItem('strategies');
+    if (savedStrategies) {
+        try {
+            strategies = JSON.parse(savedStrategies);
+            console.log('Strategies loaded from localStorage:', strategies);
+        } catch (e) {
+            console.error('Error parsing strategies from localStorage:', e);
+            strategies = [...sampleStrategies];
+        }
+    } else {
+        strategies = [...sampleStrategies];
+    }
+}
+
+function saveAnalysesToLocalStorage() {
+    localStorage.setItem('savedAnalyses', JSON.stringify(savedAnalyses));
+    console.log('Analyses saved to localStorage:', savedAnalyses);
+}
+
+function loadAnalysesFromLocalStorage() {
+    const saved = localStorage.getItem('savedAnalyses');
+    if (saved) {
+        try {
+            savedAnalyses = JSON.parse(saved);
+            console.log('Analyses loaded from localStorage:', savedAnalyses);
+        } catch (error) {
+            console.error('Error parsing saved analyses:', error);
+            savedAnalyses = [];
+        }
+    } else {
+        savedAnalyses = [];
+    }
+}
+
+// Функция для загрузки анализов из базы данных
+async function loadAnalysesFromDatabase(retryCount = 0) {
+    try {
+        console.log('🔄 Loading analyses from database...');
+        
+        if (!window.supabase || typeof window.supabase.from !== 'function') {
+            if (retryCount < 3) {
+                console.warn(`⚠️ Supabase client not available, retrying... (${retryCount + 1}/3)`);
+                
+                // Попробуем еще раз через секунду
+                setTimeout(() => {
+                    loadAnalysesFromDatabase(retryCount + 1);
+                }, 1000);
+                return;
+            } else {
+                console.error('❌ Supabase client not available after 3 attempts');
+                savedAnalyses = [];
+                return;
+            }
+        }
+        
+        // Загружаем из таблицы analyses
+        const { data: analysesData, error } = await window.supabase
+            .from('analyses')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('❌ Error loading analyses from database:', error);
+            savedAnalyses = [];
+            return;
+        }
+        
+        if (analysesData && Array.isArray(analysesData)) {
+            // Форматируем данные из БД в формат приложения
+            savedAnalyses = analysesData.map(analysis => ({
+                id: analysis.id,
+                date: analysis.created_at,
+                strategyName: analysis.strategy_name || 'Неизвестная стратегия',
+                strategyId: analysis.strategy_id,
+                coin: analysis.coin || '',
+                results: {
+                    positive: analysis.positive_factors || [],
+                    negative: analysis.negative_factors || []
+                }
+            }));
+            
+            console.log(`✅ Loaded ${savedAnalyses.length} analyses from database`);
+        } else {
+            console.log('📝 No analyses found in database');
+            savedAnalyses = [];
+        }
+        
+    } catch (error) {
+        console.error('❌ Exception loading analyses from database:', error);
+        savedAnalyses = [];
+    }
+}
 
 // Card Analysis State
 let currentCardIndex = 0;
 let analysisAnswers = [];
 let currentAnalysisStrategy = null;
-
+let currentCoin = '';
 // Sample data with correct structure
 const sampleStrategies = [
   {
@@ -91,6 +192,7 @@ const addFieldBtn = document.getElementById('addFieldBtn');
 const fieldsContainer = document.getElementById('fieldsContainer');
 const strategiesGrid = document.getElementById('strategiesGrid');
 const strategySelect = document.getElementById('strategySelect');
+const coinInput = document.getElementById('coinInput');
 const cardAnalysisContainer = document.getElementById('cardAnalysisContainer');
 const analysisCard = document.getElementById('analysisCard');
 const cardTitle = document.getElementById('cardTitle');
@@ -102,30 +204,106 @@ const nextBtnText = document.getElementById('nextBtnText');
 const analysisResults = document.getElementById('analysisResults');
 const newAnalysisBtn = document.getElementById('newAnalysisBtn');
 
+// My Analyses Modal Elements
+const myAnalysesBtn = document.getElementById('myAnalysesBtn');
+const analysesModal = document.getElementById('analysesModal');
+const closeAnalysesModalBtn = document.getElementById('closeAnalysesModalBtn');
+const closeAnalysesBtn = document.getElementById('closeAnalysesBtn');
+const analysesList = document.getElementById('analysesList');
+
+// Support Modal Elements (will be initialized in DOMContentLoaded)
+let supportProjectBtn, supportProjectFooterBtn, supportModal, closeSupportModalBtn, closeSupportBtn, copyAddressBtn, walletAddress;
+
 // Initialize application
-document.addEventListener('DOMContentLoaded', function() {
-    strategies = [...sampleStrategies];
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Initializing TradeAnalyzer...');
+    
+    // Инициализируем Telegram WebApp
+    if (typeof initializeTelegramWebApp === 'function') {
+        const telegramUser = initializeTelegramWebApp();
+        if (telegramUser) {
+            console.log('✅ Telegram user authenticated:', telegramUser);
+            if (typeof syncTelegramTheme === 'function') {
+                syncTelegramTheme();
+            }
+        }
+    }
+    
+    // Инициализируем базу данных
+    let dbInitialized = false;
+    if (typeof initializeDatabase === 'function') {
+        dbInitialized = await initializeDatabase();
+    }
+    
+    // Простая загрузка стратегий из базы данных
+    strategies = [];
+    
+    if (window.supabase && typeof window.supabase.from === 'function') {
+        try {
+            console.log('🔄 Loading strategies from database...');
+            
+            const { data: dbStrategies, error } = await window.supabase
+                .from('strategies')
+                .select('*')
+                .order('created_at', { ascending: false });
+                
+            if (error) {
+                console.error('❌ Error loading strategies:', error);
+            } else if (dbStrategies && Array.isArray(dbStrategies)) {
+                strategies = dbStrategies;
+                console.log(`✅ Loaded ${strategies.length} strategies from database`);
+            } else {
+                console.log('📝 No strategies found in database');
+            }
+        } catch (error) {
+            console.error('❌ Exception loading strategies:', error);
+        }
+    } else {
+        console.warn('⚠️ Supabase client not available or not functional');
+    }
     
     setupEventListeners();
     renderStrategies();
     updateStrategySelect();
     showSection('home');
     
-    console.log('TradeAnalyzer initialized with correct field structure:', strategies);
+    console.log('✅ TradeAnalyzer initialized with strategies:', strategies);
 });
 
 // Event Listeners Setup
 function setupEventListeners() {
+    // Initialize Support Modal Elements
+    supportProjectBtn = document.getElementById('newSupportProjectBtn');
+    supportProjectFooterBtn = document.getElementById('newSupportProjectFooterBtn');
+    supportModal = document.getElementById('supportModal');
+    closeSupportModalBtn = document.getElementById('closeSupportModalBtn');
+    closeSupportBtn = document.getElementById('closeSupportBtn');
+    copyAddressBtn = document.getElementById('copyAddressBtn');
+    walletAddress = document.getElementById('walletAddress');
+    
+    console.log('Support elements initialized:', {
+        supportProjectBtn: !!supportProjectBtn,
+        supportProjectFooterBtn: !!supportProjectFooterBtn,
+        supportModal: !!supportModal
+    });
     navLinks.forEach(link => {
         link.addEventListener('click', handleNavigation);
     });
     
-    document.querySelectorAll('[data-section]').forEach(btn => {
+    const sectionButtons = document.querySelectorAll('[data-section]');
+    console.log('Found section buttons:', sectionButtons.length);
+    
+    sectionButtons.forEach((btn, index) => {
+        const section = btn.getAttribute('data-section');
+        console.log(`Button ${index + 1}: section="${section}", text="${btn.textContent.trim()}"`);
+        
         btn.addEventListener('click', (e) => {
-            const section = e.target.getAttribute('data-section');
-            if (section) {
-                showSection(section);
-                updateActiveNavLink(section);
+            e.preventDefault();
+            const targetSection = e.target.getAttribute('data-section') || e.target.closest('[data-section]')?.getAttribute('data-section');
+            console.log('Section button clicked:', targetSection);
+            if (targetSection) {
+                showSection(targetSection);
+                updateActiveNavLink(targetSection);
             }
         });
     });
@@ -138,7 +316,6 @@ function setupEventListeners() {
     strategyModal.addEventListener('click', (e) => {
         if (e.target === strategyModal) closeModal();
     });
-    
     strategyForm.addEventListener('submit', handleStrategySubmit);
     addFieldBtn.addEventListener('click', addFieldBuilder);
     
@@ -146,8 +323,71 @@ function setupEventListeners() {
     
     prevBtn.addEventListener('click', handlePrevCard);
     nextBtn.addEventListener('click', handleNextCard);
+    if (newAnalysisBtn) {
+        newAnalysisBtn.addEventListener('click', startNewAnalysis);
+    }
     
-    newAnalysisBtn.addEventListener('click', resetAnalysis);
+    const backToAnalysesBtn = document.getElementById('backToAnalysesBtn');
+    if (backToAnalysesBtn) {
+        backToAnalysesBtn.addEventListener('click', () => {
+            openAnalysesModal();
+        });
+    }
+    
+    // My Analyses Modal Event Listeners
+    if (myAnalysesBtn) {
+        myAnalysesBtn.addEventListener('click', openAnalysesModal);
+        console.log('My Analyses button event listener added');
+    } else {
+        console.error('myAnalysesBtn not found');
+    }
+    
+    if (closeAnalysesModalBtn) {
+        closeAnalysesModalBtn.addEventListener('click', closeAnalysesModal);
+    }
+    
+    if (closeAnalysesBtn) {
+        closeAnalysesBtn.addEventListener('click', closeAnalysesModal);
+    }
+    
+    if (analysesModal) {
+        analysesModal.addEventListener('click', (e) => {
+            if (e.target === analysesModal) closeAnalysesModal();
+        });
+    }
+    
+    // Support Modal Event Listeners
+    if (supportProjectBtn) {
+        supportProjectBtn.addEventListener('click', openSupportModal);
+        console.log('Support project button (header) event listener added');
+    } else {
+        console.error('supportProjectBtn not found');
+    }
+    
+    if (supportProjectFooterBtn) {
+        supportProjectFooterBtn.addEventListener('click', openSupportModal);
+        console.log('Support project button (footer) event listener added');
+    } else {
+        console.error('supportProjectFooterBtn not found');
+    }
+    
+    if (closeSupportModalBtn) {
+        closeSupportModalBtn.addEventListener('click', closeSupportModal);
+    }
+    
+    if (closeSupportBtn) {
+        closeSupportBtn.addEventListener('click', closeSupportModal);
+    }
+    
+    if (copyAddressBtn) {
+        copyAddressBtn.addEventListener('click', copyWalletAddress);
+    }
+    
+    if (supportModal) {
+        supportModal.addEventListener('click', (e) => {
+            if (e.target === supportModal) closeSupportModal();
+        });
+    }
 }
 
 // Navigation Functions
@@ -161,19 +401,59 @@ function handleNavigation(e) {
     hamburger.classList.remove('active');
 }
 
-function showSection(sectionId) {
+async function showSection(sectionId) {
+    console.log('📍 Showing section:', sectionId);
+    
+    // Скрываем все секции
     sections.forEach(section => {
         section.classList.remove('active');
+        section.style.display = 'none';
     });
     
+    // Показываем выбранную секцию
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.classList.add('active');
+        targetSection.style.display = 'block';
         targetSection.classList.add('fade-in');
         
         setTimeout(() => {
             targetSection.classList.remove('fade-in');
         }, 300);
+        
+        console.log('Section activated:', sectionId);
+        
+        // Перезагружаем стратегии при переходе на конструктор или анализ
+        if (sectionId === 'constructor' || sectionId === 'analysis') {
+            console.log('🔄 Refreshing strategies for section:', sectionId);
+            
+            if (window.supabase && typeof window.supabase.from === 'function') {
+                try {
+                    const { data: dbStrategies, error } = await window.supabase
+                        .from('strategies')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                        
+                    if (error) {
+                        console.error('❌ Error loading strategies:', error);
+                    } else if (dbStrategies && Array.isArray(dbStrategies)) {
+                        strategies.length = 0; // Очищаем массив
+                        strategies.push(...dbStrategies); // Добавляем данные из БД
+                        console.log(`✅ Refreshed ${strategies.length} strategies`);
+                        
+                        if (sectionId === 'constructor') {
+                            renderStrategies();
+                        } else if (sectionId === 'analysis') {
+                            updateStrategySelect();
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Exception loading strategies:', error);
+                }
+            }
+        }
+    } else {
+        console.error('Section not found:', sectionId);
     }
 }
 
@@ -251,23 +531,28 @@ function addFieldBuilder(fieldData = null) {
     
     fieldBuilder.innerHTML = `
         <div class="field-header">
-            <h4>Пункт чек-листа ${fieldCounter}</h4>
-            <button type="button" class="remove-field" title="Удалить пункт">🗑️</button>
+            <h4>Основание ${fieldCounter}</h4>
+            <button type="button" class="remove-field" title="Удалить основание"><i class="fas fa-times-circle"></i></button>
         </div>
         <div class="field-info">
             <div class="form-group">
-                <label class="form-label">Название пункта</label>
+                <label class="form-label">Название основания</label>
                 <input type="text" class="form-control" name="fieldName" value="${fieldData?.name || ''}" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Описание пункта</label>
+                <label class="form-label">Описание основания</label>
                 <textarea class="form-control" name="fieldDescription" rows="2">${fieldData?.description || ''}</textarea>
             </div>
         </div>
         <div class="inputs-section">
             <div class="inputs-header">
-                <label class="form-label">Поля ввода для этого пункта</label>
-                <button type="button" class="btn btn--outline btn--sm add-input-btn">+ Добавить поле</button>
+                <div class="inputs-header-title">
+                    <label class="form-label">Подпункты</label>
+                    <button type="button" class="toggle-inputs-btn" title="Развернуть/свернуть подпункты">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <button type="button" class="btn btn--primary btn--sm add-input-btn">+ Добавить подпункт</button>
             </div>
             <div class="inputs-container"></div>
         </div>
@@ -276,13 +561,28 @@ function addFieldBuilder(fieldData = null) {
     const removeBtn = fieldBuilder.querySelector('.remove-field');
     const addInputBtn = fieldBuilder.querySelector('.add-input-btn');
     const inputsContainer = fieldBuilder.querySelector('.inputs-container');
+    const toggleBtn = fieldBuilder.querySelector('.toggle-inputs-btn');
     
     removeBtn.addEventListener('click', () => {
         fieldBuilder.remove();
+        updateFieldNumbers();
     });
     
     addInputBtn.addEventListener('click', () => {
         addInputBuilder(inputsContainer);
+    });
+    
+    toggleBtn.addEventListener('click', () => {
+        const icon = toggleBtn.querySelector('i');
+        if (inputsContainer.classList.contains('hidden')) {
+            inputsContainer.classList.remove('hidden');
+            icon.classList.remove('fa-chevron-right');
+            icon.classList.add('fa-chevron-down');
+        } else {
+            inputsContainer.classList.add('hidden');
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-right');
+        }
     });
     
     // Add existing inputs if editing
@@ -290,12 +590,22 @@ function addFieldBuilder(fieldData = null) {
         fieldData.inputs.forEach(input => {
             addInputBuilder(inputsContainer, input);
         });
-    } else {
-        // Add one default input
-        addInputBuilder(inputsContainer);
     }
+    // Не добавляем подпункт автоматически
     
     fieldsContainer.appendChild(fieldBuilder);
+    updateFieldNumbers();
+}
+
+function updateFieldNumbers() {
+    const fieldBuilders = fieldsContainer.querySelectorAll('.field-builder');
+    fieldBuilders.forEach((builder, index) => {
+        const header = builder.querySelector('.field-header h4');
+        if (header) {
+            header.textContent = `Основание ${index + 1}`;
+        }
+        builder.setAttribute('data-field-id', index + 1);
+    });
 }
 
 function addInputBuilder(container, inputData = null) {
@@ -308,7 +618,14 @@ function addInputBuilder(container, inputData = null) {
     const isSelect = inputData?.type === 'select';
     const options = inputData?.options || [];
     
+    // Определяем номер подпункта на основе количества существующих подпунктов в контейнере
+    const existingInputs = container.querySelectorAll('.input-builder').length + 1;
+    
     inputBuilder.innerHTML = `
+        <div class="input-header">
+            <h5>Подпункт ${existingInputs}</h5>
+            <button type="button" class="remove-input" title="Удалить подпункт"><i class="fas fa-times-circle"></i></button>
+        </div>
         <div class="input-row">
             <div class="form-group">
                 <label class="form-label">Название поля</label>
@@ -331,7 +648,6 @@ function addInputBuilder(container, inputData = null) {
                     <option value="false" ${!inputData?.required ? 'selected' : ''}>Нет</option>
                 </select>
             </div>
-            <button type="button" class="remove-input" title="Удалить поле">🗑️</button>
         </div>
         <div class="input-options ${isSelect ? '' : 'hidden'}">
             <label class="form-label">Варианты выбора (через запятую)</label>
@@ -354,21 +670,39 @@ function addInputBuilder(container, inputData = null) {
     });
     
     removeBtn.addEventListener('click', () => {
+        const parentContainer = inputBuilder.parentElement;
         inputBuilder.remove();
+        updateInputNumbers(parentContainer);
     });
     
     container.appendChild(inputBuilder);
+    updateInputNumbers(container);
+}
+
+function updateInputNumbers(container) {
+    const inputBuilders = container.querySelectorAll('.input-builder');
+    inputBuilders.forEach((builder, index) => {
+        const header = builder.querySelector('.input-header h5');
+        if (header) {
+            header.textContent = `Подпункт ${index + 1}`;
+        }
+        builder.setAttribute('data-input-id', index + 1);
+    });
 }
 
 // Strategy Management
-function handleStrategySubmit(e) {
+async function handleStrategySubmit(e) {
     e.preventDefault();
+    console.log('Form submitted!');
     
     const formData = new FormData(strategyForm);
     const strategyName = formData.get('strategyName');
     const strategyDescription = formData.get('strategyDescription');
     
-    if (!strategyName.trim()) {
+    console.log('Strategy name:', strategyName);
+    console.log('Strategy description:', strategyDescription);
+    
+    if (!strategyName || !strategyName.trim()) {
         alert('Пожалуйста, введите название стратегии');
         return;
     }
@@ -413,18 +747,17 @@ function handleStrategySubmit(e) {
             inputs.push(input);
         });
         
-        if (inputs.length > 0) {
-            const field = {
-                name: fieldName,
-                description: fieldDescription,
-                inputs: inputs
-            };
-            fields.push(field);
-        }
+        // Добавляем поле даже если нет подпунктов
+        const field = {
+            name: fieldName,
+            description: fieldDescription,
+            inputs: inputs
+        };
+        fields.push(field);
     });
     
     if (fields.length === 0) {
-        alert('Добавьте хотя бы один пункт чек-листа с полями');
+        alert('Добавьте хотя бы одно основание');
         return;
     }
     
@@ -439,9 +772,43 @@ function handleStrategySubmit(e) {
         const index = strategies.findIndex(s => s.id === currentStrategy.id);
         strategies[index] = strategy;
         console.log('Strategy updated:', strategy);
+        
+        // TODO: Обновить стратегию в базе данных
+        // await StrategyDB.update(strategy);
+        
     } else {
-        strategies.push(strategy);
-        console.log('New strategy created:', strategy);
+        // Сохраняем новую стратегию в базу данных
+        try {
+            console.log('💾 Saving strategy to database...');
+            
+            const { data: savedStrategy, error } = await window.supabase
+                .from('strategies')
+                .insert({
+                    name: strategyName,
+                    description: strategyDescription,
+                    fields: fields
+                })
+                .select()
+                .single();
+                
+            if (error) {
+                console.error('❌ Error saving strategy:', error);
+                alert('Ошибка сохранения стратегии: ' + error.message);
+                return;
+            }
+            
+            strategy.id = savedStrategy.id;
+            strategies.push(strategy);
+            console.log('✅ Strategy saved successfully:', savedStrategy);
+            
+            // Обновляем селект стратегий для анализа
+            updateStrategySelect();
+            
+        } catch (error) {
+            console.error('❌ Exception saving strategy:', error);
+            alert('Ошибка сохранения стратегии');
+            return;
+        }
     }
     
     renderStrategies();
@@ -451,10 +818,21 @@ function handleStrategySubmit(e) {
     showNotification(isEditMode ? 'Стратегия обновлена!' : 'Стратегия создана!', 'success');
 }
 
+function editStrategy(id) {
+    const strategy = strategies.find(s => s.id === id);
+    if (strategy) {
+        openModal(strategy);
+    }
+}
+
 function deleteStrategy(id) {
     if (confirm('Вы уверены, что хотите удалить эту стратегию?')) {
         strategies = strategies.filter(s => s.id !== id);
         console.log('Strategy deleted, ID:', id);
+        
+        // Сохраняем стратегии в localStorage
+        saveStrategiesToLocalStorage();
+        
         renderStrategies();
         updateStrategySelect();
         showNotification('Стратегия удалена', 'info');
@@ -462,9 +840,19 @@ function deleteStrategy(id) {
 }
 
 function renderStrategies() {
+    console.log('🎨 Rendering strategies...');
+    console.log('Strategies to render:', strategies.length);
+    console.log('strategiesGrid element:', strategiesGrid);
+    
+    if (!strategiesGrid) {
+        console.error('❌ strategiesGrid element not found');
+        return;
+    }
+    
     strategiesGrid.innerHTML = '';
     
     if (strategies.length === 0) {
+        console.log('📝 No strategies found - showing empty state');
         strategiesGrid.innerHTML = `
             <div class="empty-state">
                 <p>Пока нет созданных стратегий. Создайте свою первую стратегию!</p>
@@ -472,6 +860,8 @@ function renderStrategies() {
         `;
         return;
     }
+    
+    console.log('📋 Rendering', strategies.length, 'strategies');
     
     strategies.forEach(strategy => {
         const totalInputs = strategy.fields.reduce((sum, field) => sum + field.inputs.length, 0);
@@ -485,13 +875,15 @@ function renderStrategies() {
                 <span class="fields-count">${strategy.fields.length} пунктов, ${totalInputs} полей</span>
             </div>
             <div class="strategy-actions">
-                <button class="btn-icon edit" onclick="openModal(strategies.find(s => s.id === ${strategy.id}))" title="Редактировать">✏️</button>
-                <button class="btn-icon delete" onclick="deleteStrategy(${strategy.id})" title="Удалить">🗑️</button>
+                <button class="btn-icon edit" onclick="editStrategy(${strategy.id})" title="Редактировать"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon delete" onclick="deleteStrategy(${strategy.id})" title="Удалить"><i class="fas fa-trash-alt"></i></button>
             </div>
         `;
         
         strategiesGrid.appendChild(strategyCard);
     });
+    
+    console.log('✅ Strategies rendered successfully');
 }
 
 // Analysis Section Functions
@@ -526,7 +918,16 @@ function handleStrategySelection(e) {
 }
 
 function startCardAnalysis(strategy) {
+    // Проверяем, что введена монета
+    const coin = coinInput.value.trim().toUpperCase();
+    if (!coin) {
+        alert('Пожалуйста, укажите монету для анализа');
+        coinInput.focus();
+        return;
+    }
+    
     currentAnalysisStrategy = strategy;
+    currentCoin = coin;
     currentCardIndex = 0;
     analysisAnswers = new Array(strategy.fields.length).fill(null);
     
@@ -555,16 +956,18 @@ function renderCurrentCard() {
         <h3 class="card-title">${currentField.name}</h3>
         <p class="card-description">${currentField.description || ''}</p>
         
+        ${currentField.inputs && currentField.inputs.length > 0 ? `
         <div class="card-inputs">
             ${currentField.inputs.map((input, index) => renderInput(input, index)).join('')}
         </div>
+        ` : ''}
         
         <div class="color-rating">
-            <div class="rating-label">Общая оценка этого пункта:</div>
+            <div class="rating-label">Есть ли основание для входа?</div>
             <div class="color-options">
                 <div class="color-option positive" data-value="positive">
                     <div class="color-circle"></div>
-                    <span class="color-label">Хорошо</span>
+                    <span class="color-label">Есть</span>
                 </div>
                 <div class="color-option neutral" data-value="neutral">
                     <div class="color-circle"></div>
@@ -572,7 +975,7 @@ function renderCurrentCard() {
                 </div>
                 <div class="color-option negative" data-value="negative">
                     <div class="color-circle"></div>
-                    <span class="color-label">Плохо</span>
+                    <span class="color-label">Отсутствует</span>
                 </div>
             </div>
         </div>
@@ -608,6 +1011,9 @@ function renderCurrentCard() {
                 }
             });
         }
+        
+        // Update next button state
+        nextBtn.disabled = false;
     }
 }
 
@@ -673,20 +1079,36 @@ function handleColorSelection(value) {
     const selectedOption = analysisCard.querySelector(`[data-value="${value}"]`);
     selectedOption.classList.add('selected');
     
-    // Save field values and rating
+    // Save field values and rating with labels
     const fieldValues = [];
+    const answers = [];
     const inputs = analysisCard.querySelectorAll('[data-input-index]');
-    inputs.forEach(input => {
+    
+    inputs.forEach((input, index) => {
+        const label = input.closest('.form-group')?.querySelector('.form-label')?.textContent || `Поле ${index + 1}`;
+        let value = '';
+        
         if (input.type === 'checkbox') {
-            fieldValues.push(input.checked);
+            value = input.checked;
+            fieldValues.push(value);
         } else {
-            fieldValues.push(input.value);
+            value = input.value;
+            fieldValues.push(value);
+        }
+        
+        // Сохраняем структурированный ответ
+        if (value && value !== '' && value !== false) {
+            answers.push({
+                label: label.replace('*', '').trim(),
+                value: value
+            });
         }
     });
     
     analysisAnswers[currentCardIndex] = {
         rating: value,
-        fieldValues: fieldValues
+        fieldValues: fieldValues,
+        answers: answers
     };
     
     nextBtn.disabled = false;
@@ -791,7 +1213,9 @@ function displayAnalysisResults() {
         if (answer && answer.rating) {
             const factor = {
                 name: field.name,
-                description: field.description
+                description: field.description,
+                answers: answer.answers || [], // Добавляем ответы пользователя
+                rating: answer.rating
             };
             analysis[answer.rating].push(factor);
         }
@@ -799,28 +1223,23 @@ function displayAnalysisResults() {
     
     // Render results
     renderFactors('positiveFactors', analysis.positive, 'positive');
-    renderFactors('neutralFactors', analysis.neutral, 'neutral');  
+    // Не отображаем нейтральные факторы
     renderFactors('negativeFactors', analysis.negative, 'negative');
     
-    // Generate summary statistics
-    const total = analysis.positive.length + analysis.neutral.length + analysis.negative.length;
+    // Generate summary statistics (без нейтральных факторов)
+    const total = analysis.positive.length + analysis.negative.length;
     const positivePercent = total > 0 ? Math.round((analysis.positive.length / total) * 100) : 0;
-    const neutralPercent = total > 0 ? Math.round((analysis.neutral.length / total) * 100) : 0;
     const negativePercent = total > 0 ? Math.round((analysis.negative.length / total) * 100) : 0;
     
     const summaryStats = document.getElementById('summaryStats');
     summaryStats.innerHTML = `
         <div class="stat-item">
             <span class="stat-value" style="color: var(--color-success)">${positivePercent}%</span>
-            <span class="stat-label">Положительные</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-value" style="color: var(--color-info)">${neutralPercent}%</span>
-            <span class="stat-label">Нейтральные</span>
+            <span class="stat-label">Есть основания</span>
         </div>
         <div class="stat-item">
             <span class="stat-value" style="color: var(--color-error)">${negativePercent}%</span>
-            <span class="stat-label">Отрицательные</span>
+            <span class="stat-label">Отсутствуют основания</span>
         </div>
     `;
     
@@ -828,12 +1247,14 @@ function displayAnalysisResults() {
     const recommendation = document.getElementById('recommendation');
     let recommendationText = '';
     
-    if (positivePercent >= 60) {
-        recommendationText = '✅ Сделка выглядит привлекательно. Большинство факторов говорят в пользу входа.';
-    } else if (negativePercent >= 50) {
-        recommendationText = '❌ Рекомендуется воздержаться от сделки. Слишком много негативных факторов.';
+    if (positivePercent >= 70) {
+        recommendationText = '✅ Сделка выглядит привлекательно. Большинство оснований присутствуют.';
+    } else if (negativePercent >= 60) {
+        recommendationText = '❌ Рекомендуется воздержаться от сделки. Слишком много отсутствующих оснований.';
+    } else if (positivePercent > negativePercent) {
+        recommendationText = '⚠️ Сделка может быть рассмотрена, но требует осторожности.';
     } else {
-        recommendationText = '⚠️ Сделка требует дополнительного анализа. Факторы противоречивы.';
+        recommendationText = '⚠️ Сделка требует дополнительного анализа. Недостаточно оснований для входа.';
     }
     
     recommendation.textContent = recommendationText;
@@ -841,7 +1262,10 @@ function displayAnalysisResults() {
     analysisResults.classList.remove('hidden');
     analysisResults.scrollIntoView({ behavior: 'smooth' });
     
-    console.log('Analysis results displayed:', { analysis, positivePercent, neutralPercent, negativePercent });
+    // Сохраняем анализ
+    saveCurrentAnalysis();
+    
+    console.log('Analysis results displayed:', { analysis, positivePercent, negativePercent });
 }
 
 function renderFactors(containerId, factors, category) {
@@ -858,9 +1282,24 @@ function renderFactors(containerId, factors, category) {
         factorElement.className = `factor-item ${category}`;
         factorElement.style.animationDelay = `${index * 0.1}s`;
         
+        // Формируем HTML с ответами пользователя
+        let answersHtml = '';
+        if (factor.answers && factor.answers.length > 0) {
+            answersHtml = '<div class="factor-answers">';
+            factor.answers.forEach(answer => {
+                if (answer.value) {
+                    answersHtml += `<div class="answer-item"><strong>${answer.label}:</strong> ${answer.value}</div>`;
+                }
+            });
+            answersHtml += '</div>';
+        }
+        
         factorElement.innerHTML = `
-            <strong>${factor.name}</strong>
-            ${factor.description ? `<br><small>${factor.description}</small>` : ''}
+            <div class="factor-header">
+                <strong>Основание: ${factor.name}</strong>
+            </div>
+            ${factor.description ? `<div class="factor-description">${factor.description}</div>` : ''}
+            ${answersHtml}
         `;
         
         container.appendChild(factorElement);
@@ -924,7 +1363,402 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
+// My Analyses Modal Functions
+function openAnalysesModal() {
+    renderAnalysesList();
+    analysesModal.classList.remove('hidden');
+    analysesModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAnalysesModal() {
+    analysesModal.classList.remove('active');
+    setTimeout(() => {
+        analysesModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }, 300);
+}
+
+async function renderAnalysesList() {
+    analysesList.innerHTML = `
+        <div class="loading-state">
+            <p>Анализы загружаются из базы данных...</p>
+        </div>
+    `;
+    
+    // Загружаем анализы из базы данных
+    await loadAnalysesFromDatabase();
+    
+    analysesList.innerHTML = '';
+    
+    if (savedAnalyses.length === 0) {
+        analysesList.innerHTML = `
+            <div class="empty-state">
+                <p>Пока нет сохраненных анализов. Проведите свой первый анализ!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    savedAnalyses.forEach((analysis, index) => {
+        const analysisCard = document.createElement('div');
+        analysisCard.className = 'analysis-item';
+        
+        const date = new Date(analysis.date).toLocaleDateString('ru-RU');
+        const positiveCount = analysis.results.positive.length;
+        const negativeCount = analysis.results.negative.length;
+        
+        const coinDisplay = analysis.coin ? ` (${analysis.coin})` : '';
+        
+        analysisCard.innerHTML = `
+            <div class="analysis-header">
+                <h4>${analysis.strategyName}${coinDisplay}</h4>
+                <span class="analysis-date">${date}</span>
+            </div>
+            <div class="analysis-summary">
+                <span class="positive-count">+${positiveCount}</span>
+                <span class="negative-count">-${negativeCount}</span>
+            </div>
+            <div class="analysis-actions">
+                <button class="btn btn--outline btn--sm" onclick="viewAnalysis(${index})">Просмотр</button>
+                <button class="btn btn--outline btn--sm" onclick="deleteAnalysis(${index})">Удалить</button>
+            </div>
+        `;
+        
+        analysesList.appendChild(analysisCard);
+    });
+}
+
+async function saveCurrentAnalysis() {
+    if (!currentAnalysisStrategy || !analysisAnswers) return;
+    
+    const analysis = {
+        id: Date.now(),
+        date: new Date().toISOString(),
+        strategyName: currentAnalysisStrategy.name,
+        strategyId: currentAnalysisStrategy.id,
+        coin: currentCoin,
+        results: {
+            positive: [],
+            negative: []
+        }
+    };
+    
+    // Process answers
+    currentAnalysisStrategy.fields.forEach((field, index) => {
+        const answer = analysisAnswers[index];
+        if (answer && answer.rating) {
+            const factor = {
+                name: field.name,
+                description: field.description
+            };
+            if (answer.rating === 'positive') {
+                analysis.results.positive.push(factor);
+            } else if (answer.rating === 'negative') {
+                analysis.results.negative.push(factor);
+            }
+        }
+    });
+    
+    // Сохраняем в базу данных
+    if (window.supabase && typeof window.supabase.from === 'function') {
+        try {
+            console.log('💾 Saving analysis to database...');
+            
+            const { data: savedAnalysis, error } = await window.supabase
+                .from('analyses')
+                .insert({
+                    strategy_id: currentAnalysisStrategy.id.toString(),
+                    strategy_name: currentAnalysisStrategy.name,
+                    coin: currentCoin,
+                    positive_factors: analysis.results.positive,
+                    negative_factors: analysis.results.negative
+                })
+                .select()
+                .single();
+                
+            if (error) {
+                console.error('❌ Error saving analysis to database:', error);
+                alert('Ошибка сохранения анализа: ' + error.message);
+                return;
+            }
+            
+            // Обновляем ID анализа
+            analysis.id = savedAnalysis.id;
+            
+            // Добавляем в локальный массив для отображения
+            savedAnalyses.push(analysis);
+            
+            console.log('✅ Analysis saved to database:', savedAnalysis);
+            
+        } catch (error) {
+            console.error('❌ Exception saving analysis to database:', error);
+            alert('Ошибка сохранения анализа');
+            return;
+        }
+    } else {
+        console.error('❌ Supabase client not available');
+        alert('База данных недоступна. Анализ не сохранен.');
+        return;
+    }
+}
+
+function viewAnalysis(index) {
+    const analysis = savedAnalyses[index];
+    if (!analysis) {
+        console.error('Analysis not found at index:', index);
+        return;
+    }
+    
+    console.log('Viewing analysis:', analysis);
+    
+    // Закрываем модальное окно "Мои анализы"
+    closeAnalysesModal();
+    
+    // Переходим на раздел анализа
+    showSection('analysis');
+    
+    // Показываем результаты анализа
+    setTimeout(() => {
+        displaySavedAnalysisResults(analysis);
+    }, 300);
+}
+
+function displaySavedAnalysisResults(analysis) {
+    // Скрываем карточки анализа и селект стратегии
+    if (cardAnalysisContainer) {
+        cardAnalysisContainer.classList.add('hidden');
+    }
+    
+    // Отображаем результаты
+    renderFactors('positiveFactors', analysis.results.positive, 'positive');
+    renderFactors('negativeFactors', analysis.results.negative, 'negative');
+    
+    // Генерируем статистику
+    const total = analysis.results.positive.length + analysis.results.negative.length;
+    const positivePercent = total > 0 ? Math.round((analysis.results.positive.length / total) * 100) : 0;
+    const negativePercent = total > 0 ? Math.round((analysis.results.negative.length / total) * 100) : 0;
+    
+    const summaryStats = document.getElementById('summaryStats');
+    if (summaryStats) {
+        summaryStats.innerHTML = `
+            <div class="stat-item">
+                <span class="stat-value" style="color: var(--color-success)">${positivePercent}%</span>
+                <span class="stat-label">Есть основания</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" style="color: var(--color-error)">${negativePercent}%</span>
+                <span class="stat-label">Отсутствуют основания</span>
+            </div>
+        `;
+    }
+    
+    // Генерируем рекомендацию
+    let recommendationText = '';
+    if (positivePercent >= 70) {
+        recommendationText = '✅ Сделка выглядит привлекательно. Большинство оснований присутствуют.';
+    } else if (negativePercent >= 60) {
+        recommendationText = '❌ Рекомендуется воздержаться от сделки. Слишком много отсутствующих оснований.';
+    } else if (positivePercent > negativePercent) {
+        recommendationText = '⚠️ Сделка может быть рассмотрена, но требует осторожности.';
+    } else {
+        recommendationText = '⚠️ Сделка требует дополнительного анализа. Недостаточно оснований для входа.';
+    }
+    
+    const recommendation = document.getElementById('recommendation');
+    if (recommendation) {
+        recommendation.innerHTML = `
+            <h4>Рекомендация</h4>
+            <p>${recommendationText}</p>
+        `;
+    }
+    
+    // Показываем результаты
+    if (analysisResults) {
+        analysisResults.classList.remove('hidden');
+    }
+    
+    // Показываем кнопку "Назад к анализам"
+    const backToAnalysesBtn = document.getElementById('backToAnalysesBtn');
+    if (backToAnalysesBtn) {
+        backToAnalysesBtn.style.display = 'inline-flex';
+    }
+    
+    console.log('✅ Saved analysis results displayed');
+}
+
+async function deleteAnalysis(index) {
+    if (!confirm('Вы уверены, что хотите удалить этот анализ?')) {
+        return;
+    }
+    
+    const analysis = savedAnalyses[index];
+    
+    if (window.supabase && typeof window.supabase.from === 'function' && analysis.id) {
+        try {
+            console.log('🗑️ Deleting analysis from database...');
+            
+            const { error } = await window.supabase
+                .from('analyses')
+                .delete()
+                .eq('id', analysis.id);
+                
+            if (error) {
+                console.error('❌ Error deleting analysis from database:', error);
+                alert('Ошибка удаления анализа: ' + error.message);
+                return;
+            }
+            
+            console.log('✅ Analysis deleted from database');
+            
+        } catch (error) {
+            console.error('❌ Exception deleting analysis from database:', error);
+            alert('Ошибка удаления анализа');
+            return;
+        }
+    }
+    
+    // Удаляем из локального массива
+    savedAnalyses.splice(index, 1);
+    renderAnalysesList();
+}
+
+// Функция для начала нового анализа
+function startNewAnalysis() {
+    console.log('🔄 Starting new analysis...');
+    
+    // Полный сброс состояния анализа
+    currentCardIndex = 0;
+    analysisAnswers = [];
+    currentAnalysisStrategy = null;
+    currentCoin = '';
+    
+    // Скрываем результаты анализа
+    if (analysisResults) {
+        analysisResults.classList.add('hidden');
+    }
+    
+    // Скрываем карточки анализа
+    if (cardAnalysisContainer) {
+        cardAnalysisContainer.classList.add('hidden');
+    }
+    
+    // Полный сброс карточки анализа
+    if (analysisCard) {
+        analysisCard.classList.remove('active', 'slide-out-left', 'slide-out-right');
+        // Очищаем содержимое карточки
+        const cardContent = analysisCard.querySelector('.card-content');
+        if (cardContent) {
+            cardContent.innerHTML = '';
+        }
+    }
+    
+    // Сбрасываем кнопки навигации
+    if (prevBtn) {
+        prevBtn.classList.remove('visible');
+    }
+    if (nextBtn) {
+        nextBtn.disabled = true;
+        nextBtn.textContent = 'Далее →';
+    }
+    
+    // Сбрасываем прогресс
+    if (progressText) {
+        progressText.textContent = '';
+    }
+    if (cardTitle) {
+        cardTitle.textContent = '';
+    }
+    
+    // Сбрасываем выбор стратегии и монету
+    if (strategySelect) {
+        strategySelect.value = '';
+    }
+    if (coinInput) {
+        coinInput.value = '';
+    }
+    
+    // Скрываем кнопку "Назад к анализам"
+    const backToAnalysesBtn = document.getElementById('backToAnalysesBtn');
+    if (backToAnalysesBtn) {
+        backToAnalysesBtn.style.display = 'none';
+    }
+    
+    // Переходим на раздел анализа сделки
+    showSection('analysis');
+    
+    console.log('✅ New analysis started - select a strategy to begin');
+}
+
+// Support Modal Functions
+function openSupportModal() {
+    console.log('openSupportModal called');
+    if (supportModal) {
+        supportModal.classList.remove('hidden');
+        supportModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        console.log('Support modal opened');
+    } else {
+        console.error('supportModal element not found');
+    }
+}
+
+function closeSupportModal() {
+    supportModal.classList.remove('active');
+    setTimeout(() => {
+        supportModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }, 300);
+}
+
+async function copyWalletAddress() {
+    if (!walletAddress) {
+        console.error('Wallet address element not found');
+        return;
+    }
+    
+    const addressText = walletAddress.value;
+    
+    try {
+        // Используем современный Clipboard API
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(addressText);
+            console.log('✅ Address copied using Clipboard API');
+        } else {
+            // Fallback для старых браузеров
+            walletAddress.select();
+            walletAddress.setSelectionRange(0, 99999); // For mobile devices
+            document.execCommand('copy');
+            console.log('✅ Address copied using execCommand fallback');
+        }
+        
+        showNotification('Адрес кошелька скопирован в буфер обмена!', 'success');
+        
+        // Change button icon temporarily to show success
+        const icon = copyAddressBtn.querySelector('i');
+        if (icon) {
+            const originalClass = icon.className;
+            icon.className = 'fas fa-check';
+            
+            // Change button color temporarily
+            copyAddressBtn.style.color = '#28a745';
+            
+            setTimeout(() => {
+                icon.className = originalClass;
+                copyAddressBtn.style.color = '';
+            }, 2000);
+        }
+        
+    } catch (err) {
+        console.error('❌ Failed to copy address:', err);
+        showNotification('Не удалось скопировать адрес в буфер обмена', 'error');
+    }
+}
+
 // Make functions globally accessible for onclick handlers
 window.openModal = openModal;
+window.editStrategy = editStrategy;
 window.deleteStrategy = deleteStrategy;
+window.viewAnalysis = viewAnalysis;
+window.deleteAnalysis = deleteAnalysis;
 window.strategies = strategies;
