@@ -6,7 +6,7 @@ function setTheme(theme) {
 
 // Initialize theme on page load
 document.addEventListener('DOMContentLoaded', function() {
-    const savedTheme = localStorage.getItem('theme') || 'dark'; // Темная тема по умолчанию
+    const savedTheme = localStorage.getItem('theme') || 'light'; // Светлая тема по умолчанию
     setTheme(savedTheme);
     
     // Получаем элементы
