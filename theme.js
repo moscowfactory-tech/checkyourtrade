@@ -156,7 +156,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const supportContactBtn = document.getElementById('supportContactBtn');
     const supportContactModal = document.getElementById('supportContactModal');
     const closeSupportContactBtn = document.getElementById('closeSupportContactBtn');
-    const closeSupportContactFooterBtn = document.getElementById('closeSupportContactFooterBtn');
     
     if (supportContactBtn) {
         supportContactBtn.addEventListener('click', function(e) {
@@ -184,9 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
         closeSupportContactBtn.addEventListener('click', closeSupportContactModal);
     }
     
-    if (closeSupportContactFooterBtn) {
-        closeSupportContactFooterBtn.addEventListener('click', closeSupportContactModal);
-    }
+    // Кнопка в подвале убрана
     
     // Закрытие по backdrop
     if (supportContactModal) {

@@ -2480,7 +2480,11 @@ main {
   }
   
   .hamburger {
-    display: flex;
+    display: none;
+  }
+  
+  .mobile-hamburger {
+    display: none;
   }
 }
 
@@ -2589,7 +2593,8 @@ main {
   }
   
   .user-button i {
-    font-size: 12px !important;
+    font-size: 16px !important;
+    color: var(--color-text-primary) !important;
   }
   
   /* Новое гамбургер-меню */
@@ -2616,7 +2621,7 @@ main {
     display: block !important;
     width: 16px !important;
     height: 2px !important;
-    background-color: var(--color-text-primary) !important;
+    background-color: var(--color-primary) !important;
     transition: all 0.3s ease !important;
     border-radius: 1px !important;
   }
