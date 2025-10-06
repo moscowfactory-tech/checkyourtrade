@@ -2486,7 +2486,7 @@ main {
   /* Правая группа иконок */
   .nav-actions {
     display: flex !important;
-    gap: var(--space-8) !important;
+    gap: 6px !important;
     align-items: center !important;
     order: 2 !important;
     position: relative !important;
@@ -2550,8 +2550,8 @@ main {
     font-size: 12px !important;
   }
   
-  /* Гамбургер-меню - в самом конце */
-  .hamburger {
+  /* Новое гамбургер-меню */
+  .mobile-hamburger {
     display: flex !important;
     flex-direction: column !important;
     width: 32px !important;
@@ -2564,17 +2564,22 @@ main {
     border-radius: 50% !important;
     background: var(--color-surface-secondary) !important;
     padding: 6px !important;
-    margin-left: 8px !important;
+    border: none !important;
     flex-shrink: 0 !important;
   }
   
-  .hamburger span {
+  .mobile-hamburger span {
     display: block !important;
-    width: 18px !important;
+    width: 16px !important;
     height: 2px !important;
     background-color: var(--color-text-primary) !important;
     transition: all 0.3s ease !important;
     border-radius: 1px !important;
+  }
+  
+  /* Скрываем старое гамбургер-меню */
+  .hamburger {
+    display: none !important;
   }
   
   /* Мобильное меню навигации */
@@ -2599,17 +2604,17 @@ main {
     text-align: center !important;
   }
   
-  /* Анимация гамбургера */
-  .hamburger.active span:nth-child(1) {
-    transform: rotate(45deg) translate(5px, 5px) !important;
+  /* Анимация нового гамбургера */
+  .mobile-hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(4px, 4px) !important;
   }
   
-  .hamburger.active span:nth-child(2) {
+  .mobile-hamburger.active span:nth-child(2) {
     opacity: 0 !important;
   }
   
-  .hamburger.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -6px) !important;
+  .mobile-hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px) !important;
   }
   
   .user-dropdown {

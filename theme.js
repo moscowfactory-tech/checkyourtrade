@@ -72,10 +72,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Мобильная иконка поддержки и гамбургер-меню
+    // Мобильная иконка поддержки и новое гамбургер-меню
     const mobileSupportIcon = document.getElementById('mobileSupportIcon');
     const mobileSupportFooterBtn = document.getElementById('mobileSupportFooterBtn');
-    const hamburger = document.getElementById('hamburger');
+    const mobileHamburger = document.getElementById('mobileHamburger');
     const navMenu = document.getElementById('navMenu');
     const brandLink = document.querySelector('.brand-link');
     
@@ -107,11 +107,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Обработчик гамбургер-меню
-    if (hamburger && navMenu) {
-        hamburger.addEventListener('click', function() {
+    // Обработчик нового гамбургер-меню
+    if (mobileHamburger && navMenu) {
+        mobileHamburger.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🎯 Mobile hamburger clicked');
+            
             navMenu.classList.toggle('active');
-            hamburger.classList.toggle('active');
+            mobileHamburger.classList.toggle('active');
+        });
+        
+        // Закрываем меню при клике вне его
+        document.addEventListener('click', function(e) {
+            if (!mobileHamburger.contains(e.target) && !navMenu.contains(e.target)) {
+                navMenu.classList.remove('active');
+                mobileHamburger.classList.remove('active');
+            }
         });
     }
     
