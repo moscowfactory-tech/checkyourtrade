@@ -2439,17 +2439,19 @@ main {
     display: grid !important;
     grid-template-columns: 1fr auto auto !important;
     grid-template-rows: auto auto !important;
-    align-items: center !important;
-    gap: var(--space-8) var(--space-4) !important;
+    align-items: start !important;
+    gap: var(--space-8) var(--space-8) !important;
     padding: var(--space-12) var(--space-16) !important;
     flex-wrap: nowrap !important;
   }
   
+  /* Логотип в левом верхнем углу */
   .nav-brand {
     grid-column: 1 !important;
     grid-row: 1 !important;
     min-width: 0 !important;
     flex: none !important;
+    align-self: center !important;
   }
   
   .nav-brand h2 {
@@ -2457,65 +2459,71 @@ main {
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    margin: 0 !important;
   }
   
-  /* Контейнер для кнопок в центральной части */
+  /* Кнопки темы и профиля по центру */
   .nav-actions {
     grid-column: 2 !important;
     grid-row: 1 !important;
-    display: grid !important;
-    grid-template-columns: auto auto !important;
-    grid-template-rows: auto auto !important;
-    gap: var(--space-4) !important;
+    display: flex !important;
+    gap: var(--space-8) !important;
     align-items: center !important;
-    justify-items: center !important;
+    justify-content: center !important;
     position: relative !important;
   }
   
   .theme-toggle {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
-    width: 32px !important;
-    height: 32px !important;
-    order: unset !important;
+    width: 36px !important;
+    height: 36px !important;
+    order: 1 !important;
   }
   
   .theme-toggle i {
-    font-size: 12px !important;
+    font-size: 14px !important;
   }
   
   .user-button {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    width: 32px !important;
-    height: 32px !important;
-    order: unset !important;
+    width: 36px !important;
+    height: 36px !important;
+    order: 2 !important;
   }
   
   .user-button i {
-    font-size: 12px !important;
+    font-size: 14px !important;
   }
   
+  /* Перемещаем кнопку "Поддержать проект" под логотип */
   .nav-actions .btn {
-    grid-column: 1 / -1 !important;
+    grid-column: 1 !important;
     grid-row: 2 !important;
-    font-size: 10px !important;
-    padding: var(--space-2) var(--space-4) !important;
+    font-size: 11px !important;
+    padding: var(--space-4) var(--space-8) !important;
+    margin-top: var(--space-4) !important;
+    align-self: start !important;
     white-space: nowrap !important;
     order: unset !important;
-    justify-self: stretch !important;
   }
   
-  .nav-actions .btn .btn-icon-space {
-    margin-left: var(--space-1) !important;
-    margin-right: var(--space-1) !important;
-  }
-  
+  /* Гамбургер-меню в правом верхнем углу */
   .hamburger {
     grid-column: 3 !important;
     grid-row: 1 !important;
     display: flex !important;
     order: unset !important;
+    align-self: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    padding: var(--space-6) !important;
+  }
+  
+  .hamburger span {
+    width: 20px !important;
+    height: 2px !important;
+    background-color: var(--color-text-primary) !important;
   }
   
   .user-dropdown {
