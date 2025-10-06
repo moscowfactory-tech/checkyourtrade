@@ -197,12 +197,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Обновляем при изменении размера окна
     window.addEventListener('resize', updateMobileElements);
     updateMobileElements();
+    
+    // Обновляем статистику пользователя
+    if (typeof window.updateUserStats === 'function') {
+        window.updateUserStats();
+    }
 
-    // Обработчики для кнопок входа/выхода
-    loginBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        handleLogin();
-    });
+    // Обработчики для кнопок входа/выхода (убраны)
+    // const loginBtn = document.getElementById('loginBtn');
+    // if (loginBtn) {
+    //     loginBtn.addEventListener('click', function(e) {
+    //         e.preventDefault();
+    //         handleLogin();
+    //     });
+    // }
     
     logoutBtn.addEventListener('click', function(e) {
         e.preventDefault();

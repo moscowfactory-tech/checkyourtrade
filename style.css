@@ -1826,7 +1826,11 @@ main {
   }
 
   .hamburger {
-    display: flex;
+    display: none;
+  }
+  
+  .mobile-hamburger {
+    display: none;
   }
 
   .nav-menu {

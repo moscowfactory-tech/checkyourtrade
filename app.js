@@ -1722,12 +1722,13 @@ function closeSupportModal() {
 }
 
 async function copyWalletAddress() {
-    if (!walletAddress) {
+    const walletAddressElement = document.getElementById('walletAddress');
+    if (!walletAddressElement) {
         console.error('Wallet address element not found');
         return;
     }
     
-    const addressText = walletAddress.value;
+    const addressText = walletAddressElement.value || walletAddressElement.textContent || walletAddressElement.innerText;
     
     try {
         // Используем современный Clipboard API
@@ -1736,8 +1737,8 @@ async function copyWalletAddress() {
             console.log('✅ Address copied using Clipboard API');
         } else {
             // Fallback для старых браузеров
-            walletAddress.select();
-            walletAddress.setSelectionRange(0, 99999); // For mobile devices
+            walletAddressElement.select();
+            walletAddressElement.setSelectionRange(0, 99999); // For mobile devices
             document.execCommand('copy');
             console.log('✅ Address copied using execCommand fallback');
         }
