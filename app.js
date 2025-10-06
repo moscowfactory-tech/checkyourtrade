@@ -339,6 +339,22 @@ function setupEventListeners() {
     
     strategySelect.addEventListener('change', handleStrategySelection);
     
+    // Обработчик для поля ввода монеты
+    coinInput.addEventListener('input', function() {
+        const coin = coinInput.value.trim().toUpperCase();
+        const strategyId = parseInt(strategySelect.value);
+        
+        console.log('📈 Coin input changed:', coin, 'Strategy:', strategyId);
+        
+        if (coin && strategyId) {
+            const strategy = strategies.find(s => s.id === strategyId);
+            if (strategy) {
+                console.log('📈 Both coin and strategy ready, starting analysis');
+                startCardAnalysis(strategy);
+            }
+        }
+    });
+    
     prevBtn.addEventListener('click', handlePrevCard);
     nextBtn.addEventListener('click', handleNextCard);
     if (newAnalysisBtn) {
@@ -937,27 +953,54 @@ function updateStrategySelect() {
 
 function handleStrategySelection(e) {
     const strategyId = parseInt(e.target.value);
+    console.log('📈 Strategy selected:', strategyId);
     
     if (!strategyId) {
         cardAnalysisContainer.classList.add('hidden');
         analysisResults.classList.add('hidden');
+        console.log('📈 No strategy selected, hiding cards');
         return;
     }
     
     const strategy = strategies.find(s => s.id === strategyId);
     if (strategy) {
-        startCardAnalysis(strategy);
+        console.log('📈 Found strategy:', strategy.name);
+        
+        // Проверяем монету и запускаем анализ
+        checkAndStartAnalysis(strategy);
+    } else {
+        console.error('❌ Strategy not found:', strategyId);
     }
+}
+
+// Новая функция для проверки и запуска анализа
+function checkAndStartAnalysis(strategy) {
+    console.log('📈 Checking conditions for analysis start');
+    
+    const coin = coinInput.value.trim().toUpperCase();
+    console.log('📈 Coin input value:', coin);
+    
+    if (!coin) {
+        console.log('📈 No coin entered, showing prompt');
+        showNotification('Пожалуйста, укажите монету для анализа', 'warning');
+        coinInput.focus();
+        return;
+    }
+    
+    console.log('📈 All conditions met, starting analysis');
+    startCardAnalysis(strategy);
 }
 
 function startCardAnalysis(strategy) {
     // Проверяем, что введена монета
     const coin = coinInput.value.trim().toUpperCase();
     if (!coin) {
-        alert('Пожалуйста, укажите монету для анализа');
+        showNotification('Пожалуйста, укажите монету для анализа', 'warning');
         coinInput.focus();
         return;
     }
+    
+    console.log('📈 Starting card analysis for:', strategy.name, 'with coin:', coin);
     
     currentAnalysisStrategy = strategy;
     currentCoin = coin;

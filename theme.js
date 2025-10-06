@@ -37,8 +37,11 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             
-            // Обновляем статистику при открытии профиля
-            if (typeof window.updateUserStats === 'function') {
+            // Принудительно обновляем статистику
+            if (typeof window.forceUpdateStats === 'function') {
+                window.forceUpdateStats();
+                console.log('📈 Stats force updated on profile open');
+            } else if (typeof window.updateUserStats === 'function') {
                 window.updateUserStats();
                 console.log('📈 Stats updated on profile open');
             }
