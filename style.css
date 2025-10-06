@@ -785,7 +785,13 @@ select.form-control {
 .nav-link:hover,
 .nav-link.active {
   color: var(--color-primary);
-  background-color: rgba(var(--color-teal-500-rgb), 0.1);
+  background: var(--color-primary-light);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
 }
 
 .hamburger {
@@ -2435,6 +2441,7 @@ main {
 
 /* Very small screens - Mobile phones */
 @media (max-width: 480px) {
+  /* Переопределяем навигацию только для мобильных */
   .nav-container {
     display: grid !important;
     grid-template-columns: 1fr auto auto !important;
@@ -2442,15 +2449,12 @@ main {
     align-items: start !important;
     gap: var(--space-8) var(--space-8) !important;
     padding: var(--space-12) var(--space-16) !important;
-    flex-wrap: nowrap !important;
   }
   
   /* Логотип в левом верхнем углу */
   .nav-brand {
     grid-column: 1 !important;
     grid-row: 1 !important;
-    min-width: 0 !important;
-    flex: none !important;
     align-self: center !important;
   }
   
@@ -2459,10 +2463,14 @@ main {
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    margin: 0 !important;
   }
   
-  /* Кнопки темы и профиля по центру */
+  /* Скрываем обычное меню навигации на мобильных */
+  .nav-menu {
+    display: none !important;
+  }
+  
+  /* Контейнер для кнопок темы и профиля по центру */
   .nav-actions {
     grid-column: 2 !important;
     grid-row: 1 !important;
@@ -2470,13 +2478,16 @@ main {
     gap: var(--space-8) !important;
     align-items: center !important;
     justify-content: center !important;
-    position: relative !important;
+  }
+  
+  /* Скрываем кнопку "Поддержать проект" из nav-actions на мобильных */
+  .nav-actions > .btn {
+    display: none !important;
   }
   
   .theme-toggle {
     width: 36px !important;
     height: 36px !important;
-    order: 1 !important;
   }
   
   .theme-toggle i {
@@ -2486,23 +2497,10 @@ main {
   .user-button {
     width: 36px !important;
     height: 36px !important;
-    order: 2 !important;
   }
   
   .user-button i {
     font-size: 14px !important;
-  }
-  
-  /* Перемещаем кнопку "Поддержать проект" под логотип */
-  .nav-actions .btn {
-    grid-column: 1 !important;
-    grid-row: 2 !important;
-    font-size: 11px !important;
-    padding: var(--space-4) var(--space-8) !important;
-    margin-top: var(--space-4) !important;
-    align-self: start !important;
-    white-space: nowrap !important;
-    order: unset !important;
   }
   
   /* Гамбургер-меню в правом верхнем углу */
@@ -2510,7 +2508,6 @@ main {
     grid-column: 3 !important;
     grid-row: 1 !important;
     display: flex !important;
-    order: unset !important;
     align-self: center !important;
     width: 36px !important;
     height: 36px !important;
@@ -2524,6 +2521,23 @@ main {
     width: 20px !important;
     height: 2px !important;
     background-color: var(--color-text-primary) !important;
+  }
+  
+  /* Создаем кнопку "Поддержать проект" под логотипом */
+  .nav-container::after {
+    content: "❤️ Поддержать проект";
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    font-size: 11px !important;
+    padding: var(--space-4) var(--space-8) !important;
+    background: var(--color-primary) !important;
+    color: white !important;
+    border-radius: var(--radius-sm) !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    margin-top: var(--space-4) !important;
+    cursor: pointer !important;
+    transition: all var(--duration-fast) var(--ease-standard) !important;
   }
   
   .user-dropdown {

@@ -72,6 +72,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Обработчик для мобильной кнопки "Поддержать проект" (псевдо-элемент)
+    if (window.innerWidth <= 480) {
+        document.addEventListener('click', function(e) {
+            const navContainer = document.querySelector('.nav-container');
+            if (navContainer) {
+                const rect = navContainer.getBoundingClientRect();
+                const afterRect = {
+                    left: rect.left,
+                    right: rect.left + 150, // примерная ширина кнопки
+                    top: rect.top + 50, // примерная позиция второй строки
+                    bottom: rect.top + 80
+                };
+                
+                if (e.clientX >= afterRect.left && e.clientX <= afterRect.right &&
+                    e.clientY >= afterRect.top && e.clientY <= afterRect.bottom) {
+                    // Клик по псевдо-кнопке - вызываем тот же обработчик
+                    const supportBtn = document.getElementById('supportProjectBtn');
+                    if (supportBtn) {
+                        supportBtn.click();
+                    }
+                }
+            }
+        });
+    }
+
     // Обработчики для кнопок входа/выхода
     loginBtn.addEventListener('click', function(e) {
         e.preventDefault();

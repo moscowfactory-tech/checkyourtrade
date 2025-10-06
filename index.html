@@ -8,9 +8,17 @@
     <meta http-equiv="Expires" content="0">
     <title>Trade analyzer - Анализ торговых стратегий</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.8">
-    <link rel="stylesheet" href="theme.css?v=3.8">
+    <link rel="stylesheet" href="style.css?v=4.0.1">
+    <link rel="stylesheet" href="theme.css?v=4.0.1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Принудительное обновление навигации */
+        .nav-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 16px !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -19,6 +27,7 @@
             <div class="nav-brand">
                 <h2><i class="fas fa-chart-line"></i> TradeAnalyzer</h2>
             </div>
+            <div class="nav-menu" id="navMenu">
                 <a href="#home" class="nav-link active" data-section="home">Главная</a>
                 <a href="#constructor" class="nav-link" data-section="constructor">Конструктор стратегий</a>
                 <a href="#analysis" class="nav-link" data-section="analysis">Анализ сделки</a>
@@ -375,9 +384,9 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=3.8"></script>
-    <script src="telegram-auth.js?v=3.8"></script>
-    <script src="theme.js?v=3.8"></script>
-    <script src="app.js?v=3.8"></script>
+    <script src="supabase-config.js?v=4.0.1"></script>
+    <script src="telegram-auth.js?v=4.0.1"></script>
+    <script src="theme.js?v=4.0.1"></script>
+    <script src="app.js?v=4.0.1"></script>
 </body>
 </html>
