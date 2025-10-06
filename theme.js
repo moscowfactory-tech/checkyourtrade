@@ -92,10 +92,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Обработчик мобильной иконки поддержки
     if (mobileSupportIcon) {
-        mobileSupportIcon.addEventListener('click', function() {
-            const supportBtn = document.getElementById('supportProjectBtn');
-            if (supportBtn) {
-                supportBtn.click();
+        mobileSupportIcon.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🎯 Mobile support icon clicked');
+            
+            // Используем тот же обработчик, что и для кнопки в подвале
+            const footerBtn = document.getElementById('newSupportProjectFooterBtn');
+            if (footerBtn) {
+                footerBtn.click();
             }
         });
     }

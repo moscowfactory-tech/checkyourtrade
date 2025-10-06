@@ -2519,20 +2519,23 @@ main {
     font-size: 12px !important;
   }
   
-  /* Иконка профиля */
+  /* Иконка профиля - справа от темы */
+  .user-menu {
+    order: 3 !important;
+  }
+  
   .user-button {
     width: 32px !important;
     height: 32px !important;
     border-radius: 50% !important;
     background: var(--color-surface-secondary) !important;
-    order: 3 !important;
   }
   
   .user-button i {
     font-size: 12px !important;
   }
   
-  /* Гамбургер-меню */
+  /* Гамбургер-меню - в самом конце */
   .hamburger {
     display: flex !important;
     flex-direction: column !important;
