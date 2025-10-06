@@ -72,30 +72,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Обработчик для мобильной кнопки "Поддержать проект" (псевдо-элемент)
-    if (window.innerWidth <= 480) {
-        document.addEventListener('click', function(e) {
-            const navContainer = document.querySelector('.nav-container');
-            if (navContainer) {
-                const rect = navContainer.getBoundingClientRect();
-                const afterRect = {
-                    left: rect.left,
-                    right: rect.left + 150, // примерная ширина кнопки
-                    top: rect.top + 50, // примерная позиция второй строки
-                    bottom: rect.top + 80
-                };
-                
-                if (e.clientX >= afterRect.left && e.clientX <= afterRect.right &&
-                    e.clientY >= afterRect.top && e.clientY <= afterRect.bottom) {
-                    // Клик по псевдо-кнопке - вызываем тот же обработчик
-                    const supportBtn = document.getElementById('supportProjectBtn');
-                    if (supportBtn) {
-                        supportBtn.click();
-                    }
-                }
+    // Мобильная кнопка поддержки и гамбургер-меню
+    const mobileSupportBtn = document.getElementById('mobileSupportBtn');
+    const hamburger = document.getElementById('hamburger');
+    const navMenu = document.getElementById('navMenu');
+    
+    // Показываем мобильную кнопку только на мобильных
+    function updateMobileElements() {
+        if (window.innerWidth <= 480) {
+            if (mobileSupportBtn) {
+                mobileSupportBtn.style.display = 'flex';
+            }
+        } else {
+            if (mobileSupportBtn) {
+                mobileSupportBtn.style.display = 'none';
+            }
+        }
+    }
+    
+    // Обработчик мобильной кнопки поддержки
+    if (mobileSupportBtn) {
+        mobileSupportBtn.addEventListener('click', function() {
+            const supportBtn = document.getElementById('supportProjectBtn');
+            if (supportBtn) {
+                supportBtn.click();
             }
         });
     }
+    
+    // Обработчик гамбургер-меню
+    if (hamburger && navMenu) {
+        hamburger.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        });
+    }
+    
+    // Обновляем при изменении размера окна
+    window.addEventListener('resize', updateMobileElements);
+    updateMobileElements();
 
     // Обработчики для кнопок входа/выхода
     loginBtn.addEventListener('click', function(e) {

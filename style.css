@@ -2441,28 +2441,37 @@ main {
 
 /* Very small screens - Mobile phones */
 @media (max-width: 480px) {
-  /* Переопределяем навигацию только для мобильных */
+  /* Компактная мобильная навигация */
   .nav-container {
-    display: grid !important;
-    grid-template-columns: 1fr auto auto !important;
-    grid-template-rows: auto auto !important;
-    align-items: start !important;
-    gap: var(--space-8) var(--space-8) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--space-8) !important;
     padding: var(--space-12) var(--space-16) !important;
   }
   
-  /* Логотип в левом верхнем углу */
+  /* Верхняя строка: логотип, кнопки, гамбургер */
+  .nav-container > * {
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  .nav-container > *:first-child {
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+  
+  /* Логотип компактный */
   .nav-brand {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
-    align-self: center !important;
+    flex: 1 !important;
+    min-width: 0 !important;
   }
   
   .nav-brand h2 {
-    font-size: var(--text-base) !important;
+    font-size: 14px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    margin: 0 !important;
   }
   
   /* Скрываем обычное меню навигации на мобильных */
@@ -2470,74 +2479,121 @@ main {
     display: none !important;
   }
   
-  /* Контейнер для кнопок темы и профиля по центру */
+  /* Центральные кнопки компактно */
   .nav-actions {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
     display: flex !important;
-    gap: var(--space-8) !important;
+    gap: var(--space-6) !important;
     align-items: center !important;
-    justify-content: center !important;
+    order: 2 !important;
   }
   
-  /* Скрываем кнопку "Поддержать проект" из nav-actions на мобильных */
+  /* Скрываем большую кнопку "Поддержать проект" */
   .nav-actions > .btn {
     display: none !important;
   }
   
   .theme-toggle {
-    width: 36px !important;
-    height: 36px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background: var(--color-surface-secondary) !important;
   }
   
   .theme-toggle i {
-    font-size: 14px !important;
+    font-size: 12px !important;
   }
   
   .user-button {
-    width: 36px !important;
-    height: 36px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background: var(--color-surface-secondary) !important;
   }
   
   .user-button i {
-    font-size: 14px !important;
+    font-size: 12px !important;
   }
   
-  /* Гамбургер-меню в правом верхнем углу */
+  /* Гамбургер-меню */
   .hamburger {
-    grid-column: 3 !important;
-    grid-row: 1 !important;
     display: flex !important;
-    align-self: center !important;
-    width: 36px !important;
-    height: 36px !important;
+    flex-direction: column !important;
+    width: 32px !important;
+    height: 32px !important;
     justify-content: center !important;
     align-items: center !important;
     cursor: pointer !important;
-    padding: var(--space-6) !important;
+    gap: 3px !important;
+    order: 3 !important;
+    border-radius: 50% !important;
+    background: var(--color-surface-secondary) !important;
+    padding: var(--space-4) !important;
   }
   
   .hamburger span {
-    width: 20px !important;
+    width: 16px !important;
     height: 2px !important;
     background-color: var(--color-text-primary) !important;
+    transition: all 0.3s ease !important;
+    border-radius: 1px !important;
   }
   
-  /* Создаем кнопку "Поддержать проект" под логотипом */
-  .nav-container::after {
-    content: "❤️ Поддержать проект";
-    grid-column: 1 !important;
-    grid-row: 2 !important;
+  /* Компактная кнопка "Поддержать проект" */
+  .mobile-support-compact {
+    display: flex !important;
+    align-items: center !important;
+    gap: var(--space-4) !important;
     font-size: 11px !important;
-    padding: var(--space-4) var(--space-8) !important;
+    padding: var(--space-3) var(--space-6) !important;
     background: var(--color-primary) !important;
     color: white !important;
+    border: none !important;
+    border-radius: var(--radius-sm) !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all var(--duration-fast) var(--ease-standard) !important;
+    width: 100% !important;
+    justify-content: center !important;
+    margin-top: var(--space-4) !important;
+  }
+  
+  .mobile-support-compact:hover {
+    background: var(--color-primary-dark) !important;
+  }
+  
+  /* Мобильное меню навигации */
+  .nav-menu.active {
+    display: flex !important;
+    flex-direction: column !important;
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: var(--color-surface) !important;
+    border-radius: var(--radius-base) !important;
+    padding: var(--space-12) !important;
+    box-shadow: var(--shadow-lg) !important;
+    z-index: 1000 !important;
+    gap: var(--space-8) !important;
+  }
+  
+  .nav-menu.active .nav-link {
+    padding: var(--space-8) var(--space-12) !important;
     border-radius: var(--radius-sm) !important;
     text-align: center !important;
-    white-space: nowrap !important;
-    margin-top: var(--space-4) !important;
-    cursor: pointer !important;
-    transition: all var(--duration-fast) var(--ease-standard) !important;
+  }
+  
+  /* Анимация гамбургера */
+  .hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px) !important;
+  }
+  
+  .hamburger.active span:nth-child(2) {
+    opacity: 0 !important;
+  }
+  
+  .hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px) !important;
   }
   
   .user-dropdown {
