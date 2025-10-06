@@ -74,8 +74,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Мобильная иконка поддержки и гамбургер-меню
     const mobileSupportIcon = document.getElementById('mobileSupportIcon');
+    const mobileSupportFooterBtn = document.getElementById('mobileSupportFooterBtn');
     const hamburger = document.getElementById('hamburger');
     const navMenu = document.getElementById('navMenu');
+    const brandLink = document.querySelector('.brand-link');
     
     // Показываем мобильную иконку только на мобильных
     function updateMobileElements() {
@@ -110,6 +112,21 @@ document.addEventListener('DOMContentLoaded', function() {
         hamburger.addEventListener('click', function() {
             navMenu.classList.toggle('active');
             hamburger.classList.toggle('active');
+        });
+    }
+    
+    // Обработчик мобильной кнопки в подвале
+    if (mobileSupportFooterBtn) {
+        mobileSupportFooterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🎯 Mobile footer support button clicked');
+            
+            // Используем тот же обработчик, что и для кнопки в подвале
+            const footerBtn = document.getElementById('newSupportProjectFooterBtn');
+            if (footerBtn) {
+                footerBtn.click();
+            }
         });
     }
     

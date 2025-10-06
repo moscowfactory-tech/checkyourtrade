@@ -767,6 +767,11 @@ select.form-control {
   color: var(--color-primary);
 }
 
+.brand-link {
+  text-decoration: none;
+  display: block;
+}
+
 .nav-menu {
   display: flex;
   gap: var(--space-32);
@@ -2439,6 +2444,15 @@ main {
   }
 }
 
+/* Классы для мобильной и десктопной версий */
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
+
 /* Very small screens - Mobile phones */
 @media (max-width: 480px) {
   /* Мобильная навигация в одну строку */
@@ -2544,15 +2558,17 @@ main {
     justify-content: center !important;
     align-items: center !important;
     cursor: pointer !important;
-    gap: 3px !important;
+    gap: 4px !important;
     order: 4 !important;
     border-radius: 50% !important;
     background: var(--color-surface-secondary) !important;
     padding: var(--space-4) !important;
+    margin-left: var(--space-4) !important;
   }
   
   .hamburger span {
-    width: 16px !important;
+    display: block !important;
+    width: 18px !important;
     height: 2px !important;
     background-color: var(--color-text-primary) !important;
     transition: all 0.3s ease !important;
@@ -2598,5 +2614,32 @@ main {
     min-width: 240px !important;
     right: 0 !important;
     left: auto !important;
+  }
+  
+  /* Мобильный подвал */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-only {
+    display: block !important;
+  }
+  
+  .footer-links {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  .footer-column {
+    text-align: center !important;
+    margin-bottom: var(--space-16) !important;
+  }
+  
+  .support-footer-btn {
+    margin-top: var(--space-16) !important;
+  }
+  
+  .footer-bottom .btn {
+    display: none !important;
   }
 }

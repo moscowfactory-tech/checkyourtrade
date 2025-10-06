@@ -8,8 +8,8 @@
     <meta http-equiv="Expires" content="0">
     <title>Trade analyzer - Анализ торговых стратегий</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.2.1">
-    <link rel="stylesheet" href="theme.css?v=4.2.1">
+    <link rel="stylesheet" href="style.css?v=4.3.0">
+    <link rel="stylesheet" href="theme.css?v=4.3.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Принудительное обновление навигации */
@@ -25,7 +25,9 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <h2><i class="fas fa-chart-line"></i> TradeAnalyzer</h2>
+                <a href="#home" class="brand-link" data-section="home">
+                    <h2><i class="fas fa-chart-line"></i> TradeAnalyzer</h2>
+                </a>
             </div>
             <div class="nav-menu" id="navMenu">
                 <a href="#home" class="nav-link active" data-section="home">Главная</a>
@@ -358,7 +360,7 @@
                     <p>Анализируйте торговые стратегии с помощью персональных чек-листов</p>
                 </div>
                 <div class="footer-links">
-                    <div class="footer-column">
+                    <div class="footer-column desktop-only">
                         <h4>Навигация</h4>
                         <ul>
                             <li><a href="#home">Главная</a></li>
@@ -372,6 +374,11 @@
                             <li><a href="https://t.me/trade_analyzer_bot" target="_blank"><i class="fab fa-telegram"></i> Telegram бот</a></li>
                             <li><a href="mailto:support@tradeanalyzer.ru"><i class="fas fa-envelope"></i> Поддержка</a></li>
                         </ul>
+                        <div class="mobile-only support-footer-btn">
+                            <button class="btn btn--outline btn--sm" id="mobileSupportFooterBtn">
+                                <i class="fas fa-heart"></i><span class="btn-icon-space"></span>Поддержать проект
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -386,9 +393,9 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=4.2.1"></script>
-    <script src="telegram-auth.js?v=4.2.1"></script>
-    <script src="theme.js?v=4.2.1"></script>
-    <script src="app.js?v=4.2.1"></script>
+    <script src="supabase-config.js?v=4.3.0"></script>
+    <script src="telegram-auth.js?v=4.3.0"></script>
+    <script src="theme.js?v=4.3.0"></script>
+    <script src="app.js?v=4.3.0"></script>
 </body>
 </html>
