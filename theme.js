@@ -72,27 +72,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Мобильная кнопка поддержки и гамбургер-меню
-    const mobileSupportBtn = document.getElementById('mobileSupportBtn');
+    // Мобильная иконка поддержки и гамбургер-меню
+    const mobileSupportIcon = document.getElementById('mobileSupportIcon');
     const hamburger = document.getElementById('hamburger');
     const navMenu = document.getElementById('navMenu');
     
-    // Показываем мобильную кнопку только на мобильных
+    // Показываем мобильную иконку только на мобильных
     function updateMobileElements() {
         if (window.innerWidth <= 480) {
-            if (mobileSupportBtn) {
-                mobileSupportBtn.style.display = 'flex';
+            if (mobileSupportIcon) {
+                mobileSupportIcon.style.display = 'flex';
             }
         } else {
-            if (mobileSupportBtn) {
-                mobileSupportBtn.style.display = 'none';
+            if (mobileSupportIcon) {
+                mobileSupportIcon.style.display = 'none';
             }
         }
     }
     
-    // Обработчик мобильной кнопки поддержки
-    if (mobileSupportBtn) {
-        mobileSupportBtn.addEventListener('click', function() {
+    // Обработчик мобильной иконки поддержки
+    if (mobileSupportIcon) {
+        mobileSupportIcon.addEventListener('click', function() {
             const supportBtn = document.getElementById('supportProjectBtn');
             if (supportBtn) {
                 supportBtn.click();
