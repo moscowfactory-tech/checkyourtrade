@@ -277,6 +277,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     updateStrategySelect();
     showSection('home');
     
+    // Принудительное обновление статистики через 1 секунду
+    setTimeout(() => {
+        if (typeof window.updateUserStats === 'function') {
+            window.updateUserStats();
+            console.log('📈 User stats updated on load');
+        }
+    }, 1000);
+    
     console.log('✅ TradeAnalyzer initialized with strategies:', strategies);
 });
 
@@ -1712,6 +1720,10 @@ function openSupportModal() {
         console.error('supportModal element not found');
     }
 }
+
+// Делаем функции глобально доступными
+window.openSupportModal = openSupportModal;
+window.openAnalysesModal = openAnalysesModal;
 
 function closeSupportModal() {
     supportModal.classList.remove('active');

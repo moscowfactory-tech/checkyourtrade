@@ -806,6 +806,10 @@ select.form-control {
   gap: 4px;
 }
 
+.mobile-hamburger {
+  display: none;
+}
+
 .hamburger span {
   width: 24px;
   height: 2px;
