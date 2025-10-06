@@ -1714,13 +1714,53 @@ main {
   color: var(--color-text-secondary);
 }
 
-.recommendation {
-  background: var(--color-bg-2);
-  padding: var(--space-20);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
+.recommend.wallet-address {
+  background: var(--color-surface-secondary);
+  padding: var(--space-12);
+  border-radius: var(--radius-base);
+  font-family: 'Courier New', monospace;
+  font-size: var(--font-size-sm);
+  word-break: break-all;
+  margin: var(--space-16) 0;
+  position: relative;
+}
+
+/* Стили для модального окна поддержки */
+.support-contact-info {
+  text-align: center;
+}
+
+.email-contact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  margin: var(--space-16) 0;
+  padding: var(--space-12);
+  background: var(--color-surface-secondary);
+  border-radius: var(--radius-base);
+}
+
+.email-contact i {
+  color: var(--color-primary);
   font-size: var(--font-size-lg);
+}
+
+.email-contact a {
+  color: var(--color-primary);
+  text-decoration: none;
   font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+}
+
+.email-contact a:hover {
+  text-decoration: underline;
+}
+
+.support-note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-16);
 }
 
 .results-actions {
@@ -2510,6 +2550,7 @@ main {
     cursor: pointer !important;
     transition: all var(--duration-fast) var(--ease-standard) !important;
     order: 1 !important;
+    margin-left: 4px !important;
   }
   
   .mobile-support-icon i {
@@ -2528,6 +2569,7 @@ main {
     border-radius: 50% !important;
     background: var(--color-surface-secondary) !important;
     order: 2 !important;
+    margin-left: 2px !important;
   }
   
   .theme-toggle i {
@@ -2566,6 +2608,8 @@ main {
     padding: 6px !important;
     border: none !important;
     flex-shrink: 0 !important;
+    position: relative !important;
+    z-index: 1001 !important;
   }
   
   .mobile-hamburger span {
@@ -2582,26 +2626,34 @@ main {
     display: none !important;
   }
   
-  /* Мобильное меню навигации */
+  /* Компактное мобильное меню навигации */
   .nav-menu.active {
     display: flex !important;
     flex-direction: column !important;
     position: absolute !important;
-    top: 100% !important;
-    left: 0 !important;
+    top: calc(100% + 8px) !important;
     right: 0 !important;
+    left: auto !important;
+    width: 200px !important;
     background: var(--color-surface) !important;
     border-radius: var(--radius-base) !important;
-    padding: var(--space-12) !important;
+    padding: var(--space-8) !important;
     box-shadow: var(--shadow-lg) !important;
     z-index: 1000 !important;
-    gap: var(--space-8) !important;
+    gap: var(--space-4) !important;
+    border: 1px solid var(--color-border) !important;
   }
   
   .nav-menu.active .nav-link {
-    padding: var(--space-8) var(--space-12) !important;
+    padding: var(--space-6) var(--space-8) !important;
     border-radius: var(--radius-sm) !important;
-    text-align: center !important;
+    text-align: left !important;
+    font-size: 14px !important;
+    transition: background-color 0.2s ease !important;
+  }
+  
+  .nav-menu.active .nav-link:hover {
+    background-color: var(--color-surface-secondary) !important;
   }
   
   /* Анимация нового гамбургера */

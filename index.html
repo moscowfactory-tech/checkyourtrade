@@ -8,8 +8,8 @@
     <meta http-equiv="Expires" content="0">
     <title>Trade analyzer - Анализ торговых стратегий</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.4.0">
-    <link rel="stylesheet" href="theme.css?v=4.4.0">
+    <link rel="stylesheet" href="style.css?v=4.5.0">
+    <link rel="stylesheet" href="theme.css?v=4.5.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Принудительное обновление навигации */
@@ -352,6 +352,32 @@
         </div>
     </div>
 
+    <!-- Support Contact Modal -->
+    <div class="modal hidden" id="supportContactModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-envelope"></i> Поддержка</h3>
+                <button class="modal-close" id="closeSupportContactBtn" aria-label="Закрыть">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="support-contact-info">
+                    <p>Если у вас возникли вопросы или проблемы с приложением, обращайтесь в поддержку по электронной почте:</p>
+                    <div class="email-contact">
+                        <i class="fas fa-envelope"></i>
+                        <a href="mailto:arsen.varavin@gmail.com">arsen.varavin@gmail.com</a>
+                    </div>
+                    <p class="support-note">Мы отвечаем на все обращения в течение 24 часов.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn--outline" id="closeSupportContactFooterBtn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -371,8 +397,8 @@
                     <div class="footer-column">
                         <h4>Контакты</h4>
                         <ul>
-                            <li><a href="https://t.me/trade_analyzer_bot" target="_blank"><i class="fab fa-telegram"></i> Telegram бот</a></li>
-                            <li><a href="mailto:support@tradeanalyzer.ru"><i class="fas fa-envelope"></i> Поддержка</a></li>
+                            <li><a href="https://t.me/checkyourtrade_bot" target="_blank"><i class="fab fa-telegram"></i> Telegram бот</a></li>
+                            <li><a href="#" id="supportContactBtn"><i class="fas fa-envelope"></i> Поддержка</a></li>
                         </ul>
                         <div class="mobile-only support-footer-btn">
                             <button class="btn btn--outline btn--sm" id="mobileSupportFooterBtn">
@@ -393,9 +419,9 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=4.4.0"></script>
-    <script src="telegram-auth.js?v=4.4.0"></script>
-    <script src="theme.js?v=4.4.0"></script>
-    <script src="app.js?v=4.4.0"></script>
+    <script src="supabase-config.js?v=4.5.0"></script>
+    <script src="telegram-auth.js?v=4.5.0"></script>
+    <script src="theme.js?v=4.5.0"></script>
+    <script src="app.js?v=4.5.0"></script>
 </body>
 </html>

@@ -99,10 +99,15 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             console.log('🎯 Mobile support icon clicked');
             
-            // Используем тот же обработчик, что и для кнопки в подвале
-            const footerBtn = document.getElementById('newSupportProjectFooterBtn');
-            if (footerBtn) {
-                footerBtn.click();
+            // Открываем модальное окно напрямую
+            if (typeof openSupportModal === 'function') {
+                openSupportModal();
+            } else {
+                // Фолбэк - используем кнопку в подвале
+                const footerBtn = document.getElementById('newSupportProjectFooterBtn');
+                if (footerBtn) {
+                    footerBtn.click();
+                }
             }
         });
     }
@@ -134,10 +139,60 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             console.log('🎯 Mobile footer support button clicked');
             
-            // Используем тот же обработчик, что и для кнопки в подвале
-            const footerBtn = document.getElementById('newSupportProjectFooterBtn');
-            if (footerBtn) {
-                footerBtn.click();
+            // Открываем модальное окно напрямую
+            if (typeof openSupportModal === 'function') {
+                openSupportModal();
+            } else {
+                // Фолбэк - используем кнопку в подвале
+                const footerBtn = document.getElementById('newSupportProjectFooterBtn');
+                if (footerBtn) {
+                    footerBtn.click();
+                }
+            }
+        });
+    }
+    
+    // Обработчик кнопки поддержки в подвале
+    const supportContactBtn = document.getElementById('supportContactBtn');
+    const supportContactModal = document.getElementById('supportContactModal');
+    const closeSupportContactBtn = document.getElementById('closeSupportContactBtn');
+    const closeSupportContactFooterBtn = document.getElementById('closeSupportContactFooterBtn');
+    
+    if (supportContactBtn) {
+        supportContactBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('📧 Opening support contact modal');
+            if (supportContactModal) {
+                supportContactModal.classList.remove('hidden');
+                supportContactModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    }
+    
+    function closeSupportContactModal() {
+        if (supportContactModal) {
+            supportContactModal.classList.remove('active');
+            setTimeout(() => {
+                supportContactModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }, 300);
+        }
+    }
+    
+    if (closeSupportContactBtn) {
+        closeSupportContactBtn.addEventListener('click', closeSupportContactModal);
+    }
+    
+    if (closeSupportContactFooterBtn) {
+        closeSupportContactFooterBtn.addEventListener('click', closeSupportContactModal);
+    }
+    
+    // Закрытие по backdrop
+    if (supportContactModal) {
+        supportContactModal.addEventListener('click', function(e) {
+            if (e.target === supportContactModal || e.target.classList.contains('modal-backdrop')) {
+                closeSupportContactModal();
             }
         });
     }
