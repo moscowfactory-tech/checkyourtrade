@@ -2489,6 +2489,7 @@ main {
     gap: var(--space-8) !important;
     align-items: center !important;
     order: 2 !important;
+    position: relative !important;
   }
   
   /* Скрываем большую кнопку "Поддержать проект" */
@@ -2558,12 +2559,13 @@ main {
     justify-content: center !important;
     align-items: center !important;
     cursor: pointer !important;
-    gap: 4px !important;
-    order: 4 !important;
+    gap: 3px !important;
+    order: 5 !important;
     border-radius: 50% !important;
     background: var(--color-surface-secondary) !important;
-    padding: var(--space-4) !important;
-    margin-left: var(--space-4) !important;
+    padding: 6px !important;
+    margin-left: 8px !important;
+    flex-shrink: 0 !important;
   }
   
   .hamburger span {
@@ -2633,6 +2635,13 @@ main {
   .footer-column {
     text-align: center !important;
     margin-bottom: var(--space-16) !important;
+  }
+  
+  .footer-column ul {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: var(--space-8) !important;
   }
   
   .support-footer-btn {
