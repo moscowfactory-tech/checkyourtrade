@@ -36,7 +36,12 @@ document.addEventListener('DOMContentLoaded', function() {
         userButton.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('User button clicked'); // Для отладки
+            
+            // Обновляем статистику при открытии профиля
+            if (typeof window.updateUserStats === 'function') {
+                window.updateUserStats();
+                console.log('📈 Stats updated on profile open');
+            }
             
             // Убираем класс hidden и добавляем active
             if (userDropdown.classList.contains('hidden')) {
@@ -44,16 +49,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     userDropdown.classList.add('active');
                 }, 10);
-            } else if (userDropdown.classList.contains('active')) {
+            } else {
                 userDropdown.classList.remove('active');
                 setTimeout(() => {
                     userDropdown.classList.add('hidden');
                 }, 300);
-            } else {
-                userDropdown.classList.remove('hidden');
-                setTimeout(() => {
-                    userDropdown.classList.add('active');
-                }, 10);
             }
         });
     }

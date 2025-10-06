@@ -354,7 +354,12 @@ function setupEventListeners() {
     
     // My Analyses Modal Event Listeners
     if (myAnalysesBtn) {
-        myAnalysesBtn.addEventListener('click', openAnalysesModal);
+        myAnalysesBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📈 My analyses button clicked');
+            openAnalysesModal();
+        });
         console.log('My Analyses button event listener added');
     } else {
         console.error('myAnalysesBtn not found');
@@ -376,14 +381,24 @@ function setupEventListeners() {
     
     // Support Modal Event Listeners
     if (supportProjectBtn) {
-        supportProjectBtn.addEventListener('click', openSupportModal);
+        supportProjectBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('💰 Header support button clicked');
+            openSupportModal();
+        });
         console.log('Support project button (header) event listener added');
     } else {
         console.error('supportProjectBtn not found');
     }
     
     if (footerSupportProjectBtn) {
-        footerSupportProjectBtn.addEventListener('click', openSupportModal);
+        footerSupportProjectBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('💰 Footer support button clicked');
+            openSupportModal();
+        });
         console.log('Footer support project button event listener added');
     } else {
         console.error('footerSupportProjectBtn not found');
@@ -1383,10 +1398,19 @@ function showNotification(message, type = 'info') {
 
 // My Analyses Modal Functions
 function openAnalysesModal() {
-    renderAnalysesList();
-    analysesModal.classList.remove('hidden');
-    analysesModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    console.log('📈 openAnalysesModal called');
+    const modal = document.getElementById('analysesModal');
+    console.log('📈 Analyses modal element found:', !!modal);
+    
+    if (modal) {
+        renderAnalysesList();
+        modal.classList.remove('hidden');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        console.log('📈 Analyses modal opened successfully');
+    } else {
+        console.error('❌ analysesModal element not found in DOM');
+    }
 }
 
 function closeAnalysesModal() {
@@ -1710,14 +1734,17 @@ function startNewAnalysis() {
 
 // Support Modal Functions
 function openSupportModal() {
-    console.log('openSupportModal called');
-    if (supportModal) {
-        supportModal.classList.remove('hidden');
-        supportModal.classList.add('active');
+    console.log('💰 openSupportModal called');
+    const modal = document.getElementById('supportModal');
+    console.log('💰 Modal element found:', !!modal);
+    
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('active');
         document.body.style.overflow = 'hidden';
-        console.log('Support modal opened');
+        console.log('💰 Support modal opened successfully');
     } else {
-        console.error('supportModal element not found');
+        console.error('❌ supportModal element not found in DOM');
     }
 }
 

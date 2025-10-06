@@ -209,14 +209,27 @@ async function updateUserStats() {
                 }
             }
         }
-        
-        analysesCountEl.textContent = analysesCount;
-        strategiesCountEl.textContent = strategiesCount;
+        // Обновляем счетчики
+        if (analysesCountEl && strategiesCountEl) {
+            analysesCountEl.textContent = analysesCount;
+            strategiesCountEl.textContent = strategiesCount;
+            
+            console.log('✅ User stats updated:', { 
+                analysesCount, 
+                strategiesCount,
+                userId: getCurrentUserId(),
+                supabaseAvailable: !!window.supabase
+            });
+        } else {
+            console.warn('⚠️ Stats elements not found in DOM:', {
+                analysesCountEl: !!analysesCountEl,
+                strategiesCountEl: !!strategiesCountEl
+            });
+        }
     }
 }
 
-// Экспорт функций
-window.initializeTelegramWebApp = initializeTelegramWebApp;
+// Экспорт функций в глобальную область
 window.getTelegramUserId = getTelegramUserId;
 window.getTelegramUserData = getTelegramUserData;
 window.isRunningInTelegram = isRunningInTelegram;
