@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 function setupEventListeners() {
     // Initialize Support Modal Elements
     supportProjectBtn = document.getElementById('newSupportProjectBtn');
-    supportProjectFooterBtn = document.getElementById('newSupportProjectFooterBtn');
+    const footerSupportProjectBtn = document.getElementById('footerSupportProjectBtn');
     supportModal = document.getElementById('supportModal');
     closeSupportModalBtn = document.getElementById('closeSupportModalBtn');
     closeSupportBtn = document.getElementById('closeSupportBtn');
@@ -301,7 +301,7 @@ function setupEventListeners() {
     
     console.log('Support elements initialized:', {
         supportProjectBtn: !!supportProjectBtn,
-        supportProjectFooterBtn: !!supportProjectFooterBtn,
+        footerSupportProjectBtn: !!footerSupportProjectBtn,
         supportModal: !!supportModal
     });
     navLinks.forEach(link => {
@@ -382,11 +382,11 @@ function setupEventListeners() {
         console.error('supportProjectBtn not found');
     }
     
-    if (supportProjectFooterBtn) {
-        supportProjectFooterBtn.addEventListener('click', openSupportModal);
-        console.log('Support project button (footer) event listener added');
+    if (footerSupportProjectBtn) {
+        footerSupportProjectBtn.addEventListener('click', openSupportModal);
+        console.log('Footer support project button event listener added');
     } else {
-        console.error('supportProjectFooterBtn not found');
+        console.error('footerSupportProjectBtn not found');
     }
     
     if (closeSupportModalBtn) {

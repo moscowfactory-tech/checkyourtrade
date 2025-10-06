@@ -968,14 +968,7 @@ main {
 }
 
 .strategy-card h4 {
-  margin: 0 0 var(--space-12) 0;
-  color: var(--color-text);
-  font-size: var(--font-size-lg);
-}
-
-.strategy-card p {
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-16);
+  margin: 0 0 var(--space-16);
   line-height: 1.5;
 }
 
@@ -1161,13 +1154,17 @@ main {
   border-color: var(--color-primary);
 }
 
-.field-header {
+.footer-bottom {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-16);
-  padding-bottom: var(--space-12);
-  border-bottom: 1px solid var(--color-border);
+  padding-top: var(--space-24);
+  margin-top: var(--space-24);
+  border-top: 1px solid var(--color-border);
+}
+
+.footer-support-btn {
+  margin-top: var(--space-16);
 }
 
 .field-header h4 {
