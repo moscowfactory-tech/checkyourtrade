@@ -36,7 +36,15 @@ document.addEventListener('DOMContentLoaded', function() {
         userButton.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('User button clicked'); // Для отладки
+            
+            // Принудительно обновляем статистику
+            if (typeof window.forceUpdateStats === 'function') {
+                window.forceUpdateStats();
+                console.log('📈 Stats force updated on profile open');
+            } else if (typeof window.updateUserStats === 'function') {
+                window.updateUserStats();
+                console.log('📈 Stats updated on profile open');
+            }
             
             // Убираем класс hidden и добавляем active
             if (userDropdown.classList.contains('hidden')) {
@@ -44,16 +52,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     userDropdown.classList.add('active');
                 }, 10);
-            } else if (userDropdown.classList.contains('active')) {
+            } else {
                 userDropdown.classList.remove('active');
                 setTimeout(() => {
                     userDropdown.classList.add('hidden');
                 }, 300);
-            } else {
-                userDropdown.classList.remove('hidden');
-                setTimeout(() => {
-                    userDropdown.classList.add('active');
-                }, 10);
             }
         });
     }
@@ -72,10 +75,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Мобильная иконка поддержки и гамбургер-меню
+    // Мобильная иконка поддержки и новое гамбургер-меню
     const mobileSupportIcon = document.getElementById('mobileSupportIcon');
     const mobileSupportFooterBtn = document.getElementById('mobileSupportFooterBtn');
-    const hamburger = document.getElementById('hamburger');
+    const mobileHamburger = document.getElementById('mobileHamburger');
     const navMenu = document.getElementById('navMenu');
     const brandLink = document.querySelector('.brand-link');
     
@@ -99,19 +102,36 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             console.log('🎯 Mobile support icon clicked');
             
-            // Используем тот же обработчик, что и для кнопки в подвале
-            const footerBtn = document.getElementById('newSupportProjectFooterBtn');
-            if (footerBtn) {
-                footerBtn.click();
+            // Открываем модальное окно напрямую
+            if (typeof openSupportModal === 'function') {
+                openSupportModal();
+            } else {
+                // Фолбэк - используем кнопку в подвале
+                const footerBtn = document.getElementById('newSupportProjectFooterBtn');
+                if (footerBtn) {
+                    footerBtn.click();
+                }
             }
         });
     }
     
-    // Обработчик гамбургер-меню
-    if (hamburger && navMenu) {
-        hamburger.addEventListener('click', function() {
+    // Обработчик нового гамбургер-меню
+    if (mobileHamburger && navMenu) {
+        mobileHamburger.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🎯 Mobile hamburger clicked');
+            
             navMenu.classList.toggle('active');
-            hamburger.classList.toggle('active');
+            mobileHamburger.classList.toggle('active');
+        });
+        
+        // Закрываем меню при клике вне его
+        document.addEventListener('click', function(e) {
+            if (!mobileHamburger.contains(e.target) && !navMenu.contains(e.target)) {
+                navMenu.classList.remove('active');
+                mobileHamburger.classList.remove('active');
+            }
         });
     }
     
@@ -122,10 +142,57 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             console.log('🎯 Mobile footer support button clicked');
             
-            // Используем тот же обработчик, что и для кнопки в подвале
-            const footerBtn = document.getElementById('newSupportProjectFooterBtn');
-            if (footerBtn) {
-                footerBtn.click();
+            // Открываем модальное окно напрямую
+            if (typeof openSupportModal === 'function') {
+                openSupportModal();
+            } else {
+                // Фолбэк - используем кнопку в подвале
+                const footerBtn = document.getElementById('newSupportProjectFooterBtn');
+                if (footerBtn) {
+                    footerBtn.click();
+                }
+            }
+        });
+    }
+    
+    // Обработчик кнопки поддержки в подвале
+    const supportContactBtn = document.getElementById('supportContactBtn');
+    const supportContactModal = document.getElementById('supportContactModal');
+    const closeSupportContactBtn = document.getElementById('closeSupportContactBtn');
+    
+    if (supportContactBtn) {
+        supportContactBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('📧 Opening support contact modal');
+            if (supportContactModal) {
+                supportContactModal.classList.remove('hidden');
+                supportContactModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    }
+    
+    function closeSupportContactModal() {
+        if (supportContactModal) {
+            supportContactModal.classList.remove('active');
+            setTimeout(() => {
+                supportContactModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }, 300);
+        }
+    }
+    
+    if (closeSupportContactBtn) {
+        closeSupportContactBtn.addEventListener('click', closeSupportContactModal);
+    }
+    
+    // Кнопка в подвале убрана
+    
+    // Закрытие по backdrop
+    if (supportContactModal) {
+        supportContactModal.addEventListener('click', function(e) {
+            if (e.target === supportContactModal || e.target.classList.contains('modal-backdrop')) {
+                closeSupportContactModal();
             }
         });
     }
@@ -133,12 +200,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Обновляем при изменении размера окна
     window.addEventListener('resize', updateMobileElements);
     updateMobileElements();
+    
+    // Обновляем статистику пользователя
+    if (typeof window.updateUserStats === 'function') {
+        window.updateUserStats();
+    }
 
-    // Обработчики для кнопок входа/выхода
-    loginBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        handleLogin();
-    });
+    // Обработчики для кнопок входа/выхода (убраны)
+    // const loginBtn = document.getElementById('loginBtn');
+    // if (loginBtn) {
+    //     loginBtn.addEventListener('click', function(e) {
+    //         e.preventDefault();
+    //         handleLogin();
+    //     });
+    // }
     
     logoutBtn.addEventListener('click', function(e) {
         e.preventDefault();

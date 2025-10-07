@@ -806,6 +806,10 @@ select.form-control {
   gap: 4px;
 }
 
+.mobile-hamburger {
+  display: none;
+}
+
 .hamburger span {
   width: 24px;
   height: 2px;
@@ -969,14 +973,7 @@ main {
 }
 
 .strategy-card h4 {
-  margin: 0 0 var(--space-12) 0;
-  color: var(--color-text);
-  font-size: var(--font-size-lg);
-}
-
-.strategy-card p {
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-16);
+  margin: 0 0 var(--space-16);
   line-height: 1.5;
 }
 
@@ -1162,13 +1159,57 @@ main {
   border-color: var(--color-primary);
 }
 
-.field-header {
+.footer-bottom {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-16);
-  padding-bottom: var(--space-12);
-  border-bottom: 1px solid var(--color-border);
+  padding-top: var(--space-24);
+  margin-top: var(--space-24);
+  border-top: 1px solid var(--color-border);
+}
+
+.footer-support-btn {
+  margin-top: var(--space-16);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-32);
+}
+
+.footer-contacts {
+  min-width: 200px;
+}
+
+.footer-contacts h4 {
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-12);
+  font-size: var(--font-size-lg);
+}
+
+.footer-contacts ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-contacts li {
+  margin-bottom: var(--space-8);
+}
+
+.footer-contacts a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.footer-contacts a:hover {
+  color: var(--color-primary);
 }
 
 .field-header h4 {
@@ -1719,13 +1760,53 @@ main {
   color: var(--color-text-secondary);
 }
 
-.recommendation {
-  background: var(--color-bg-2);
-  padding: var(--space-20);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
+.recommend.wallet-address {
+  background: var(--color-surface-secondary);
+  padding: var(--space-12);
+  border-radius: var(--radius-base);
+  font-family: 'Courier New', monospace;
+  font-size: var(--font-size-sm);
+  word-break: break-all;
+  margin: var(--space-16) 0;
+  position: relative;
+}
+
+/* Стили для модального окна поддержки */
+.support-contact-info {
+  text-align: center;
+}
+
+.email-contact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  margin: var(--space-16) 0;
+  padding: var(--space-12);
+  background: var(--color-surface-secondary);
+  border-radius: var(--radius-base);
+}
+
+.email-contact i {
+  color: var(--color-primary);
   font-size: var(--font-size-lg);
+}
+
+.email-contact a {
+  color: var(--color-primary);
+  text-decoration: none;
   font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+}
+
+.email-contact a:hover {
+  text-decoration: underline;
+}
+
+.support-note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-16);
 }
 
 .results-actions {
@@ -1791,7 +1872,11 @@ main {
   }
 
   .hamburger {
-    display: flex;
+    display: none;
+  }
+  
+  .mobile-hamburger {
+    display: none;
   }
 
   .nav-menu {
@@ -2445,7 +2530,11 @@ main {
   }
   
   .hamburger {
-    display: flex;
+    display: none;
+  }
+  
+  .mobile-hamburger {
+    display: none;
   }
 }
 
@@ -2491,7 +2580,7 @@ main {
   /* Правая группа иконок */
   .nav-actions {
     display: flex !important;
-    gap: var(--space-8) !important;
+    gap: 6px !important;
     align-items: center !important;
     order: 2 !important;
     position: relative !important;
@@ -2515,6 +2604,7 @@ main {
     cursor: pointer !important;
     transition: all var(--duration-fast) var(--ease-standard) !important;
     order: 1 !important;
+    margin-left: 4px !important;
   }
   
   .mobile-support-icon i {
@@ -2533,6 +2623,7 @@ main {
     border-radius: 50% !important;
     background: var(--color-surface-secondary) !important;
     order: 2 !important;
+    margin-left: 2px !important;
   }
   
   .theme-toggle i {
@@ -2552,11 +2643,12 @@ main {
   }
   
   .user-button i {
-    font-size: 12px !important;
+    font-size: 16px !important;
+    color: var(--color-text-primary) !important;
   }
   
-  /* Гамбургер-меню - в самом конце */
-  .hamburger {
+  /* Новое гамбургер-меню */
+  .mobile-hamburger {
     display: flex !important;
     flex-direction: column !important;
     width: 32px !important;
@@ -2569,52 +2661,67 @@ main {
     border-radius: 50% !important;
     background: var(--color-surface-secondary) !important;
     padding: 6px !important;
-    margin-left: 8px !important;
+    border: none !important;
     flex-shrink: 0 !important;
+    position: relative !important;
+    z-index: 1001 !important;
   }
   
-  .hamburger span {
+  .mobile-hamburger span {
     display: block !important;
-    width: 18px !important;
+    width: 16px !important;
     height: 2px !important;
-    background-color: var(--color-text-primary) !important;
+    background-color: var(--color-primary) !important;
     transition: all 0.3s ease !important;
     border-radius: 1px !important;
   }
   
-  /* Мобильное меню навигации */
+  /* Скрываем старое гамбургер-меню */
+  .hamburger {
+    display: none !important;
+  }
+  
+  /* Компактное мобильное меню навигации */
   .nav-menu.active {
     display: flex !important;
     flex-direction: column !important;
     position: absolute !important;
-    top: 100% !important;
-    left: 0 !important;
+    top: calc(100% + 8px) !important;
     right: 0 !important;
+    left: auto !important;
+    width: 200px !important;
     background: var(--color-surface) !important;
     border-radius: var(--radius-base) !important;
-    padding: var(--space-12) !important;
+    padding: var(--space-8) !important;
     box-shadow: var(--shadow-lg) !important;
     z-index: 1000 !important;
-    gap: var(--space-8) !important;
+    gap: var(--space-4) !important;
+    border: 1px solid var(--color-border) !important;
   }
   
   .nav-menu.active .nav-link {
-    padding: var(--space-8) var(--space-12) !important;
+    padding: var(--space-6) var(--space-8) !important;
     border-radius: var(--radius-sm) !important;
-    text-align: center !important;
+    text-align: left !important;
+    font-size: 14px !important;
+    transition: background-color 0.2s ease !important;
   }
   
-  /* Анимация гамбургера */
-  .hamburger.active span:nth-child(1) {
-    transform: rotate(45deg) translate(5px, 5px) !important;
+  .nav-menu.active .nav-link:hover {
+    background-color: var(--color-surface-secondary) !important;
   }
   
-  .hamburger.active span:nth-child(2) {
+  /* Анимация нового гамбургера */
+  .mobile-hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(4px, 4px) !important;
+  }
+  
+  .mobile-hamburger.active span:nth-child(2) {
     opacity: 0 !important;
   }
   
-  .hamburger.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -6px) !important;
+  .mobile-hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px) !important;
   }
   
   .user-dropdown {

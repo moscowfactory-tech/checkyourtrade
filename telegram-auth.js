@@ -150,31 +150,51 @@ function hideTelegramMainButton() {
     }
 }
 
-// Функция обновления статистики пользователя
-function updateUserStats() {
+// Функция обновления статистики пользователя из БД
+async function updateUserStats() {
     const analysesCountEl = document.getElementById('analysesCount');
     const strategiesCountEl = document.getElementById('strategiesCount');
     
     if (analysesCountEl && strategiesCountEl) {
-        // Получаем количество анализов
         let analysesCount = 0;
-        if (typeof window.savedAnalyses !== 'undefined' && Array.isArray(window.savedAnalyses)) {
-            analysesCount = window.savedAnalyses.length;
+        let strategiesCount = 0;
+        
+        // Получаем количество анализов из Supabase
+        if (window.supabase && getCurrentUserId()) {
+            try {
+                const { count: analysesDbCount } = await window.supabase
+                    .from('analyses')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', getCurrentUserId());
+                
+                if (analysesDbCount !== null) {
+                    analysesCount = analysesDbCount;
+                }
+            } catch (error) {
+                console.warn('Error counting analyses from DB:', error);
+                // Fallback к локальным данным
+                if (typeof window.savedAnalyses !== 'undefined' && Array.isArray(window.savedAnalyses)) {
+                    analysesCount = window.savedAnalyses.length;
+                }
+            }
         } else {
-            // Пробуем получить из localStorage как fallback
-            const localAnalyses = localStorage.getItem('savedAnalyses');
-            if (localAnalyses) {
-                try {
-                    const parsed = JSON.parse(localAnalyses);
-                    analysesCount = Array.isArray(parsed) ? parsed.length : 0;
-                } catch (e) {
-                    analysesCount = 0;
+            // Fallback к локальным данным если нет Supabase
+            if (typeof window.savedAnalyses !== 'undefined' && Array.isArray(window.savedAnalyses)) {
+                analysesCount = window.savedAnalyses.length;
+            } else {
+                const localAnalyses = localStorage.getItem('savedAnalyses');
+                if (localAnalyses) {
+                    try {
+                        const parsed = JSON.parse(localAnalyses);
+                        analysesCount = Array.isArray(parsed) ? parsed.length : 0;
+                    } catch (e) {
+                        analysesCount = 0;
+                    }
                 }
             }
         }
         
-        // Получаем количество стратегий
-        let strategiesCount = 0;
+        // Получаем количество стратегий (стратегии хранятся локально)
         if (typeof window.strategies !== 'undefined' && Array.isArray(window.strategies)) {
             strategiesCount = window.strategies.length;
         } else {
@@ -189,14 +209,27 @@ function updateUserStats() {
                 }
             }
         }
-        
-        analysesCountEl.textContent = analysesCount;
-        strategiesCountEl.textContent = strategiesCount;
+        // Обновляем счетчики
+        if (analysesCountEl && strategiesCountEl) {
+            analysesCountEl.textContent = analysesCount;
+            strategiesCountEl.textContent = strategiesCount;
+            
+            console.log('✅ User stats updated:', { 
+                analysesCount, 
+                strategiesCount,
+                userId: getCurrentUserId(),
+                supabaseAvailable: !!window.supabase
+            });
+        } else {
+            console.warn('⚠️ Stats elements not found in DOM:', {
+                analysesCountEl: !!analysesCountEl,
+                strategiesCountEl: !!strategiesCountEl
+            });
+        }
     }
 }
 
-// Экспорт функций
-window.initializeTelegramWebApp = initializeTelegramWebApp;
+// Экспорт функций в глобальную область
 window.getTelegramUserId = getTelegramUserId;
 window.getTelegramUserData = getTelegramUserData;
 window.isRunningInTelegram = isRunningInTelegram;
