@@ -283,8 +283,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 // Event Listeners Setup
 function setupEventListeners() {
     // Initialize Support Modal Elements
-    supportProjectBtn = document.getElementById('newSupportProjectBtn');
-    supportProjectFooterBtn = document.getElementById('newSupportProjectFooterBtn');
+    supportProjectBtn = document.getElementById('supportProjectBtn');
+    supportProjectFooterBtn = document.getElementById('footerSupportBtn');
     supportModal = document.getElementById('supportModal');
     closeSupportModalBtn = document.getElementById('closeSupportModalBtn');
     closeSupportBtn = document.getElementById('closeSupportBtn');
@@ -810,6 +810,11 @@ async function handleStrategySubmit(e) {
             strategy.id = savedStrategy.id;
             strategies.push(strategy);
             console.log('✅ Strategy saved successfully:', savedStrategy);
+            
+            // Обновляем счетчик стратегий
+            if (window.incrementStrategiesCount) {
+                window.incrementStrategiesCount();
+            }
             
             // Обновляем селект стратегий для анализа
             updateStrategySelect();
@@ -1498,6 +1503,11 @@ async function saveCurrentAnalysis() {
             
             // Добавляем в локальный массив для отображения
             savedAnalyses.push(analysis);
+            
+            // Обновляем счетчик анализов
+            if (window.incrementAnalysesCount) {
+                window.incrementAnalysesCount();
+            }
             
             console.log('✅ Analysis saved to database:', savedAnalysis);
             

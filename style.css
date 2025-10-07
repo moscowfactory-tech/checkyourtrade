@@ -907,9 +907,14 @@ main {
   color: var(--color-text);
 }
 
-.feature-card p {
+.footer-brand p {
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  margin: 0 0 var(--space-16) 0;
+  line-height: 1.5;
+}
+
+.footer-support-btn {
+  margin-top: var(--space-8);
 }
 
 /* Section Headers */
