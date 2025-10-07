@@ -243,6 +243,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Простая загрузка стратегий из базы данных
     strategies = [];
     
+    // Подождем немного для инициализации Supabase
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     if (window.supabase && typeof window.supabase.from === 'function') {
         try {
             console.log('🔄 Loading strategies from database...');
@@ -254,25 +257,39 @@ document.addEventListener('DOMContentLoaded', async function() {
                 
             if (error) {
                 console.error('❌ Error loading strategies:', error);
+                console.log('❌ Full error details:', JSON.stringify(error, null, 2));
             } else if (dbStrategies && Array.isArray(dbStrategies)) {
                 strategies = dbStrategies;
                 console.log(`✅ Loaded ${strategies.length} strategies from database`);
+                console.log('✅ Strategies data:', strategies);
         
-        // Обновляем статистику пользователя
-        if (typeof window.updateUserStats === 'function') {
-            window.updateUserStats();
-        }
+                // Обновляем статистику пользователя
+                if (typeof window.updateUserStats === 'function') {
+                    window.updateUserStats();
+                }
             } else {
                 console.log('📝 No strategies found in database');
+                console.log('📝 dbStrategies:', dbStrategies);
             }
         } catch (error) {
             console.error('❌ Exception loading strategies:', error);
+            console.log('❌ Full exception:', JSON.stringify(error, null, 2));
         }
     } else {
         console.warn('⚠️ Supabase client not available or not functional');
+        console.log('⚠️ window.supabase:', window.supabase);
+        console.log('⚠️ typeof window.supabase.from:', typeof window.supabase?.from);
+        
+        // Используем sample стратегии как fallback
+        console.log('🔄 Loading sample strategies as fallback...');
+        strategies = [...sampleStrategies];
+        console.log(`✅ Loaded ${strategies.length} sample strategies as fallback`);
     }
     
     setupEventListeners();
+    
+    // Рендерим стратегии после загрузки
+    console.log('🎨 About to render strategies. Current count:', strategies.length);
     renderStrategies();
     updateStrategySelect();
     showSection('home');
