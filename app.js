@@ -337,7 +337,7 @@ function setupEventListeners() {
     hamburger.addEventListener('click', toggleMobileMenu);
     
     // User Profile Event Listeners
-    const userProfileBtn = document.getElementById('userProfileBtn');
+    const userProfileBtn = document.getElementById('userButton');
     const userDropdown = document.getElementById('userDropdown');
     
     if (userProfileBtn && userDropdown) {
@@ -478,6 +478,13 @@ function setupEventListeners() {
         supportModal.addEventListener('click', (e) => {
             if (e.target === supportModal) closeSupportModal();
         });
+    }
+    
+    // Мобильная иконка поддержки
+    const mobileSupportIcon = document.getElementById('mobileSupportIcon');
+    if (mobileSupportIcon) {
+        mobileSupportIcon.addEventListener('click', openSupportModal);
+        console.log('Mobile support icon event listener added');
     }
 }
 
@@ -1801,10 +1808,19 @@ function openSupportModal() {
     } else {
         console.error('supportModal not found');
     }
-    setTimeout(() => {
-        supportModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }, 300);
+}
+
+function closeSupportModal() {
+    if (supportModal) {
+        supportModal.classList.remove('active');
+        setTimeout(() => {
+            supportModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }, 300);
+    }
+}
+
+async function copyWalletAddress() {
     if (!walletAddress) {
         console.error('Wallet address element not found');
         return;
