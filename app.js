@@ -20,10 +20,10 @@ function loadStrategiesFromLocalStorage() {
             console.log('Strategies loaded from localStorage:', strategies);
         } catch (e) {
             console.error('Error parsing strategies from localStorage:', e);
-            strategies = [...sampleStrategies];
+            strategies = []; // Новые пользователи начинают с пустого списка
         }
     } else {
-        strategies = [...sampleStrategies];
+        strategies = []; // Новые пользователи начинают с пустого списка
     }
 }
 
