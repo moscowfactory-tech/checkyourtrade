@@ -14,18 +14,30 @@ async function countAnalysesFromDB() {
         // Получаем ID текущего пользователя Telegram
         const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
         
-        let query = window.supabase
-            .from('analyses')
-            .select('id', { count: 'exact' });
-        
-        // Фильтруем по пользователю
-        if (telegramUserId) {
-            query = query.eq('telegram_user_id', telegramUserId);
-            console.log('📊 Counting analyses for user:', telegramUserId);
-        } else {
+        if (!telegramUserId) {
             console.log('⚠️ No telegram user ID for analyses count');
-            return 0; // Возвращаем 0 для неавторизованных пользователей
+            return 0;
         }
+        
+        // Сначала найдем user_id по telegram_id
+        const { data: userData } = await window.supabase
+            .from('users')
+            .select('id')
+            .eq('telegram_id', telegramUserId)
+            .single();
+        
+        if (!userData) {
+            console.log('📊 User not found in DB for analyses count');
+            return 0;
+        }
+        
+        // Проверяем, какая таблица существует: analyses или analysis_results
+        let query = window.supabase
+            .from('analysis_results') // По схеме recreate-database.sql
+            .select('id', { count: 'exact' })
+            .eq('user_id', userData.id);
+        
+        console.log('📊 Counting analyses for user_id:', userData.id);
         
         const { data, error } = await query;
             
@@ -62,13 +74,25 @@ async function countStrategiesFromDB() {
             return 0;
         }
         
-        // Считаем стратегии через связь с таблицей users
+        // Сначала найдем user_id по telegram_id
+        const { data: userData } = await window.supabase
+            .from('users')
+            .select('id')
+            .eq('telegram_id', telegramUserId)
+            .single();
+        
+        if (!userData) {
+            console.log('📊 User not found in DB for strategies count');
+            return 0;
+        }
+        
+        // Считаем стратегии по user_id
         let query = window.supabase
             .from('strategies')
             .select('id', { count: 'exact' })
-            .eq('users.telegram_id', telegramUserId);
+            .eq('user_id', userData.id);
         
-        console.log('📊 Counting strategies for telegram user:', telegramUserId);
+        console.log('📊 Counting strategies for user_id:', userData.id);
         
         const { data, error } = await query;
             

@@ -154,92 +154,20 @@ function hideTelegramMainButton() {
         window.Telegram.WebApp.MainButton.hide();
     }
 }
+// Функция обновления статистики ПОЛНОСТЬЮ УДАЛЕНА
+// Используем только stats-counter.js для статистики
 
-// Функция обновления статистики пользователя из БД
-async function updateUserStats() {
-    const analysesCountEl = document.getElementById('analysesCount');
-    const strategiesCountEl = document.getElementById('strategiesCount');
-    
-    if (analysesCountEl && strategiesCountEl) {
-        let analysesCount = 0;
-        let strategiesCount = 0;
-        
-        // Получаем количество анализов из Supabase
-        if (window.supabase && getCurrentUserId()) {
-            try {
-                const { count: analysesDbCount } = await window.supabase
-                    .from('analyses')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('user_id', getCurrentUserId());
-                
-                if (analysesDbCount !== null) {
-                    analysesCount = analysesDbCount;
-                }
-            } catch (error) {
-                console.warn('Error counting analyses from DB:', error);
-                // Fallback к локальным данным
-                if (typeof window.savedAnalyses !== 'undefined' && Array.isArray(window.savedAnalyses)) {
-                    analysesCount = window.savedAnalyses.length;
-                }
-            }
-        } else {
-            // Fallback к локальным данным если нет Supabase
-            if (typeof window.savedAnalyses !== 'undefined' && Array.isArray(window.savedAnalyses)) {
-                analysesCount = window.savedAnalyses.length;
-            } else {
-                const localAnalyses = localStorage.getItem('savedAnalyses');
-                if (localAnalyses) {
-                    try {
-                        const parsed = JSON.parse(localAnalyses);
-                        analysesCount = Array.isArray(parsed) ? parsed.length : 0;
-                    } catch (e) {
-                        analysesCount = 0;
-                    }
-                }
-            }
-        }
-        
-        // Получаем количество стратегий (стратегии хранятся локально)
-        if (typeof window.strategies !== 'undefined' && Array.isArray(window.strategies)) {
-            strategiesCount = window.strategies.length;
-        } else {
-            // Пробуем получить из localStorage как fallback
-            const localStrategies = localStorage.getItem('strategies');
-            if (localStrategies) {
-                try {
-                    const parsed = JSON.parse(localStrategies);
-                    strategiesCount = Array.isArray(parsed) ? parsed.length : 0;
-                } catch (e) {
-                    strategiesCount = 0;
-                }
-            }
-        }
-        // Обновляем счетчики
-        if (analysesCountEl && strategiesCountEl) {
-            analysesCountEl.textContent = analysesCount;
-            strategiesCountEl.textContent = strategiesCount;
-            
-            console.log('✅ User stats updated:', { 
-                analysesCount, 
-                strategiesCount,
-                userId: getCurrentUserId(),
-                supabaseAvailable: !!window.supabase
-            });
-        } else {
-            console.warn('⚠️ Stats elements not found in DOM:', {
-                analysesCountEl: !!analysesCountEl,
-                strategiesCountEl: !!strategiesCountEl
-            });
-        }
-    }
+// Остальные функции Telegram
+function getCurrentUserId() {
+    // Возвращаем UUID пользователя для совместимости
+    return telegramUser ? telegramUser.id : null;
 }
 
 // Экспорт функций в глобальную область
 window.getTelegramUserId = getTelegramUserId;
 window.getTelegramUserData = getTelegramUserData;
-window.isRunningInTelegram = isRunningInTelegram;
 window.syncTelegramTheme = syncTelegramTheme;
 window.sendToTelegram = sendToTelegram;
 window.showTelegramMainButton = showTelegramMainButton;
 window.hideTelegramMainButton = hideTelegramMainButton;
-window.updateUserStats = updateUserStats;
+// window.updateUserStats удалена - используем stats-counter.js

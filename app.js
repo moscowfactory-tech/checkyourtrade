@@ -244,21 +244,44 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Получаем ID текущего пользователя Telegram
             const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
             
-            let query = window.supabase
-                .from('strategies')
-                .select('*, users!inner(telegram_id)')
-                .order('created_at', { ascending: false });
+            let dbStrategies = [];
+            let error = null;
             
-            // Фильтруем по пользователю через связь с таблицей users
             if (telegramUserId) {
-                query = query.eq('users.telegram_id', telegramUserId);
-                console.log('👤 Loading strategies for telegram user:', telegramUserId);
+                // Сначала найдем user_id по telegram_id
+                const { data: userData } = await window.supabase
+                    .from('users')
+                    .select('id')
+                    .eq('telegram_id', telegramUserId)
+                    .single();
+                
+                if (userData) {
+                    // Загружаем стратегии по user_id
+                    const result = await window.supabase
+                        .from('strategies')
+                        .select('*')
+                        .eq('user_id', userData.id)
+                        .order('created_at', { ascending: false });
+                    
+                    dbStrategies = result.data || [];
+                    error = result.error;
+                    console.log('👤 Loading strategies for user_id:', userData.id);
+                } else {
+                    console.log('👤 User not found in DB, will be created on first strategy save');
+                    dbStrategies = [];
+                }
             } else {
+                // Загружаем публичные стратегии
+                const result = await window.supabase
+                    .from('strategies')
+                    .select('*')
+                    .eq('is_public', true)
+                    .order('created_at', { ascending: false });
+                
+                dbStrategies = result.data || [];
+                error = result.error;
                 console.log('⚠️ No telegram user ID, loading public strategies only');
-                query = query.eq('is_public', true);
             }
-            
-            const { data: dbStrategies, error } = await query;
                 
             if (error) {
                 console.error('❌ Error loading strategies:', error);
@@ -958,6 +981,73 @@ function editStrategy(id) {
     const strategy = strategies.find(s => s.id === id);
     if (strategy) {
         openModal(strategy);
+    }
+}
+
+// Функция обновления стратегии в БД
+async function updateStrategyInDB(strategyId, updatedData) {
+    try {
+        console.log('🔄 Updating strategy in database...', strategyId);
+        
+        const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        
+        if (!telegramUserId) {
+            console.error('❌ Cannot update strategy: No telegram user ID');
+            showNotification('Необходима авторизация через Telegram', 'error');
+            return false;
+        }
+        
+        // Найдем user_id
+        const { data: userData } = await window.supabase
+            .from('users')
+            .select('id')
+            .eq('telegram_id', telegramUserId)
+            .single();
+        
+        if (!userData) {
+            console.error('❌ User not found for telegram_id:', telegramUserId);
+            showNotification('Пользователь не найден', 'error');
+            return false;
+        }
+        
+        // Обновляем стратегию
+        const { data: updatedStrategy, error } = await window.supabase
+            .from('strategies')
+            .update({
+                name: updatedData.name,
+                description: updatedData.description,
+                fields: updatedData.fields
+            })
+            .eq('id', strategyId)
+            .eq('user_id', userData.id) // Проверяем владельца
+            .select()
+            .single();
+        
+        if (error) {
+            console.error('❌ Error updating strategy:', error);
+            showNotification('Ошибка обновления стратегии: ' + error.message, 'error');
+            return false;
+        }
+        
+        // Обновляем локальные данные
+        const strategyIndex = strategies.findIndex(s => s.id === strategyId);
+        if (strategyIndex !== -1) {
+            strategies[strategyIndex] = updatedStrategy;
+        }
+        
+        console.log('✅ Strategy updated successfully:', updatedStrategy);
+        showNotification('Стратегия обновлена', 'success');
+        
+        // Обновляем интерфейс
+        renderStrategies();
+        updateStrategySelect();
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Exception updating strategy:', error);
+        showNotification('Ошибка обновления стратегии', 'error');
+        return false;
     }
 }
 
@@ -2002,6 +2092,7 @@ async function refreshStrategiesFromDB() {
 // Make functions globally accessible for onclick handlers
 window.openModal = openModal;
 window.editStrategy = editStrategy;
+window.updateStrategyInDB = updateStrategyInDB;
 window.deleteStrategy = deleteStrategy;
 window.viewAnalysis = viewAnalysis;
 window.refreshStrategiesFromDB = refreshStrategiesFromDB;
