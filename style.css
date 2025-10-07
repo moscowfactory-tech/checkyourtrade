@@ -1977,7 +1977,18 @@ main {
   }
 
   .color-options {
-    gap: var(--space-16);
+    gap: var(--space-12);
+  }
+  
+  /* Уменьшаем кружки для мобильных */
+  .color-circle {
+    width: 60px !important;
+    height: 60px !important;
+    border-width: 3px !important;
+  }
+  
+  .color-option {
+    gap: var(--space-8) !important;
   }
 
   .color-circle {
@@ -2383,23 +2394,23 @@ main {
 
 .user-dropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: 100%;
   right: 0;
-  min-width: 280px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  padding: var(--space-16);
+  min-width: 280px;
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
-  transition: all var(--duration-normal) var(--ease-standard);
+  transition: all 0.3s ease;
 }
 
-.user-dropdown.hidden {
-  display: none;
+/* Навигация в профиле */
+.profile-navigation {
+  padding: var(--space-8) 0;
 }
 
 .user-dropdown.active {
@@ -2456,6 +2467,41 @@ main {
   height: 1px;
   background: var(--color-border);
   margin: var(--space-12) 0;
+}
+
+/* Навигация в профиле */
+.profile-navigation {
+  padding: var(--space-8) 0;
+}
+
+.profile-nav-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-12) var(--space-16);
+  background: none;
+  border: none;
+  color: #e91e63;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.profile-nav-item:hover {
+  background: rgba(233, 30, 99, 0.1);
+  color: #e91e63;
+}
+
+.profile-nav-item i {
+  margin-right: var(--space-12);
+  width: 16px;
+  text-align: center;
+  color: #e91e63;
+}
+
+.profile-nav-item span {
+  flex: 1;
 }
 
 .dropdown-item {

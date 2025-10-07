@@ -280,10 +280,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('⚠️ window.supabase:', window.supabase);
         console.log('⚠️ typeof window.supabase.from:', typeof window.supabase?.from);
         
-        // Используем sample стратегии как fallback
-        console.log('🔄 Loading sample strategies as fallback...');
-        strategies = [...sampleStrategies];
-        console.log(`✅ Loaded ${strategies.length} sample strategies as fallback`);
+        // Новые пользователи начинают с пустым списком
+        console.log('📝 New user - starting with empty strategies list');
+        strategies = [];
     }
     
     setupEventListeners();
@@ -336,6 +335,71 @@ function setupEventListeners() {
     });
     
     hamburger.addEventListener('click', toggleMobileMenu);
+    
+    // User Profile Event Listeners
+    const userProfileBtn = document.getElementById('userProfileBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    
+    if (userProfileBtn && userDropdown) {
+        userProfileBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('👤 User profile clicked');
+            
+            // Переключаем видимость dropdown
+            const isHidden = userDropdown.classList.contains('hidden');
+            
+            if (isHidden) {
+                userDropdown.classList.remove('hidden');
+                console.log('👤 User dropdown opened');
+                
+                // Обновляем статистику при открытии
+                if (window.updateUserStats) {
+                    setTimeout(window.updateUserStats, 100);
+                }
+            } else {
+                userDropdown.classList.add('hidden');
+                console.log('👤 User dropdown closed');
+            }
+        });
+        
+        // Закрытие при клике вне dropdown
+        document.addEventListener('click', function(e) {
+            if (!userDropdown.contains(e.target) && !userProfileBtn.contains(e.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+        
+        // Обработчики навигации в профиле
+        const profileNavConstructor = document.getElementById('profileNavConstructor');
+        const profileNavAnalysis = document.getElementById('profileNavAnalysis');
+        
+        if (profileNavConstructor) {
+            profileNavConstructor.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('👤 Profile navigation: Constructor');
+                showSection('constructor');
+                userDropdown.classList.add('hidden');
+            });
+        }
+        
+        if (profileNavAnalysis) {
+            profileNavAnalysis.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('👤 Profile navigation: Analysis');
+                showSection('analysis');
+                userDropdown.classList.add('hidden');
+            });
+        }
+        
+        console.log('👤 User profile initialized');
+    } else {
+        console.error('👤 User profile elements not found:', {
+            userProfileBtn: !!userProfileBtn,
+            userDropdown: !!userDropdown
+        });
+    }
     
     createStrategyBtn.addEventListener('click', () => openModal());
     closeModalBtn.addEventListener('click', closeModal);
@@ -1734,21 +1798,13 @@ function openSupportModal() {
         supportModal.classList.remove('hidden');
         supportModal.classList.add('active');
         document.body.style.overflow = 'hidden';
-        console.log('Support modal opened');
     } else {
-        console.error('supportModal element not found');
+        console.error('supportModal not found');
     }
-}
-
-function closeSupportModal() {
-    supportModal.classList.remove('active');
     setTimeout(() => {
         supportModal.classList.add('hidden');
         document.body.style.overflow = 'auto';
     }, 300);
-}
-
-async function copyWalletAddress() {
     if (!walletAddress) {
         console.error('Wallet address element not found');
         return;
