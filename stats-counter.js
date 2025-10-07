@@ -11,9 +11,23 @@ async function countAnalysesFromDB() {
             return 0;
         }
         
-        const { data, error } = await window.supabase
+        // Получаем ID текущего пользователя Telegram
+        const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        
+        let query = window.supabase
             .from('analyses')
             .select('id', { count: 'exact' });
+        
+        // Фильтруем по пользователю
+        if (telegramUserId) {
+            query = query.eq('telegram_user_id', telegramUserId);
+            console.log('📊 Counting analyses for user:', telegramUserId);
+        } else {
+            console.log('⚠️ No telegram user ID for analyses count');
+            return 0; // Возвращаем 0 для неавторизованных пользователей
+        }
+        
+        const { data, error } = await query;
             
         if (error) {
             console.error('📊 Error counting analyses:', error);
@@ -40,9 +54,23 @@ async function countStrategiesFromDB() {
             return 0;
         }
         
-        const { data, error } = await window.supabase
+        // Получаем ID текущего пользователя Telegram
+        const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        
+        let query = window.supabase
             .from('strategies')
             .select('id', { count: 'exact' });
+        
+        // Фильтруем по пользователю
+        if (telegramUserId) {
+            query = query.eq('telegram_user_id', telegramUserId);
+            console.log('📊 Counting strategies for user:', telegramUserId);
+        } else {
+            console.log('⚠️ No telegram user ID for strategies count');
+            return 0; // Возвращаем 0 для неавторизованных пользователей
+        }
+        
+        const { data, error } = await query;
             
         if (error) {
             console.error('📊 Error counting strategies:', error);

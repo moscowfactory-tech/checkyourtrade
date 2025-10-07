@@ -95,6 +95,11 @@ function getTelegramUserData() {
     return telegramUser;
 }
 
+// Делаем функции глобально доступными
+window.getTelegramUserId = getTelegramUserId;
+window.getTelegramUserData = getTelegramUserData;
+window.telegramUser = telegramUser;
+
 // Проверка, запущено ли в Telegram
 function isRunningInTelegram() {
     return isTelegramWebApp && telegramUser !== null;

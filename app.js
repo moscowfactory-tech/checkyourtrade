@@ -250,10 +250,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         try {
             console.log('🔄 Loading strategies from database...');
             
-            const { data: dbStrategies, error } = await window.supabase
+            // Получаем ID текущего пользователя Telegram
+            const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+            
+            let query = window.supabase
                 .from('strategies')
                 .select('*')
                 .order('created_at', { ascending: false });
+            
+            // Фильтруем по пользователю, если есть ID
+            if (telegramUserId) {
+                query = query.eq('telegram_user_id', telegramUserId);
+                console.log('👤 Loading strategies for user:', telegramUserId);
+            } else {
+                console.log('⚠️ No telegram user ID, loading all strategies (not recommended)');
+            }
+            
+            const { data: dbStrategies, error } = await query;
                 
             if (error) {
                 console.error('❌ Error loading strategies:', error);
@@ -527,10 +540,21 @@ async function showSection(sectionId) {
             
             if (window.supabase && typeof window.supabase.from === 'function') {
                 try {
-                    const { data: dbStrategies, error } = await window.supabase
+                    // Получаем ID текущего пользователя Telegram
+                    const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+                    
+                    let query = window.supabase
                         .from('strategies')
                         .select('*')
                         .order('created_at', { ascending: false });
+                    
+                    // Фильтруем по пользователю
+                    if (telegramUserId) {
+                        query = query.eq('telegram_user_id', telegramUserId);
+                        console.log('👤 Refreshing strategies for user:', telegramUserId);
+                    }
+                    
+                    const { data: dbStrategies, error } = await query;
                         
                     if (error) {
                         console.error('❌ Error loading strategies:', error);
@@ -879,12 +903,22 @@ async function handleStrategySubmit(e) {
         try {
             console.log('💾 Saving strategy to database...');
             
+            // Получаем ID текущего пользователя Telegram
+            const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+            
+            if (!telegramUserId) {
+                console.error('❌ Cannot save strategy: No telegram user ID');
+                showNotification('Необходима авторизация через Telegram', 'error');
+                return;
+            }
+            
             const { data: savedStrategy, error } = await window.supabase
                 .from('strategies')
                 .insert({
                     name: strategyName,
                     description: strategyDescription,
-                    fields: fields
+                    fields: JSON.stringify(strategyFields),
+                    telegram_user_id: telegramUserId
                 })
                 .select()
                 .single();
@@ -928,17 +962,50 @@ function editStrategy(id) {
     }
 }
 
-function deleteStrategy(id) {
+async function deleteStrategy(id) {
     if (confirm('Вы уверены, что хотите удалить эту стратегию?')) {
-        strategies = strategies.filter(s => s.id !== id);
-        console.log('Strategy deleted, ID:', id);
-        
-        // Сохраняем стратегии в localStorage
-        saveStrategiesToLocalStorage();
-        
-        renderStrategies();
-        updateStrategySelect();
-        showNotification('Стратегия удалена', 'info');
+        try {
+            // Получаем ID текущего пользователя Telegram
+            const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+            
+            if (!telegramUserId) {
+                console.error('❌ Cannot delete strategy: No telegram user ID');
+                showNotification('Необходима авторизация через Telegram', 'error');
+                return;
+            }
+            
+            // Удаляем из базы данных
+            const { error } = await window.supabase
+                .from('strategies')
+                .delete()
+                .eq('id', id)
+                .eq('telegram_user_id', telegramUserId); // Проверяем, что стратегия принадлежит пользователю
+            
+            if (error) {
+                console.error('❌ Error deleting strategy from database:', error);
+                showNotification('Ошибка удаления стратегии: ' + error.message, 'error');
+                return;
+            }
+            
+            // Удаляем из локального массива
+            strategies = strategies.filter(s => s.id !== id);
+            console.log('✅ Strategy deleted from database and local array, ID:', id);
+            
+            // Обновляем интерфейс
+            renderStrategies();
+            updateStrategySelect();
+            
+            // Обновляем статистику
+            if (window.updateUserStats) {
+                window.updateUserStats();
+            }
+            
+            showNotification('Стратегия удалена', 'success');
+            
+        } catch (error) {
+            console.error('❌ Exception deleting strategy:', error);
+            showNotification('Ошибка удаления стратегии', 'error');
+        }
     }
 }
 
