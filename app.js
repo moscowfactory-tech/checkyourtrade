@@ -6,25 +6,16 @@ let fieldCounter = 0;
 let inputCounter = 0;
 let savedAnalyses = [];
 
-// Функции для работы с localStorage
+// Функции для работы с localStorage (ОТКЛЮЧЕНО - используем только Supabase)
 function saveStrategiesToLocalStorage() {
-    localStorage.setItem('strategies', JSON.stringify(strategies));
-    console.log('Strategies saved to localStorage:', strategies);
+    // ОТКЛЮЧЕНО: Не сохраняем в localStorage, только в Supabase
+    console.log('⚠️ localStorage saving disabled - using Supabase only');
 }
 
 function loadStrategiesFromLocalStorage() {
-    const savedStrategies = localStorage.getItem('strategies');
-    if (savedStrategies) {
-        try {
-            strategies = JSON.parse(savedStrategies);
-            console.log('Strategies loaded from localStorage:', strategies);
-        } catch (e) {
-            console.error('Error parsing strategies from localStorage:', e);
-            strategies = []; // Новые пользователи начинают с пустого списка
-        }
-    } else {
-        strategies = []; // Новые пользователи начинают с пустого списка
-    }
+    // ОТКЛЮЧЕНО: Не загружаем из localStorage, только из Supabase
+    console.log('⚠️ localStorage loading disabled - using Supabase only');
+    strategies = []; // Пустой массив, данные будут загружены из БД
 }
 
 function saveAnalysesToLocalStorage() {
@@ -534,45 +525,13 @@ async function showSection(sectionId) {
         
         console.log('Section activated:', sectionId);
         
-        // Перезагружаем стратегии при переходе на конструктор или анализ
-        if (sectionId === 'constructor' || sectionId === 'analysis') {
-            console.log('🔄 Refreshing strategies for section:', sectionId);
-            
-            if (window.supabase && typeof window.supabase.from === 'function') {
-                try {
-                    // Получаем ID текущего пользователя Telegram
-                    const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
-                    
-                    let query = window.supabase
-                        .from('strategies')
-                        .select('*')
-                        .order('created_at', { ascending: false });
-                    
-                    // Фильтруем по пользователю
-                    if (telegramUserId) {
-                        query = query.eq('telegram_user_id', telegramUserId);
-                        console.log('👤 Refreshing strategies for user:', telegramUserId);
-                    }
-                    
-                    const { data: dbStrategies, error } = await query;
-                        
-                    if (error) {
-                        console.error('❌ Error loading strategies:', error);
-                    } else if (dbStrategies && Array.isArray(dbStrategies)) {
-                        strategies.length = 0; // Очищаем массив
-                        strategies.push(...dbStrategies); // Добавляем данные из БД
-                        console.log(`✅ Refreshed ${strategies.length} strategies`);
-                        
-                        if (sectionId === 'constructor') {
-                            renderStrategies();
-                        } else if (sectionId === 'analysis') {
-                            updateStrategySelect();
-                        }
-                    }
-                } catch (error) {
-                    console.error('❌ Exception loading strategies:', error);
-                }
-            }
+        // Отображаем стратегии без перезагрузки (используем уже загруженные данные)
+        if (sectionId === 'constructor') {
+            console.log('🏠 Showing constructor with current strategies:', strategies.length);
+            renderStrategies();
+        } else if (sectionId === 'analysis') {
+            console.log('📊 Showing analysis with current strategies:', strategies.length);
+            updateStrategySelect();
         }
     } else {
         console.error('Section not found:', sectionId);
@@ -917,7 +876,7 @@ async function handleStrategySubmit(e) {
                 .insert({
                     name: strategyName,
                     description: strategyDescription,
-                    fields: JSON.stringify(strategyFields),
+                    fields: strategyFields, // Не преобразуем в строку - Supabase сам обработает JSONB
                     telegram_user_id: telegramUserId
                 })
                 .select()
@@ -1931,10 +1890,67 @@ async function copyWalletAddress() {
     }
 }
 
+// Функция для принудительного обновления стратегий из БД
+async function refreshStrategiesFromDB() {
+    try {
+        console.log('🔄 Force refreshing strategies from database...');
+        
+        const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        
+        if (!telegramUserId) {
+            console.error('❌ Cannot refresh: No telegram user ID');
+            showNotification('Необходима авторизация через Telegram', 'error');
+            return;
+        }
+        
+        if (!window.supabase) {
+            console.error('❌ Supabase not available');
+            showNotification('Ошибка подключения к базе данных', 'error');
+            return;
+        }
+        
+        const { data: dbStrategies, error } = await window.supabase
+            .from('strategies')
+            .select('*')
+            .eq('telegram_user_id', telegramUserId)
+            .order('created_at', { ascending: false });
+            
+        if (error) {
+            console.error('❌ Error refreshing strategies:', error);
+            showNotification('Ошибка обновления стратегий: ' + error.message, 'error');
+            return;
+        }
+        
+        // Обновляем локальные данные
+        strategies.length = 0;
+        if (dbStrategies && Array.isArray(dbStrategies)) {
+            strategies.push(...dbStrategies);
+        }
+        
+        console.log(`✅ Strategies refreshed: ${strategies.length} found`);
+        
+        // Обновляем интерфейс
+        renderStrategies();
+        updateStrategySelect();
+        
+        // Обновляем статистику
+        if (window.updateUserStats) {
+            window.updateUserStats();
+        }
+        
+        showNotification(`Обновлено: ${strategies.length} стратегий`, 'success');
+        
+    } catch (error) {
+        console.error('❌ Exception refreshing strategies:', error);
+        showNotification('Ошибка обновления стратегий', 'error');
+    }
+}
+
 // Make functions globally accessible for onclick handlers
 window.openModal = openModal;
 window.editStrategy = editStrategy;
 window.deleteStrategy = deleteStrategy;
 window.viewAnalysis = viewAnalysis;
+window.refreshStrategiesFromDB = refreshStrategiesFromDB;
 window.deleteAnalysis = deleteAnalysis;
 window.strategies = strategies;
