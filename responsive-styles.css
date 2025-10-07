@@ -172,6 +172,33 @@
    АДАПТИВНЫЕ КНОПКИ И ЭЛЕМЕНТЫ
    ======================================== */
 
+/* Уменьшенные размеры кнопок */
+.btn {
+  padding: var(--space-6) var(--space-12); /* Уменьшено с var(--space-8) var(--space-16) */
+  font-size: 14px; /* Уменьшено */
+  min-height: 36px; /* Уменьшено с 44px */
+  border-radius: 6px; /* Уменьшено */
+}
+
+.btn--sm {
+  padding: var(--space-3) var(--space-8); /* Еще меньше для маленьких кнопок */
+  font-size: 12px;
+  min-height: 28px;
+}
+
+.btn--lg {
+  padding: var(--space-8) var(--space-16); /* Уменьшено для больших кнопок */
+  font-size: 16px;
+  min-height: 40px;
+}
+
+/* Кнопки-иконки */
+.btn-icon {
+  width: 32px; /* Уменьшено с 36px */
+  height: 32px;
+  padding: 6px;
+}
+
 /* Адаптивные кружки анализа */
 .color-circle {
   width: var(--circle-size);
@@ -237,6 +264,26 @@
   
   .user-stats {
     padding: 12px;
+  }
+  
+  /* Мобильные кнопки - еще меньше */
+  .btn {
+    padding: var(--space-4) var(--space-10);
+    font-size: 13px;
+    min-height: 32px;
+    border-radius: 5px;
+  }
+  
+  .btn--sm {
+    padding: var(--space-2) var(--space-6);
+    font-size: 11px;
+    min-height: 24px;
+  }
+  
+  .btn-icon {
+    width: 28px;
+    height: 28px;
+    padding: 4px;
   }
   
   /* Адаптивная сетка стратегий */

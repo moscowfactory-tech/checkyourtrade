@@ -246,15 +246,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             let query = window.supabase
                 .from('strategies')
-                .select('*')
+                .select('*, users!inner(telegram_id)')
                 .order('created_at', { ascending: false });
             
-            // Фильтруем по пользователю, если есть ID
+            // Фильтруем по пользователю через связь с таблицей users
             if (telegramUserId) {
-                query = query.eq('telegram_user_id', telegramUserId);
-                console.log('👤 Loading strategies for user:', telegramUserId);
+                query = query.eq('users.telegram_id', telegramUserId);
+                console.log('👤 Loading strategies for telegram user:', telegramUserId);
             } else {
-                console.log('⚠️ No telegram user ID, loading all strategies (not recommended)');
+                console.log('⚠️ No telegram user ID, loading public strategies only');
+                query = query.eq('is_public', true);
             }
             
             const { data: dbStrategies, error } = await query;
@@ -871,13 +872,52 @@ async function handleStrategySubmit(e) {
                 return;
             }
             
+            // Сначала найдем или создадим пользователя в таблице users
+            let userId = null;
+            
+            // Проверяем, есть ли пользователь в таблице users
+            const { data: existingUser } = await window.supabase
+                .from('users')
+                .select('id')
+                .eq('telegram_id', telegramUserId)
+                .single();
+            
+            if (existingUser) {
+                userId = existingUser.id;
+                console.log('👤 Found existing user:', userId);
+            } else {
+                // Создаем нового пользователя
+                const telegramUserData = window.getTelegramUserData ? window.getTelegramUserData() : {};
+                
+                const { data: newUser, error: userError } = await window.supabase
+                    .from('users')
+                    .insert({
+                        telegram_id: telegramUserId,
+                        username: telegramUserData.username || null,
+                        first_name: telegramUserData.first_name || null,
+                        last_name: telegramUserData.last_name || null
+                    })
+                    .select('id')
+                    .single();
+                
+                if (userError) {
+                    console.error('❌ Error creating user:', userError);
+                    showNotification('Ошибка создания пользователя: ' + userError.message, 'error');
+                    return;
+                }
+                
+                userId = newUser.id;
+                console.log('🆕 Created new user:', userId);
+            }
+            
+            // Теперь сохраняем стратегию
             const { data: savedStrategy, error } = await window.supabase
                 .from('strategies')
                 .insert({
                     name: strategyName,
                     description: strategyDescription,
-                    fields: strategyFields, // Не преобразуем в строку - Supabase сам обработает JSONB
-                    telegram_user_id: telegramUserId
+                    fields: strategyFields, // JSONB поле
+                    user_id: userId // UUID ссылка на users.id
                 })
                 .select()
                 .single();
@@ -933,12 +973,25 @@ async function deleteStrategy(id) {
                 return;
             }
             
-            // Удаляем из базы данных
+            // Сначала найдем user_id по telegram_id
+            const { data: userData } = await window.supabase
+                .from('users')
+                .select('id')
+                .eq('telegram_id', telegramUserId)
+                .single();
+            
+            if (!userData) {
+                console.error('❌ User not found for telegram_id:', telegramUserId);
+                showNotification('Пользователь не найден', 'error');
+                return;
+            }
+            
+            // Удаляем стратегию, проверяя владельца
             const { error } = await window.supabase
                 .from('strategies')
                 .delete()
                 .eq('id', id)
-                .eq('telegram_user_id', telegramUserId); // Проверяем, что стратегия принадлежит пользователю
+                .eq('user_id', userData.id); // Проверяем владельца по user_id
             
             if (error) {
                 console.error('❌ Error deleting strategy from database:', error);

@@ -57,18 +57,18 @@ async function countStrategiesFromDB() {
         // Получаем ID текущего пользователя Telegram
         const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
         
+        if (!telegramUserId) {
+            console.log('⚠️ No telegram user ID for strategies count');
+            return 0;
+        }
+        
+        // Считаем стратегии через связь с таблицей users
         let query = window.supabase
             .from('strategies')
-            .select('id', { count: 'exact' });
+            .select('id', { count: 'exact' })
+            .eq('users.telegram_id', telegramUserId);
         
-        // Фильтруем по пользователю
-        if (telegramUserId) {
-            query = query.eq('telegram_user_id', telegramUserId);
-            console.log('📊 Counting strategies for user:', telegramUserId);
-        } else {
-            console.log('⚠️ No telegram user ID for strategies count');
-            return 0; // Возвращаем 0 для неавторизованных пользователей
-        }
+        console.log('📊 Counting strategies for telegram user:', telegramUserId);
         
         const { data, error } = await query;
             
