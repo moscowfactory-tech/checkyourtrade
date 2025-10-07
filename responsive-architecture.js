@@ -317,9 +317,13 @@ class AdaptiveNavigationManager {
             dropdown.classList.add('mobile-dropdown');
         }
         
-        // Обновляем статистику
+        // Обновляем статистику сразу и через 100ms
         if (window.updateUserStats) {
-            setTimeout(window.updateUserStats, 100);
+            console.log('📊 Updating user stats on profile open');
+            window.updateUserStats(); // Немедленно
+            setTimeout(window.updateUserStats, 100); // Для надежности
+        } else {
+            console.warn('⚠️ updateUserStats function not found');
         }
     }
     

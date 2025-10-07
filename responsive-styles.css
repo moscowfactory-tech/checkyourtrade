@@ -122,10 +122,23 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
+  width: 100%;
 }
 
 .stat-label {
   margin-left: 8px; /* Отступ слева */
+  flex: 1;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.stat-value {
+  margin-right: 8px; /* Отступ справа */
+  font-weight: 600;
+  color: #00bcd4; /* Цвет логотипа */
+  font-size: 16px;
+  min-width: 24px;
+  text-align: right;
 }
 
 /* Навигация в профиле */
@@ -213,6 +226,22 @@
   /* Уменьшаем отступы между кружками */
   .color-options {
     gap: 12px;
+  }
+  
+  /* Мобильная статистика профиля */
+  .stat-label {
+    font-size: 13px;
+    margin-left: 6px;
+  }
+  
+  .stat-value {
+    font-size: 15px;
+    margin-right: 6px;
+    min-width: 20px;
+  }
+  
+  .user-stats {
+    padding: 12px;
   }
   
   /* Адаптивная сетка стратегий */

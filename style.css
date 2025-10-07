@@ -2500,9 +2500,29 @@ main {
   color: #00bcd4; /* Цвет логотипа */
 }
 
-/* Отступы в статистике профиля */
+/* Статистика профиля - адаптивные стили */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  width: 100%;
+}
+
 .stat-label {
   margin-left: 8px;
+  flex: 1;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.stat-value {
+  margin-right: 8px;
+  font-weight: 600;
+  color: #00bcd4; /* Цвет логотипа */
+  font-size: 16px;
+  min-width: 24px;
+  text-align: right;
 }
 
 .profile-nav-item span {
