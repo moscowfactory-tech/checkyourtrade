@@ -116,8 +116,8 @@ let currentCardIndex = 0;
 let analysisAnswers = [];
 let currentAnalysisStrategy = null;
 let currentCoin = '';
-// Sample data with correct structure
-const sampleStrategies = [
+// Sample data removed - new users start with empty strategies
+const sampleStrategies = [ // Оставляем для совместимости, но не используем
   {
     id: 1,
     name: "Технический анализ движения",

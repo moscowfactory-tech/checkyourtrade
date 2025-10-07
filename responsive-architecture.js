@@ -395,18 +395,25 @@ class AdaptiveButtonManager {
 // ========================================
 // ГЛОБАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ
 // ========================================
-
+// Глобальная инициализация
 // Создаем глобальный менеджер
 window.ResponsiveManager = null;
 
 // Инициализируем после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
     window.ResponsiveManager = new ResponsiveComponentManager();
-    console.log('🏗️ RESPONSIVE ARCHITECTURE READY');
+    console.log('RESPONSIVE ARCHITECTURE READY');
+    
+    // Принудительно обновляем статистику через 3 секунды
+    setTimeout(() => {
+        if (window.updateUserStats) {
+            console.log('Force updating user stats after initialization');
+            window.updateUserStats();
+        }
+    }, 3000);
 });
 
 // Экспортируем для использования в других скриптах
 window.DeviceDetector = DeviceDetector;
 window.ResponsiveComponentManager = ResponsiveComponentManager;
-
 console.log('🏗️ RESPONSIVE ARCHITECTURE LOADED SUCCESSFULLY');

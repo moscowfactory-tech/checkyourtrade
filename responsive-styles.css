@@ -119,7 +119,6 @@
 
 .stat-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 8px 0;
   width: 100%;
@@ -127,18 +126,15 @@
 
 .stat-label {
   margin-left: 8px; /* Отступ слева */
-  flex: 1;
   color: var(--color-text-secondary);
   font-size: 14px;
 }
 
 .stat-value {
-  margin-right: 8px; /* Отступ справа */
+  margin-left: 4px; /* Маленький отступ от двоеточия */
   font-weight: 600;
   color: #00bcd4; /* Цвет логотипа */
   font-size: 16px;
-  min-width: 24px;
-  text-align: right;
 }
 
 /* Навигация в профиле */
@@ -236,8 +232,7 @@
   
   .stat-value {
     font-size: 15px;
-    margin-right: 6px;
-    min-width: 20px;
+    margin-left: 3px; /* Маленький отступ от двоеточия */
   }
   
   .user-stats {

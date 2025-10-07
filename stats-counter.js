@@ -139,12 +139,15 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('📊 Setting up stats counter...');
     
     // Обновляем статистику при клике на профиль
-    const userProfileBtn = document.getElementById('userProfileBtn');
-    if (userProfileBtn) {
-        userProfileBtn.addEventListener('click', function() {
+    const userButton = document.getElementById('userButton');
+    if (userButton) {
+        userButton.addEventListener('click', function() {
             console.log('📊 Profile opened, updating stats...');
-            setTimeout(updateUserStats, 100); // Небольшая задержка для открытия модального окна
+            setTimeout(updateUserStats, 200); // Увеличили задержку для надежности
         });
+        console.log('📊 Profile button listener added');
+    } else {
+        console.error('📊 userButton not found!');
     }
     
     // Обновляем статистику при загрузке страницы (через 2 секунды для инициализации Supabase)
