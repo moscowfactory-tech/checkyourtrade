@@ -2217,6 +2217,68 @@ async function refreshStrategiesFromDB() {
     }
 }
 
+// 📱 МОБИЛЬНАЯ ОПТИМИЗАЦИЯ
+
+// Улучшение отзывчивости на мобильных
+function optimizeMobileInteractions() {
+    // Проверяем, что это мобильное устройство
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        console.log('📱 Mobile device detected, optimizing interactions...');
+        
+        // Добавляем touch обработчики для быстрого отклика
+        const buttons = document.querySelectorAll('button, .btn, [role="button"]');
+        buttons.forEach(button => {
+            // Добавляем визуальный отклик
+            button.addEventListener('touchstart', function() {
+                this.style.opacity = '0.7';
+            }, { passive: true });
+            
+            button.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    this.style.opacity = '';
+                }, 150);
+            }, { passive: true });
+            
+            button.addEventListener('touchcancel', function() {
+                this.style.opacity = '';
+            }, { passive: true });
+        });
+        
+        // Оптимизация форм для мобильных
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                // Добавляем небольшую задержку для мобильных
+                e.preventDefault();
+                setTimeout(() => {
+                    // Вызываем оригинальный обработчик
+                    if (form.id === 'strategyForm') {
+                        handleStrategySubmit(e);
+                    }
+                }, 100);
+            });
+        });
+        
+        // Оптимизация модальных окон
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.addEventListener('touchmove', function(e) {
+                // Предотвращаем прокрутку фона
+                if (e.target === modal) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        });
+    }
+}
+
+// Инициализация мобильной оптимизации
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(optimizeMobileInteractions, 1000); // Запускаем после основной инициализации
+});
+
 // Make functions globally accessible for onclick handlers
 window.openModal = openModal;
 window.editStrategy = editStrategy;

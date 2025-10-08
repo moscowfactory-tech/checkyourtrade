@@ -2335,6 +2335,60 @@ main {
   gap: var(--space-16);
 }
 
+/* 📱 МОБИЛЬНАЯ ОПТИМИЗАЦИЯ - УБРАТЬ ЗАДЕРЖКИ */
+
+/* Убрать 300ms задержку на мобильных */
+* {
+  touch-action: manipulation;
+}
+
+button, .btn, [role="button"], input[type="submit"], input[type="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Оптимизация для мобильных форм */
+input, textarea, select {
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Предотвращение зума на iOS */
+input[type="text"], input[type="email"], input[type="tel"], textarea, select {
+  font-size: 16px !important;
+}
+
+/* Оптимизация модальных окон для мобильных */
+@media (max-width: 768px) {
+  .modal-content {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Увеличить область нажатия на кнопки */
+  button, .btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 12px 16px !important;
+  }
+  
+  /* Оптимизация кнопок добавления */
+  #addFieldBtn, .add-input-btn {
+    min-height: 44px !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    margin: 8px 0 !important;
+  }
+  
+  /* Оптимизация полей ввода */
+  input, textarea, select {
+    min-height: 44px !important;
+    padding: 12px !important;
+    font-size: 16px !important;
+  }
+}
+
 /* Notification Styles */
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
