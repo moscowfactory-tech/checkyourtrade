@@ -2211,7 +2211,7 @@ main {
 }
 
 .wallet-info {
-  background: var(--color-bg-1);
+  background: var(--color-surface-secondary); /* Заменил синий на серый */
   border-radius: var(--radius-base);
   padding: var(--space-12); /* РАДИКАЛЬНО уменьшено с var(--space-20) */
   margin: var(--space-12) 0; /* Уменьшено с var(--space-24) */
@@ -2292,12 +2292,19 @@ main {
 
 /* Стили для кнопок в конструкторе стратегий */
 #addFieldBtn,
-.add-input-btn,
-#cancelBtn,
-#strategyForm button[type="submit"] {
+.add-input-btn {
   padding: var(--space-1) var(--space-4) !important; /* Меньше высота, больше ширина */
   font-size: var(--font-size-xs) !important; /* Маленький шрифт */
   min-height: 24px !important; /* Еще меньше высота */
+  height: auto !important;
+}
+
+/* Отдельные стили для кнопок в modal-footer (Отмена и Сохранить) */
+.modal-footer #cancelBtn,
+.modal-footer button[type="submit"] {
+  padding: var(--space-1) var(--space-4) !important; /* Такой же размер как у "Добавить основание" */
+  font-size: var(--font-size-xs) !important;
+  min-height: 24px !important;
   height: auto !important;
 }
 
