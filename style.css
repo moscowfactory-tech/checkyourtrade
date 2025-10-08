@@ -1095,7 +1095,7 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-12); /* ЕЩЕ меньше */
+  padding: var(--space-6); /* Минимальные отступы */
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -1108,10 +1108,10 @@ main {
 .modal-close {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 32px; /* Увеличил размер крестика */
   cursor: pointer;
   color: var(--color-text-secondary);
-  padding: var(--space-4);
+  padding: var(--space-2); /* Уменьшил отступы */
   border-radius: var(--radius-base);
   transition: all var(--duration-fast) var(--ease-standard);
 }
@@ -1122,7 +1122,7 @@ main {
 }
 
 .modal-body {
-  padding: var(--space-12); /* ЕЩЕ меньше */
+  padding: var(--space-6); /* Минимальные отступы */
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -2235,11 +2235,12 @@ main {
 }
 
 .copy-btn {
-  min-width: 40px;
-  height: 40px;
+  min-width: 32px; /* Уменьшил размер кнопки копирования */
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: var(--font-size-sm); /* Меньший шрифт */
 }
 
 .wallet-details {
@@ -2276,6 +2277,16 @@ main {
   line-height: 1.6;
   color: var(--color-text-secondary);
   margin-top: var(--space-24);
+}
+
+/* Стили для кнопки "Поддержать проект" */
+#supportProjectBtn,
+#footerSupportBtn {
+  padding: var(--space-2) var(--space-4) !important; /* Меньше по высоте, но оставляем по ширине */
+  font-size: var(--font-size-base) !important; /* Больший текст */
+  font-weight: 500 !important;
+  min-height: auto !important;
+  height: auto !important;
 }
 
 .footer-bottom {
