@@ -272,15 +272,15 @@ let supportProjectBtn, supportProjectFooterBtn, supportModal, closeSupportModalB
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 Initializing TradeAnalyzer...');
     
-    // Инициализируем Telegram WebApp
-    if (typeof initializeTelegramWebApp === 'function') {
-        const telegramUser = initializeTelegramWebApp();
-        if (telegramUser) {
-            console.log('✅ Telegram user authenticated:', telegramUser);
-            if (typeof syncTelegramTheme === 'function') {
-                syncTelegramTheme();
-            }
-        }
+    // 👤 Инициализация пользователя
+    console.log('👤 Initializing user manager...');
+    const currentUser = await window.userManager.initialize();
+    
+    if (currentUser) {
+        console.log('✅ User initialized:', currentUser.type, currentUser.id);
+    } else {
+        console.error('❌ Failed to initialize user');
+        showNotification('Ошибка инициализации пользователя', 'error');
     }
     
     // Инициализируем базу данных
