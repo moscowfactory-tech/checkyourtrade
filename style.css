@@ -2235,12 +2235,13 @@ main {
 }
 
 .copy-btn {
-  min-width: 32px; /* Уменьшил размер кнопки копирования */
-  height: 32px;
+  min-width: 28px; /* Еще меньше кнопка копирования */
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-sm); /* Меньший шрифт */
+  font-size: var(--font-size-xs); /* Еще меньший шрифт */
+  padding: var(--space-1) !important;
 }
 
 .wallet-details {
@@ -2283,9 +2284,20 @@ main {
 #supportProjectBtn,
 #footerSupportBtn {
   padding: var(--space-2) var(--space-4) !important; /* Меньше по высоте, но оставляем по ширине */
-  font-size: var(--font-size-base) !important; /* Больший текст */
+  font-size: var(--font-size-sm) !important; /* Уменьшил текст */
   font-weight: 500 !important;
   min-height: auto !important;
+  height: auto !important;
+}
+
+/* Стили для кнопок в конструкторе стратегий */
+#addFieldBtn,
+.add-input-btn,
+#cancelBtn,
+#strategyForm button[type="submit"] {
+  padding: var(--space-1) var(--space-2) !important; /* В 2 раза меньше */
+  font-size: var(--font-size-xs) !important; /* Маленький шрифт */
+  min-height: 28px !important; /* Минимальная высота */
   height: auto !important;
 }
 
