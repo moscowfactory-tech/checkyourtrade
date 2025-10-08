@@ -2217,6 +2217,66 @@ async function refreshStrategiesFromDB() {
     }
 }
 
+// 📱 МОБИЛЬНАЯ ОПТИМИЗАЦИЯ КЛАВИАТУРЫ
+
+// Обработка появления/скрытия клавиатуры
+function initMobileKeyboardHandling() {
+    let initialViewportHeight = window.innerHeight;
+    let keyboardVisible = false;
+    
+    // Отслеживание изменения размера экрана
+    function handleViewportChange() {
+        const currentHeight = window.innerHeight;
+        const heightDifference = initialViewportHeight - currentHeight;
+        
+        // Клавиатура появилась, если высота уменьшилась на 150px+
+        if (heightDifference > 150 && !keyboardVisible) {
+            keyboardVisible = true;
+            document.body.classList.add('keyboard-active');
+            console.log('📱 Keyboard shown, height difference:', heightDifference);
+        } 
+        // Клавиатура скрылась
+        else if (heightDifference < 100 && keyboardVisible) {
+            keyboardVisible = false;
+            document.body.classList.remove('keyboard-active');
+            console.log('📱 Keyboard hidden, height difference:', heightDifference);
+        }
+    }
+    
+    // Обработчики событий
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            initialViewportHeight = window.innerHeight;
+            handleViewportChange();
+        }, 500);
+    });
+    
+    // Обработка фокуса на полях ввода
+    document.addEventListener('focusin', (e) => {
+        if (e.target.matches('input, textarea, select')) {
+            setTimeout(() => {
+                // Прокручиваем к элементу через небольшую задержку
+                e.target.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center',
+                    inline: 'nearest'
+                });
+            }, 300);
+        }
+    });
+    
+    console.log('📱 Mobile keyboard handling initialized');
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    // Проверяем, что это мобильное устройство
+    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        initMobileKeyboardHandling();
+    }
+});
+
 // Make functions globally accessible for onclick handlers
 window.openModal = openModal;
 window.editStrategy = editStrategy;

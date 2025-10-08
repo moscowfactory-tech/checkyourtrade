@@ -2339,6 +2339,25 @@ main {
   padding-right: var(--space-8) !important; /* Место для стрелки dropdown */
 }
 
+/* 📱 МОБИЛЬНАЯ ОПТИМИЗАЦИЯ КЛАВИАТУРЫ */
+
+/* Класс для активной клавиатуры */
+.keyboard-active .modal {
+  align-items: flex-start !important;
+  padding-top: 10px !important;
+}
+
+.keyboard-active .modal-content {
+  max-height: 60vh !important; /* Меньше высота при клавиатуре */
+  margin-top: 0 !important;
+}
+
+.keyboard-active .modal-body {
+  max-height: 40vh !important;
+  overflow-y: auto !important;
+  padding-bottom: var(--space-8) !important;
+}
+
 .footer-bottom {
   display: flex;
   justify-content: space-between;
@@ -3045,14 +3064,82 @@ main {
     justify-content: center !important; /* По центру */
   }
   
-  /* Мобильная адаптация полей в подпунктах */
-  .input-row {
-    grid-template-columns: 1fr !important; /* Одна колонка на мобильных */
-    gap: var(--space-4) !important;
+  /* 📱 МОБИЛЬНАЯ ОПТИМИЗАЦИЯ МОДАЛЬНЫХ ОКОН */
+  
+  /* Оптимизация модального окна для клавиатуры */
+  .modal {
+    align-items: flex-start !important; /* Прижать к верху */
+    padding-top: 20px !important; /* Отступ сверху */
   }
   
+  .modal-content {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    max-height: 80vh !important; /* Ограничить высоту */
+    margin: 0 auto !important;
+    overflow-y: auto !important;
+  }
+  
+  /* Оптимизация полей ввода */
+  .form-control {
+    width: 100% !important;
+    min-width: unset !important;
+    font-size: 16px !important; /* Предотвращает зум iOS */
+  }
+  
+  #strategyName {
+    width: 100% !important;
+    min-width: unset !important;
+    font-size: 16px !important;
+  }
+  
+  /* Мобильная адаптация полей в подпунктах */
+  .input-row {
+    display: flex !important; /* Используем flexbox */
+    flex-direction: column !important; /* Вертикальное расположение */
+    gap: var(--space-3) !important;
+    width: 100% !important;
+  }
+  
+  .input-row input,
   .input-row select {
-    padding-left: var(--space-3) !important; /* Отступ слева */
-    padding-right: var(--space-8) !important; /* Место для стрелки */
+    width: 100% !important;
+    padding: var(--space-2) var(--space-3) !important;
+    font-size: 16px !important; /* Предотвращает зум */
+    border-radius: var(--radius-base) !important;
+  }
+  
+  /* Оптимизация кнопок */
+  #addFieldBtn,
+  .add-input-btn {
+    width: 100% !important; /* Полная ширина */
+    max-width: 200px !important; /* Максимальная ширина */
+    margin: 0 auto !important; /* По центру */
+    text-align: center !important;
+    white-space: nowrap !important; /* Не переносить текст */
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  /* Оптимизация для клавиатуры iOS/Android */
+  .modal-body {
+    padding-bottom: var(--space-20) !important; /* Дополнительное пространство */
+  }
+  
+  /* Оптимизация текстовых областей */
+  textarea.form-control {
+    min-height: 80px !important; /* Минимальная высота */
+    resize: vertical !important; /* Только вертикальное изменение */
+  }
+  
+  /* Оптимизация кнопок modal-footer */
+  .modal-footer {
+    padding: var(--space-3) var(--space-4) !important;
+    gap: var(--space-3) !important;
+  }
+  
+  .modal-footer button {
+    flex: 1 !important; /* Равномерное распределение */
+    min-width: 0 !important; /* Позволяет сжиматься */
   }
 }
