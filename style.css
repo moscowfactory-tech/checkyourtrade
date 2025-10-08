@@ -1095,7 +1095,7 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-16); /* Уменьшено с var(--space-24) */
+  padding: var(--space-12); /* ЕЩЕ меньше */
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -1122,7 +1122,7 @@ main {
 }
 
 .modal-body {
-  padding: var(--space-16); /* Уменьшено с var(--space-24) */
+  padding: var(--space-12); /* ЕЩЕ меньше */
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -1131,8 +1131,8 @@ main {
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: var(--space-12);
-  padding: var(--space-16); /* Уменьшено с var(--space-24) */
+  gap: var(--space-8); /* Меньший разрыв */
+  padding: var(--space-12); /* ЕЩЕ меньше */
   border-top: 1px solid var(--color-border);
   flex-shrink: 0;
 }

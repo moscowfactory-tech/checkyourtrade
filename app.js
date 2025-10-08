@@ -798,14 +798,15 @@ function updateInputNumbers(container) {
 // Strategy Management
 async function handleStrategySubmit(e) {
     e.preventDefault();
-    console.log('Form submitted!');
+    console.log('📝 FORM SUBMITTED - Starting strategy creation...');
     
     const formData = new FormData(strategyForm);
     const strategyName = formData.get('strategyName');
     const strategyDescription = formData.get('strategyDescription');
     
-    console.log('Strategy name:', strategyName);
-    console.log('Strategy description:', strategyDescription);
+    console.log('📝 Strategy name:', strategyName);
+    console.log('📝 Strategy description:', strategyDescription);
+    console.log('📝 Form data:', Object.fromEntries(formData.entries()));
     
     if (!strategyName || !strategyName.trim()) {
         alert('Пожалуйста, введите название стратегии');
@@ -816,12 +817,17 @@ async function handleStrategySubmit(e) {
     const fields = [];
     const fieldBuilders = fieldsContainer.querySelectorAll('.field-builder');
     
-    fieldBuilders.forEach(builder => {
-        const fieldName = builder.querySelector('input[name="fieldName"]').value;
-        const fieldDescription = builder.querySelector('textarea[name="fieldDescription"]').value;
+    console.log('📝 Found field builders:', fieldBuilders.length);
+    
+    fieldBuilders.forEach((builder, index) => {
+        console.log(`📝 Processing field builder ${index + 1}:`, builder);
+        const fieldName = builder.querySelector('input[name="fieldName"]').value.trim();
+        const fieldDescription = builder.querySelector('textarea[name="fieldDescription"]').value.trim();
         const inputBuilders = builder.querySelectorAll('.input-builder');
         
-        if (!fieldName.trim()) return;
+        if (!fieldName) return;
+        
+        console.log(`📝 Field ${index + 1}: name="${fieldName}", description="${fieldDescription}"`);
         
         const inputs = [];
         inputBuilders.forEach(inputBuilder => {
