@@ -1860,11 +1860,14 @@ async function saveCurrentAnalysis() {
                 return;
             }
             
-            // Обновляем ID анализа
+            // Обновляем ID анализа и название
             analysis.id = savedAnalysis.id;
+            analysis.strategyName = currentAnalysisStrategy.name; // Правильное название стратегии
+            analysis.coin = currentCoin; // Монета
+            analysis.date = savedAnalysis.created_at; // Дата создания
             
             // Добавляем в локальный массив для отображения
-            savedAnalyses.push(analysis);
+            savedAnalyses.unshift(analysis); // unshift чтобы новые были сверху
             
             // Обновляем счетчик анализов
             if (window.incrementAnalysesCount) {
@@ -1892,7 +1895,10 @@ function viewAnalysis(index) {
         return;
     }
     
-    console.log('Viewing analysis:', analysis);
+    console.log('🔍 Viewing analysis:', analysis);
+    console.log('🔍 Analysis results:', analysis.results);
+    console.log('🔍 Positive factors:', analysis.results?.positive);
+    console.log('🔍 Negative factors:', analysis.results?.negative);
     
     // Закрываем модальное окно "Мои анализы"
     closeAnalysesModal();
@@ -1907,19 +1913,36 @@ function viewAnalysis(index) {
 }
 
 function displaySavedAnalysisResults(analysis) {
+    console.log('📊 Displaying saved analysis results:', analysis);
+    
     // Скрываем карточки анализа и селект стратегии
     if (cardAnalysisContainer) {
         cardAnalysisContainer.classList.add('hidden');
     }
     
+    // Показываем результаты
+    const resultsContainer = document.getElementById('analysisResults');
+    if (resultsContainer) {
+        resultsContainer.classList.remove('hidden');
+    }
+    
+    // Проверяем структуру данных
+    const positive = analysis.results?.positive || [];
+    const negative = analysis.results?.negative || [];
+    
+    console.log('📊 Positive factors to render:', positive);
+    console.log('📊 Negative factors to render:', negative);
+    
     // Отображаем результаты
-    renderFactors('positiveFactors', analysis.results.positive, 'positive');
-    renderFactors('negativeFactors', analysis.results.negative, 'negative');
+    renderFactors('positiveFactors', positive, 'positive');
+    renderFactors('negativeFactors', negative, 'negative');
     
     // Генерируем статистику
-    const total = analysis.results.positive.length + analysis.results.negative.length;
-    const positivePercent = total > 0 ? Math.round((analysis.results.positive.length / total) * 100) : 0;
-    const negativePercent = total > 0 ? Math.round((analysis.results.negative.length / total) * 100) : 0;
+    const total = positive.length + negative.length;
+    const positivePercent = total > 0 ? Math.round((positive.length / total) * 100) : 0;
+    const negativePercent = total > 0 ? Math.round((negative.length / total) * 100) : 0;
+    
+    console.log('📊 Statistics:', { total, positivePercent, negativePercent });
     
     const summaryStats = document.getElementById('summaryStats');
     if (summaryStats) {
