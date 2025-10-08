@@ -2327,6 +2327,18 @@ main {
   font-size: var(--font-size-xl) !important; /* Увеличил заголовок */
 }
 
+/* Исправление ширины поля "Название стратегии" */
+#strategyName {
+  width: 100% !important; /* Полная ширина */
+  min-width: 300px !important; /* Минимальная ширина */
+}
+
+/* Исправление отступов в полях подпунктов */
+.input-row select {
+  padding-left: var(--space-3) !important; /* Отступ слева для текста */
+  padding-right: var(--space-8) !important; /* Место для стрелки dropdown */
+}
+
 .footer-bottom {
   display: flex;
   justify-content: space-between;
@@ -3031,5 +3043,16 @@ main {
   
   .wallet-detail {
     justify-content: center !important; /* По центру */
+  }
+  
+  /* Мобильная адаптация полей в подпунктах */
+  .input-row {
+    grid-template-columns: 1fr !important; /* Одна колонка на мобильных */
+    gap: var(--space-4) !important;
+  }
+  
+  .input-row select {
+    padding-left: var(--space-3) !important; /* Отступ слева */
+    padding-right: var(--space-8) !important; /* Место для стрелки */
   }
 }
