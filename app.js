@@ -895,10 +895,25 @@ async function handleStrategySubmit(e) {
             // Получаем ID текущего пользователя Telegram
             const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
             
+            console.log('🔍 TELEGRAM USER ID:', telegramUserId);
+            console.log('🔍 SUPABASE CLIENT:', window.supabase);
+            
             if (!telegramUserId) {
                 console.error('❌ Cannot save strategy: No telegram user ID');
                 showNotification('Необходима авторизация через Telegram', 'error');
                 return;
+            }
+            
+            // ТЕСТ: Проверим подключение к Supabase
+            try {
+                console.log('🔍 Testing Supabase connection...');
+                const { data: testData, error: testError } = await window.supabase
+                    .from('strategies')
+                    .select('count')
+                    .limit(1);
+                console.log('🔍 Supabase test result:', { testData, testError });
+            } catch (testErr) {
+                console.error('🔍 Supabase connection test failed:', testErr);
             }
             
             // Сначала найдем или создадим пользователя в таблице users
