@@ -59,33 +59,74 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
             }
         }
         
-        // Загружаем из таблицы analysis_results
-        const { data: analysesData, error } = await window.supabase
+        // Получаем ID текущего пользователя
+        const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        let currentUserId = null;
+        
+        if (telegramUserId) {
+            const { data: user } = await window.supabase
+                .from('users')
+                .select('id')
+                .eq('telegram_id', telegramUserId)
+                .single();
+                
+            if (user) {
+                currentUserId = user.id;
+                console.log('👤 Current user ID:', currentUserId);
+            }
+        }
+        
+        // Загружаем анализы только текущего пользователя
+        let query = window.supabase
             .from('analysis_results')
             .select('*')
             .order('created_at', { ascending: false });
+            
+        // Фильтруем по пользователю если он найден
+        if (currentUserId) {
+            query = query.eq('user_id', currentUserId);
+        }
+        
+        const { data: analysesData, error } = await query;
         
         if (error) {
             console.error('❌ Error loading analyses from database:', error);
-            savedAnalyses = [];
             return;
         }
         
         if (analysesData && Array.isArray(analysesData)) {
             // Форматируем данные из БД в формат приложения
-            savedAnalyses = analysesData.map(analysis => ({
-                id: analysis.id,
-                date: analysis.created_at,
-                strategyName: analysis.strategy_name || 'Неизвестная стратегия',
-                strategyId: analysis.strategy_id,
-                coin: analysis.coin || '',
-                results: {
-                    positive: analysis.positive_factors || [],
-                    negative: analysis.negative_factors || []
-                }
-            }));
+            console.log('📊 Raw analyses data from DB:', analysesData);
             
-            console.log(`✅ Loaded ${savedAnalyses.length} analyses from database`);
+            // Загружаем стратегии для получения названий
+            const { data: strategiesData } = await window.supabase
+                .from('strategies')
+                .select('id, name');
+            
+            const strategiesMap = {};
+            if (strategiesData) {
+                strategiesData.forEach(strategy => {
+                    strategiesMap[strategy.id] = strategy.name;
+                });
+            }
+            
+            savedAnalyses = analysesData.map(analysis => {
+                const results = analysis.results || {};
+                return {
+                    id: analysis.id,
+                    date: analysis.created_at,
+                    strategyName: strategiesMap[analysis.strategy_id] || 'Неизвестная стратегия',
+                    coin: results.coin || 'BTC',
+                    results: {
+                        positive: results.positive_factors || [],
+                        negative: results.negative_factors || [],
+                        totalScore: analysis.total_score || results.total_score || 0,
+                        maxScore: analysis.max_score || results.max_score || 0,
+                        percentage: analysis.percentage || results.percentage || 0
+                    }
+                };
+            });
+            console.log('📊 Formatted analyses:', savedAnalyses);
         
         // Обновляем статистику пользователя
         if (typeof window.updateUserStats === 'function') {
