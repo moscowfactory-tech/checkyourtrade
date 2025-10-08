@@ -2716,6 +2716,42 @@ main {
   display: none;
 }
 
+/* 🔴 ТЕСТОВЫЕ МОБИЛЬНЫЕ СТИЛИ - ДОЛЖНЫ БЫТЬ ВИДНЫ */
+@media screen and (max-width: 768px) {
+  /* Тестовые стили для проверки */
+  .modal-content {
+    border: 3px solid red !important; /* ТЕСТ - красная граница */
+    background: rgba(255, 0, 0, 0.1) !important; /* ТЕСТ - красный фон */
+  }
+  
+  #addFieldBtn, .add-input-btn {
+    background: orange !important; /* ТЕСТ - оранжевый фон */
+    color: black !important;
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+    max-width: 150px !important;
+    margin: 5px auto !important;
+    display: block !important;
+  }
+  
+  .modal-footer button {
+    background: lime !important; /* ТЕСТ - зеленый фон */
+    color: black !important;
+    padding: 10px 20px !important;
+    margin: 0 5px !important;
+    min-width: 100px !important;
+    max-width: 130px !important;
+  }
+  
+  .form-control, #strategyName {
+    border: 2px solid blue !important; /* ТЕСТ - синяя граница */
+    padding: 15px !important;
+    font-size: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
 /* 📱 TABLET ADAPTATION - ПЛАНШЕТНАЯ АДАПТАЦИЯ */
 @media (max-width: 768px) and (min-width: 481px) {
   /* Планшетная адаптация кнопок "Поддержать проект" */
@@ -2995,17 +3031,31 @@ main {
   /* Мобильная адаптация кнопок конструктора стратегий */
   #addFieldBtn,
   .add-input-btn {
-    padding: var(--space-1) var(--space-3) !important; /* Компактнее на мобильных */
-    font-size: 11px !important; /* Маленький шрифт */
-    min-height: 20px !important;
+    padding: 4px 8px !important; /* Компактные отступы */
+    font-size: 12px !important; /* Читаемый шрифт */
+    min-height: 32px !important; /* Удобные для нажатия */
+    max-width: 180px !important; /* Ограничить ширину */
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   
   /* Мобильная адаптация кнопок modal-footer */
+  .modal-footer {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+  
   .modal-footer #cancelBtn,
   .modal-footer button[type="submit"] {
-    padding: var(--space-1) var(--space-4) !important; /* Оптимальные для мобильных */
-    font-size: var(--font-size-xs) !important;
-    min-height: 28px !important;
+    padding: 8px 16px !important; /* Компактные отступы */
+    font-size: 14px !important; /* Читаемый шрифт */
+    min-height: 40px !important; /* Удобно нажимать */
+    min-width: 80px !important;
+    max-width: 120px !important;
+    flex: none !important; /* Не растягивать */
   }
   
   /* Мобильная адаптация кнопки копирования */
@@ -3075,9 +3125,18 @@ main {
   .modal-content {
     width: 95vw !important;
     max-width: 95vw !important;
-    max-height: 90vh !important; /* Увеличил обычную высоту */
-    margin: 0 auto !important;
+    max-height: 85vh !important;
+    margin: 10px auto !important;
     overflow-y: auto !important;
+    padding: 0 !important; /* Убрать лишние отступы */
+  }
+  
+  .modal-body {
+    padding: 16px !important; /* Компактные отступы */
+  }
+  
+  .modal-header {
+    padding: 12px 16px !important;
   }
   
   /* Оптимизация полей ввода */
@@ -3085,12 +3144,18 @@ main {
     width: 100% !important;
     min-width: unset !important;
     font-size: 16px !important; /* Предотвращает зум iOS */
+    padding: 12px !important; /* Увеличить отступы */
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
   }
   
   #strategyName {
     width: 100% !important;
     min-width: unset !important;
     font-size: 16px !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
   }
   
   /* Мобильная адаптация полей в подпунктах */
