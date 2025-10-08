@@ -2335,6 +2335,54 @@ main {
   gap: var(--space-16);
 }
 
+/* 📱 TELEGRAM WEBAPP ОПТИМИЗАЦИЯ */
+
+/* Основные стили для Telegram WebApp */
+body.telegram-webapp {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Оптимизация для Telegram WebApp клавиатуры */
+.telegram-webapp .modal-content {
+  max-height: var(--tg-viewport-height, 100vh) !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Улучшенная прокрутка для Telegram */
+.telegram-webapp ::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* Оптимизация кнопок для Telegram WebApp */
+.telegram-webapp button,
+.telegram-webapp .btn {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  transition: all 0.1s ease;
+}
+
+.telegram-webapp button:active,
+.telegram-webapp .btn:active {
+  transform: scale(0.98);
+  opacity: 0.8;
+}
+
+/* Оптимизация полей ввода для Telegram */
+.telegram-webapp input,
+.telegram-webapp textarea,
+.telegram-webapp select {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 8px;
+  font-size: 16px !important; /* Предотвращает зум */
+}
+
 /* 📱 МОБИЛЬНАЯ ОПТИМИЗАЦИЯ - УБРАТЬ ЗАДЕРЖКИ */
 
 /* Убрать 300ms задержку на мобильных */
