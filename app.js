@@ -916,33 +916,44 @@ async function handleStrategySubmit(e) {
                 console.error('🔍 Supabase connection test failed:', testErr);
             }
             
-            // Сначала найдем или создадим пользователя в таблице users
+            // Найдем или создадим пользователя в таблице users
             let userId = null;
             
+            console.log('🔍 Checking for existing user with telegram_id:', telegramUserId);
+            
             // Проверяем, есть ли пользователь в таблице users
-            const { data: existingUser } = await window.supabase
+            const { data: existingUser, error: findError } = await window.supabase
                 .from('users')
                 .select('id')
                 .eq('telegram_id', telegramUserId)
                 .single();
             
+            console.log('🔍 User lookup result:', { existingUser, findError });
+            
             if (existingUser) {
                 userId = existingUser.id;
-                console.log('👤 Found existing user:', userId);
+                console.log('✅ Found existing user:', userId);
             } else {
                 // Создаем нового пользователя
+                console.log('🆕 Creating new user...');
                 const telegramUserData = window.getTelegramUserData ? window.getTelegramUserData() : {};
+                
+                const newUserData = {
+                    telegram_id: telegramUserId,
+                    username: telegramUserData.username || null,
+                    first_name: telegramUserData.first_name || null,
+                    last_name: telegramUserData.last_name || null
+                };
+                
+                console.log('📝 Creating user with data:', newUserData);
                 
                 const { data: newUser, error: userError } = await window.supabase
                     .from('users')
-                    .insert({
-                        telegram_id: telegramUserId,
-                        username: telegramUserData.username || null,
-                        first_name: telegramUserData.first_name || null,
-                        last_name: telegramUserData.last_name || null
-                    })
+                    .insert(newUserData)
                     .select('id')
                     .single();
+                
+                console.log('📝 User creation result:', { newUser, userError });
                 
                 if (userError) {
                     console.error('❌ Error creating user:', userError);
@@ -951,7 +962,7 @@ async function handleStrategySubmit(e) {
                 }
                 
                 userId = newUser.id;
-                console.log('🆕 Created new user:', userId);
+                console.log('✅ Created new user with ID:', userId);
             }
             
             // Теперь сохраняем стратегию
