@@ -2217,102 +2217,81 @@ async function refreshStrategiesFromDB() {
     }
 }
 
-// 📱 TELEGRAM WEBAPP ОПТИМИЗАЦИЯ
+// 📱 ДВОЙНАЯ АРХИТЕКТУРА: БРАУЗЕР + TELEGRAM WEBAPP
 
-// Оптимизация форм для Telegram WebApp
-function optimizeTelegramForms() {
-    console.log('📝 Optimizing forms for Telegram WebApp...');
-    
-    // Оптимизация обработки формы стратегий
-    const strategyForm = document.getElementById('strategyForm');
-    if (strategyForm) {
-        // Убираем стандартный обработчик и добавляем оптимизированный
-        strategyForm.removeEventListener('submit', handleStrategySubmit);
-        
-        strategyForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('📱 Telegram WebApp form submission started...');
-            
-            // Добавляем небольшую задержку для стабильности
-            setTimeout(() => {
-                try {
-                    handleStrategySubmit(e);
-                } catch (error) {
-                    console.error('❌ Error in Telegram form submission:', error);
-                    showNotification('Ошибка при создании стратегии', 'error');
-                }
-            }, 200);
-        });
-    }
-    
-    // Оптимизация полей ввода для Telegram
-    const inputs = document.querySelectorAll('input, textarea, select');
-    inputs.forEach(input => {
-        // Предотвращаем зум на iOS в Telegram
-        if (input.type !== 'file') {
-            input.style.fontSize = '16px';
-        }
-        
-        // Улучшаем обработку фокуса
-        input.addEventListener('focus', function() {
-            setTimeout(() => {
-                this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300);
-        });
-    });
-    
-    console.log('✅ Telegram forms optimization completed');
-}
+// Определение окружения
+const APP_ENVIRONMENT = {
+    isTelegramWebApp: !!(window.Telegram && window.Telegram.WebApp),
+    isBrowser: !(window.Telegram && window.Telegram.WebApp),
+    isMobile: /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+};
 
-// Улучшение отзывчивости для Telegram WebApp
-function optimizeTelegramWebApp() {
-    // Проверяем, что мы в Telegram WebApp
-    const isTelegramWebApp = window.Telegram && window.Telegram.WebApp;
-    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+console.log('🌍 Environment detected:', APP_ENVIRONMENT);
+
+// Инициализация для Telegram WebApp
+function initializeTelegramWebApp() {
+    if (!APP_ENVIRONMENT.isTelegramWebApp) return;
     
-    if (isTelegramWebApp) {
-        console.log('📱 Telegram WebApp detected, applying specific optimizations...');
+    console.log('📱 Initializing Telegram WebApp version...');
+    
+    try {
+        const tg = window.Telegram.WebApp;
         
-        // Добавляем класс для CSS стилей
+        // Основная инициализация
+        tg.ready();
+        tg.expand();
+        
+        // Добавляем класс для CSS
         document.body.classList.add('telegram-webapp');
         
-        // Настройки для Telegram WebApp
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
-        
-        // Отключаем вертикальные свайпы, которые могут мешать
-        if (window.Telegram.WebApp.disableVerticalSwipes) {
-            window.Telegram.WebApp.disableVerticalSwipes();
+        // Отключаем вертикальные свайпы
+        if (typeof tg.disableVerticalSwipes === 'function') {
+            tg.disableVerticalSwipes();
         }
         
-        // Устанавливаем высоту viewport
-        const viewportHeight = window.Telegram.WebApp.viewportHeight || window.innerHeight;
-        document.documentElement.style.setProperty('--tg-viewport-height', viewportHeight + 'px');
-        
-        // Настраиваем цвета под тему Telegram
-        const themeParams = window.Telegram.WebApp.themeParams;
-        if (themeParams) {
-            document.documentElement.style.setProperty('--tg-bg-color', themeParams.bg_color || '#ffffff');
-            document.documentElement.style.setProperty('--tg-text-color', themeParams.text_color || '#000000');
-            document.documentElement.style.setProperty('--tg-button-color', themeParams.button_color || '#3390ec');
-            document.documentElement.style.setProperty('--tg-button-text-color', themeParams.button_text_color || '#ffffff');
+        // Настройка темы
+        if (tg.themeParams) {
+            Object.keys(tg.themeParams).forEach(key => {
+                document.documentElement.style.setProperty(
+                    `--tg-${key.replace(/_/g, '-')}`, 
+                    tg.themeParams[key]
+                );
+            });
         }
         
-        // Оптимизация для создания стратегий в Telegram
-        optimizeTelegramForms();
+        // Оптимизация полей ввода
+        const inputs = document.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            if (input.type !== 'file') {
+                input.style.fontSize = '16px'; // Предотвращает зум
+            }
+        });
         
-        console.log('🎯 Telegram WebApp optimizations applied');
-    } else if (isMobile) {
-        console.log('📱 Mobile browser detected, applying mobile optimizations...');
+        console.log('✅ Telegram WebApp initialized successfully');
         
-        // Добавляем touch обработчики для быстрого отклика
-        const buttons = document.querySelectorAll('button, .btn, [role="button"]');
+    } catch (error) {
+        console.error('❌ Error initializing Telegram WebApp:', error);
+    }
+}
+
+// Инициализация для браузерной версии
+function initializeBrowserVersion() {
+    if (!APP_ENVIRONMENT.isBrowser) return;
+    
+    console.log('💻 Initializing Browser version...');
+    
+    // Добавляем класс для CSS
+    document.body.classList.add('browser-version');
+    
+    // Мобильная оптимизация для браузера
+    if (APP_ENVIRONMENT.isMobile) {
+        document.body.classList.add('mobile-browser');
+        
+        // Оптимизация touch событий
+        const buttons = document.querySelectorAll('button, .btn');
         buttons.forEach(button => {
-            // Добавляем визуальный отклик
             button.addEventListener('touchstart', function() {
-                this.style.opacity = '0.7';
+                this.style.opacity = '0.8';
             }, { passive: true });
             
             button.addEventListener('touchend', function() {
@@ -2320,62 +2299,29 @@ function optimizeTelegramWebApp() {
                     this.style.opacity = '';
                 }, 150);
             }, { passive: true });
-            
-            button.addEventListener('touchcancel', function() {
-                this.style.opacity = '';
-            }, { passive: true });
-        });
-        
-        // Оптимизация форм для мобильных
-        const forms = document.querySelectorAll('form');
-        forms.forEach(form => {
-            form.addEventListener('submit', function(e) {
-                // Добавляем небольшую задержку для мобильных
-                e.preventDefault();
-                setTimeout(() => {
-                    // Вызываем оригинальный обработчик
-                    if (form.id === 'strategyForm') {
-                        handleStrategySubmit(e);
-                    }
-                }, 100);
-            });
-        });
-        
-        // Оптимизация модальных окон
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            modal.addEventListener('touchmove', function(e) {
-                // Предотвращаем прокрутку фона
-                if (e.target === modal) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
         });
     }
-}
-
-// Инициализация Telegram WebApp оптимизации
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(optimizeTelegramWebApp, 500); // Запускаем после основной инициализации
-});
-
-// Дополнительная инициализация при загрузке Telegram WebApp
-if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.onEvent('viewportChanged', function() {
-        console.log('📱 Telegram WebApp viewport changed');
-        // Пересчитываем размеры модальных окон
-        const modals = document.querySelectorAll('.modal-content');
-        modals.forEach(modal => {
-            modal.style.maxHeight = window.Telegram.WebApp.viewportHeight + 'px';
-        });
-    });
     
-    window.Telegram.WebApp.onEvent('themeChanged', function() {
-        console.log('🎨 Telegram theme changed');
-        // Обновляем цвета под новую тему
-        optimizeTelegramWebApp();
-    });
+    console.log('✅ Browser version initialized successfully');
 }
+
+// 🎆 ЕДИНАЯ ИНИЦИАЛИЗАЦИЯ ДЛЯ ОБЕИХ ВЕРСИЙ
+function initializeAppEnvironment() {
+    console.log('🎆 Starting unified app initialization...');
+    
+    // Инициализация соответствующей версии
+    if (APP_ENVIRONMENT.isTelegramWebApp) {
+        initializeTelegramWebApp();
+    } else {
+        initializeBrowserVersion();
+    }
+    
+    console.log('✅ App environment initialized for:', 
+        APP_ENVIRONMENT.isTelegramWebApp ? 'Telegram WebApp' : 'Browser');
+}
+
+// Автоматическая инициализация при загрузке
+setTimeout(initializeAppEnvironment, 1000);
 
 // Make functions globally accessible for onclick handlers
 window.openModal = openModal;
