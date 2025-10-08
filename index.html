@@ -386,13 +386,47 @@
         </div>
     </footer>
 
+    <!-- Основные библиотеки -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=4.3.1"></script>
-    <script src="telegram-auth.js?v=4.3.1"></script>
-    <script src="theme.js?v=4.3.1"></script>
-    <script src="stats-counter.js?v=4.3.1"></script>
-    <script src="responsive-architecture.js?v=4.3.1"></script>
-    <script src="app.js?v=4.3.1"></script>
+    
+    <!-- Конфигурация и аутентификация -->
+    <script src="supabase-config.js?v=5.0.0"></script>
+    <script src="telegram-auth.js?v=5.0.0"></script>
+    
+    <!-- Система проверок и валидации -->
+    <script src="database/database-validator.js?v=5.0.0"></script>
+    
+    <!-- Модульная архитектура -->
+    <script src="modules/strategy-manager.js?v=5.0.0"></script>
+    
+    <!-- Центральная инициализация -->
+    <script src="core/app-initializer.js?v=5.0.0"></script>
+    
+    <!-- Основное приложение -->
+    <script src="theme.js?v=5.0.0"></script>
+    <script src="stats-counter.js?v=5.0.0"></script>
+    <script src="responsive-architecture.js?v=5.0.0"></script>
+    <script src="app.js?v=5.0.0"></script>
+    
+    <!-- Автоматическая инициализация -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🎆 Starting TradeAnalyzer v5.0...');
+            
+            try {
+                const result = await initializeApp();
+                
+                if (result.success) {
+                    console.log('✅ Application ready!');
+                } else {
+                    console.error('❌ Application initialization failed:', result.error);
+                    // Можно показать пользователю ошибку
+                }
+            } catch (error) {
+                console.error('❌ Critical initialization error:', error);
+            }
+        });
+    </script>
 </body>
 </html>
