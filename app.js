@@ -969,7 +969,7 @@ async function handleStrategySubmit(e) {
             console.log('💾 Saving strategy data:', {
                 name: strategyName,
                 description: strategyDescription,
-                fields: strategyFields,
+                fields: fields, // ✅ Исправлено: было strategyFields
                 user_id: userId
             });
             
@@ -978,7 +978,7 @@ async function handleStrategySubmit(e) {
                 .insert({
                     name: strategyName,
                     description: strategyDescription,
-                    fields: strategyFields, // JSONB поле
+                    fields: fields, // ✅ Исправлено: было strategyFields
                     user_id: userId // UUID ссылка на users.id
                 })
                 .select()
