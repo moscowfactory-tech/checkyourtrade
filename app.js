@@ -2217,64 +2217,6 @@ async function refreshStrategiesFromDB() {
     }
 }
 
-// 📱 МОБИЛЬНАЯ ОПТИМИЗАЦИЯ КЛАВИАТУРЫ
-
-// Обработка появления/скрытия клавиатуры
-function initMobileKeyboardHandling() {
-    let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    
-    // Обработка изменения высоты viewport
-    function handleViewportResize() {
-        if (window.visualViewport) {
-            const currentHeight = window.visualViewport.height;
-            const modal = document.querySelector('.modal.active');
-            
-            if (modal) {
-                // Устанавливаем высоту модального окна равной видимой части
-                const modalContent = modal.querySelector('.modal-content');
-                if (modalContent) {
-                    modalContent.style.maxHeight = `${currentHeight}px`;
-                }
-            }
-        }
-    }
-    
-    // Используем Visual Viewport API для точного отслеживания
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', handleViewportResize);
-        window.visualViewport.addEventListener('scroll', handleViewportResize);
-    }
-    
-    // Обработка фокуса на полях ввода
-    document.addEventListener('focusin', (e) => {
-        if (e.target.matches('input, textarea, select')) {
-            setTimeout(() => {
-                // Прокручиваем к элементу
-                e.target.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'nearest'
-                });
-                handleViewportResize();
-            }, 300);
-        }
-    });
-    
-    // При потере фокуса восстанавливаем размер
-    document.addEventListener('focusout', () => {
-        setTimeout(handleViewportResize, 300);
-    });
-    
-    console.log('📱 Mobile keyboard handling initialized with Visual Viewport API');
-}
-
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    // Проверяем, что это мобильное устройство
-    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        initMobileKeyboardHandling();
-    }
-});
-
 // Make functions globally accessible for onclick handlers
 window.openModal = openModal;
 window.editStrategy = editStrategy;
