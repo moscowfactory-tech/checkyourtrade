@@ -59,9 +59,9 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
             }
         }
         
-        // Загружаем из таблицы analyses
+        // Загружаем из таблицы analysis_results
         const { data: analysesData, error } = await window.supabase
-            .from('analyses')
+            .from('analysis_results')
             .select('*')
             .order('created_at', { ascending: false });
         
@@ -1776,14 +1776,39 @@ async function saveCurrentAnalysis() {
         try {
             console.log('💾 Saving analysis to database...');
             
+            // Получаем ID пользователя
+            const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+            let userId = null;
+            
+            if (telegramUserId) {
+                // Находим пользователя
+                const { data: user } = await window.supabase
+                    .from('users')
+                    .select('id')
+                    .eq('telegram_id', telegramUserId)
+                    .single();
+                    
+                if (user) {
+                    userId = user.id;
+                }
+            }
+            
             const { data: savedAnalysis, error } = await window.supabase
-                .from('analyses')
+                .from('analysis_results')
                 .insert({
-                    strategy_id: currentAnalysisStrategy.id.toString(),
-                    strategy_name: currentAnalysisStrategy.name,
-                    coin: currentCoin,
-                    positive_factors: analysis.results.positive,
-                    negative_factors: analysis.results.negative
+                    strategy_id: currentAnalysisStrategy.id,
+                    user_id: userId,
+                    results: {
+                        coin: currentCoin,
+                        positive_factors: analysis.results.positive,
+                        negative_factors: analysis.results.negative,
+                        total_score: analysis.results.totalScore,
+                        max_score: analysis.results.maxScore,
+                        percentage: analysis.results.percentage
+                    },
+                    total_score: analysis.results.totalScore,
+                    max_score: analysis.results.maxScore,
+                    percentage: analysis.results.percentage
                 })
                 .select()
                 .single();
@@ -1915,7 +1940,7 @@ async function deleteAnalysis(index) {
             console.log('🗑️ Deleting analysis from database...');
             
             const { error } = await window.supabase
-                .from('analyses')
+                .from('analysis_results')
                 .delete()
                 .eq('id', analysis.id);
                 
