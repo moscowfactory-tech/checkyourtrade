@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Тест модального окна</h1>
+    
+    <button id="testBtn1" style="padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px;">
+        Тест 1: Прямой вызов функции
+    </button>
+    
+    <button id="testBtn2" style="padding: 10px 20px; margin: 10px; background: #28a745; color: white; border: none; border-radius: 5px;">
+        Тест 2: Через window
+    </button>
+    
+    <button id="testBtn3" style="padding: 10px 20px; margin: 10px; background: #dc3545; color: white; border: none; border-radius: 5px;">
+        Тест 3: Показать/скрыть напрямую
+    </button>
+
+    <!-- Support Project Modal -->
+    <div class="modal hidden" id="supportModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-heart"></i> Поддержать проект</h3>
+                <button class="modal-close" id="closeSupportModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="support-content">
+                    <p>Если вам нравится TradeAnalyzer и он помогает в торговле, вы можете поддержать развитие проекта:</p>
+                    
+                    <div class="wallet-info">
+                        <div class="wallet-header">
+                            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="USDT" class="crypto-icon">
+                            <div class="wallet-details">
+                                <h4>USDT (TRC20)</h4>
+                                <p class="wallet-network">Tron Network</p>
+                            </div>
+                        </div>
+                        
+                        <div class="wallet-address-container">
+                            <input type="text" id="walletAddress" value="TYourWalletAddressHere123456789" readonly class="wallet-address">
+                            <button id="copyAddressBtn" class="copy-btn">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="support-note">
+                        <p><strong>Спасибо за поддержку!</strong></p>
+                        <p>Ваши донаты помогают улучшать функциональность и добавлять новые возможности.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" id="closeSupportBtn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Простые функции для тестирования
+        function showModal() {
+            console.log('showModal called');
+            const modal = document.getElementById('supportModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('active');
+                console.log('Modal shown');
+            } else {
+                console.error('Modal not found');
+            }
+        }
+
+        function hideModal() {
+            console.log('hideModal called');
+            const modal = document.getElementById('supportModal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+                console.log('Modal hidden');
+            }
+        }
+
+        // Тесты
+        document.getElementById('testBtn1').addEventListener('click', function() {
+            console.log('Test 1: Direct function call');
+            showModal();
+        });
+
+        document.getElementById('testBtn2').addEventListener('click', function() {
+            console.log('Test 2: Via window object');
+            if (typeof window.openSupportModal === 'function') {
+                window.openSupportModal();
+            } else {
+                console.error('window.openSupportModal not found');
+                showModal();
+            }
+        });
+
+        document.getElementById('testBtn3').addEventListener('click', function() {
+            console.log('Test 3: Direct DOM manipulation');
+            const modal = document.getElementById('supportModal');
+            if (modal.classList.contains('hidden')) {
+                modal.style.display = 'flex';
+                modal.classList.remove('hidden');
+                console.log('Modal shown via DOM');
+            } else {
+                modal.style.display = 'none';
+                modal.classList.add('hidden');
+                console.log('Modal hidden via DOM');
+            }
+        });
+
+        // Закрытие
+        document.getElementById('closeSupportModalBtn').addEventListener('click', hideModal);
+        document.getElementById('closeSupportBtn').addEventListener('click', hideModal);
+        
+        // Закрытие по backdrop
+        document.getElementById('supportModal').addEventListener('click', function(e) {
+            if (e.target === this || e.target.classList.contains('modal-backdrop')) {
+                hideModal();
+            }
+        });
+
+        console.log('Test page loaded. Try the buttons above.');
+    </script>
+</body>
+</html>
