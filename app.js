@@ -6,6 +6,23 @@ let fieldCounter = 0;
 let inputCounter = 0;
 let savedAnalyses = [];
 
+// 📱 TELEGRAM WEBAPP MINIMAL INTEGRATION
+const IS_TELEGRAM_WEBAPP = !!(window.Telegram && window.Telegram.WebApp);
+
+// Минимальная инициализация Telegram WebApp
+if (IS_TELEGRAM_WEBAPP) {
+    console.log('📱 Telegram WebApp detected - applying minimal integration');
+    try {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+        console.log('✅ Telegram WebApp initialized');
+    } catch (error) {
+        console.error('❌ Telegram WebApp initialization error:', error);
+    }
+} else {
+    console.log('💻 Browser version detected');
+}
+
 // Функции для работы с localStorage (ОТКЛЮЧЕНО - используем только Supabase)
 function saveStrategiesToLocalStorage() {
     // ОТКЛЮЧЕНО: Не сохраняем в localStorage, только в Supabase

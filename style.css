@@ -2335,6 +2335,29 @@ main {
   gap: var(--space-16);
 }
 
+/* 📱 TELEGRAM WEBAPP MINIMAL STYLES */
+
+/* Минимальные оптимизации для Telegram WebApp */
+@media (max-width: 768px) {
+  /* Предотвращение зума на iOS */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+  
+  /* Оптимизация кнопок для touch */
+  button, .btn {
+    min-height: 44px !important;
+    touch-action: manipulation;
+  }
+  
+  /* Модальные окна на мобильных */
+  .modal-content {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 20px auto !important;
+  }
+}
+
 /* Notification Styles */
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
