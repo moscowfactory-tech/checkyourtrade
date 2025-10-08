@@ -934,6 +934,13 @@ async function handleStrategySubmit(e) {
             }
             
             // Теперь сохраняем стратегию
+            console.log('💾 Saving strategy data:', {
+                name: strategyName,
+                description: strategyDescription,
+                fields: strategyFields,
+                user_id: userId
+            });
+            
             const { data: savedStrategy, error } = await window.supabase
                 .from('strategies')
                 .insert({

@@ -254,12 +254,15 @@
   /* Мобильная статистика профиля */
   .stat-label {
     font-size: 13px;
-    margin-left: 6px;
   }
   
   .stat-value {
-    font-size: 15px;
-    margin-left: 3px; /* Маленький отступ от двоеточия */
+    font-size: 13px;
+    padding: var(--space-1) var(--space-4); /* Меньше отступы на мобильных */
+  }
+  
+  .stat-row {
+    gap: var(--space-4); /* Меньший отступ на мобильных */
   }
   
   .user-stats {

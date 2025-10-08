@@ -1073,12 +1073,12 @@ main {
 .modal-content {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
-  width: 100%;
-  max-width: 800px;
-  max-height: calc(100vh - 48px);
-  overflow: hidden;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: var(--shadow-lg);
-  position: relative;
+  border: 1px solid var(--color-border);
   z-index: 1;
   transform: scale(0.9);
   transition: transform var(--duration-normal) var(--ease-standard);
@@ -1095,7 +1095,7 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-24);
+  padding: var(--space-16); /* Уменьшено с var(--space-24) */
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -1122,7 +1122,7 @@ main {
 }
 
 .modal-body {
-  padding: var(--space-24);
+  padding: var(--space-16); /* Уменьшено с var(--space-24) */
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -1132,7 +1132,7 @@ main {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-12);
-  padding: var(--space-24);
+  padding: var(--space-16); /* Уменьшено с var(--space-24) */
   border-top: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -1212,10 +1212,32 @@ main {
   color: var(--color-primary);
 }
 
+/* Стили для заголовка поля стратегии */
+.field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-16);
+  padding-bottom: var(--space-8);
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+}
+
 .field-header h4 {
   margin: 0;
   color: var(--color-text);
   font-size: var(--font-size-lg);
+  flex: 1;
+}
+
+/* Позиционирование крестика удаления */
+.field-header .remove-field {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  margin-left: var(--space-12);
 }
 
 .field-info {
@@ -2345,9 +2367,9 @@ main {
 
 .stat-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: var(--space-4) 0;
+  gap: var(--space-6); /* Маленький отступ между лабелом и значением */
 }
 
 .stat-label {
