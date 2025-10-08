@@ -2685,6 +2685,55 @@ main {
   display: none;
 }
 
+/* 📱 TABLET ADAPTATION - ПЛАНШЕТНАЯ АДАПТАЦИЯ */
+@media (max-width: 768px) and (min-width: 481px) {
+  /* Планшетная адаптация кнопок "Поддержать проект" */
+  #supportProjectBtn,
+  #footerSupportBtn {
+    padding: var(--space-2) var(--space-5) !important; /* Средние размеры */
+    font-size: var(--font-size-sm) !important;
+    min-height: 30px !important;
+  }
+  
+  /* Планшетная адаптация кнопок конструктора */
+  #addFieldBtn,
+  .add-input-btn {
+    padding: var(--space-1) var(--space-3) !important;
+    font-size: var(--font-size-xs) !important;
+    min-height: 22px !important;
+  }
+  
+  /* Планшетная адаптация modal-footer кнопок */
+  .modal-footer #cancelBtn,
+  .modal-footer button[type="submit"] {
+    padding: var(--space-2) var(--space-5) !important;
+    font-size: var(--font-size-sm) !important;
+    min-height: 30px !important;
+  }
+  
+  /* Планшетная адаптация кнопки копирования */
+  .copy-btn {
+    min-width: 26px !important;
+    height: 26px !important;
+    font-size: var(--font-size-xs) !important;
+  }
+  
+  /* Планшетная адаптация модальных окон */
+  .modal-close {
+    font-size: 30px !important;
+  }
+  
+  /* Планшетная адаптация содержимого стратегий */
+  #strategyModal .form-label {
+    font-size: var(--font-size-base) !important;
+  }
+  
+  #strategyModal .form-control {
+    font-size: var(--font-size-base) !important;
+    padding: var(--space-3) var(--space-4) !important;
+  }
+}
+
 /* Very small screens - Mobile phones */
 @media (max-width: 480px) {
   /* Мобильная навигация в одну строку */
@@ -2900,5 +2949,87 @@ main {
   
   .footer-bottom .btn {
     display: none !important;
+  }
+  
+  /* 📱 МОБИЛЬНАЯ АДАПТАЦИЯ НАШИХ УЛУЧШЕНИЙ */
+  
+  /* Мобильная адаптация кнопок "Поддержать проект" */
+  #supportProjectBtn,
+  #footerSupportBtn {
+    padding: var(--space-1) var(--space-3) !important; /* Меньше на мобильных */
+    font-size: var(--font-size-xs) !important; /* Меньший шрифт */
+    min-height: 28px !important;
+  }
+  
+  /* Мобильная адаптация кнопок конструктора стратегий */
+  #addFieldBtn,
+  .add-input-btn {
+    padding: var(--space-1) var(--space-3) !important; /* Компактнее на мобильных */
+    font-size: 11px !important; /* Маленький шрифт */
+    min-height: 20px !important;
+  }
+  
+  /* Мобильная адаптация кнопок modal-footer */
+  .modal-footer #cancelBtn,
+  .modal-footer button[type="submit"] {
+    padding: var(--space-1) var(--space-4) !important; /* Оптимальные для мобильных */
+    font-size: var(--font-size-xs) !important;
+    min-height: 28px !important;
+  }
+  
+  /* Мобильная адаптация кнопки копирования */
+  .copy-btn {
+    min-width: 24px !important; /* Еще меньше на мобильных */
+    height: 24px !important;
+    font-size: 10px !important;
+    padding: var(--space-1) !important;
+  }
+  
+  /* Мобильная адаптация модальных окон */
+  .modal-close {
+    font-size: 28px !important; /* Меньше крестик на мобильных */
+    padding: var(--space-1) !important;
+  }
+  
+  .modal-header {
+    padding: var(--space-4) !important; /* Минимальные отступы */
+  }
+  
+  .modal-body {
+    padding: var(--space-4) !important; /* Минимальные отступы */
+  }
+  
+  /* Мобильная адаптация содержимого модального окна стратегий */
+  #strategyModal .modal-body {
+    font-size: var(--font-size-sm) !important; /* Меньше на мобильных */
+  }
+  
+  #strategyModal .form-label {
+    font-size: var(--font-size-sm) !important; /* Меньше подписи */
+    font-weight: 500 !important;
+  }
+  
+  #strategyModal .form-control {
+    font-size: var(--font-size-sm) !important; /* Меньше текст в полях */
+    padding: var(--space-2) var(--space-3) !important; /* Меньше отступы */
+  }
+  
+  #strategyModal h3 {
+    font-size: var(--font-size-lg) !important; /* Меньше заголовок */
+  }
+  
+  /* Мобильная адаптация модального окна поддержки */
+  .wallet-info {
+    padding: var(--space-8) !important; /* Меньше отступы */
+    margin: var(--space-8) 0 !important;
+  }
+  
+  .wallet-details {
+    flex-direction: column !important; /* В столбец на мобильных */
+    gap: var(--space-4) !important;
+  }
+  
+  .wallet-detail {
+    justify-content: center !important; /* По центру */
   }
 }
