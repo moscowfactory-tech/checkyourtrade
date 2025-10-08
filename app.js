@@ -2221,52 +2221,50 @@ async function refreshStrategiesFromDB() {
 
 // Обработка появления/скрытия клавиатуры
 function initMobileKeyboardHandling() {
-    let initialViewportHeight = window.innerHeight;
-    let keyboardVisible = false;
+    let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     
-    // Отслеживание изменения размера экрана
-    function handleViewportChange() {
-        const currentHeight = window.innerHeight;
-        const heightDifference = initialViewportHeight - currentHeight;
-        
-        // Клавиатура появилась, если высота уменьшилась на 150px+
-        if (heightDifference > 150 && !keyboardVisible) {
-            keyboardVisible = true;
-            document.body.classList.add('keyboard-active');
-            console.log('📱 Keyboard shown, height difference:', heightDifference);
-        } 
-        // Клавиатура скрылась
-        else if (heightDifference < 100 && keyboardVisible) {
-            keyboardVisible = false;
-            document.body.classList.remove('keyboard-active');
-            console.log('📱 Keyboard hidden, height difference:', heightDifference);
+    // Обработка изменения высоты viewport
+    function handleViewportResize() {
+        if (window.visualViewport) {
+            const currentHeight = window.visualViewport.height;
+            const modal = document.querySelector('.modal.active');
+            
+            if (modal) {
+                // Устанавливаем высоту модального окна равной видимой части
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.maxHeight = `${currentHeight}px`;
+                }
+            }
         }
     }
     
-    // Обработчики событий
-    window.addEventListener('resize', handleViewportChange);
-    window.addEventListener('orientationchange', () => {
-        setTimeout(() => {
-            initialViewportHeight = window.innerHeight;
-            handleViewportChange();
-        }, 500);
-    });
+    // Используем Visual Viewport API для точного отслеживания
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportResize);
+        window.visualViewport.addEventListener('scroll', handleViewportResize);
+    }
     
     // Обработка фокуса на полях ввода
     document.addEventListener('focusin', (e) => {
         if (e.target.matches('input, textarea, select')) {
             setTimeout(() => {
-                // Прокручиваем к элементу через небольшую задержку
+                // Прокручиваем к элементу
                 e.target.scrollIntoView({ 
                     behavior: 'smooth', 
-                    block: 'center',
-                    inline: 'nearest'
+                    block: 'nearest'
                 });
+                handleViewportResize();
             }, 300);
         }
     });
     
-    console.log('📱 Mobile keyboard handling initialized');
+    // При потере фокуса восстанавливаем размер
+    document.addEventListener('focusout', () => {
+        setTimeout(handleViewportResize, 300);
+    });
+    
+    console.log('📱 Mobile keyboard handling initialized with Visual Viewport API');
 }
 
 // Инициализация при загрузке страницы
