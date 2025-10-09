@@ -353,93 +353,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         showNotification('Ошибка инициализации пользователя', 'error');
     }
     
-    // Инициализируем базу данных
-    let dbInitialized = false;
-    if (typeof initializeDatabase === 'function') {
-        dbInitialized = await initializeDatabase();
-    }
+    // 💾 Простая инициализация без конфликтов
+    console.log('💾 Skipping complex database initialization - using simple approach');
     
-    // Простая загрузка стратегий из базы данных
+    // 💾 Простая загрузка стратегий
     strategies = [];
     
-    // Подождем немного для инициализации Supabase
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (window.supabase && typeof window.supabase.from === 'function') {
-        try {
-            console.log('🔄 Loading strategies from database...');
-            
-            // Получаем ID текущего пользователя Telegram
-            const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
-            
-            let dbStrategies = [];
-            let error = null;
-            
-            if (telegramUserId) {
-                // Сначала найдем user_id по telegram_id
-                const { data: userData } = await window.supabase
-                    .from('users')
-                    .select('id')
-                    .eq('telegram_id', telegramUserId)
-                    .single();
-                
-                if (userData) {
-                    // Загружаем стратегии по user_id
-                    const result = await window.supabase
-                        .from('strategies')
-                        .select('*')
-                        .eq('user_id', userData.id)
-                        .order('created_at', { ascending: false });
-                    
-                    dbStrategies = result.data || [];
-                    error = result.error;
-                    console.log('👤 Loading strategies for user_id:', userData.id);
-                } else {
-                    console.log('👤 User not found in DB, will be created on first strategy save');
-                    dbStrategies = [];
-                }
-            } else {
-                // Загружаем публичные стратегии
-                const result = await window.supabase
-                    .from('strategies')
-                    .select('*')
-                    .eq('is_public', true)
-                    .order('created_at', { ascending: false });
-                
-                dbStrategies = result.data || [];
-                error = result.error;
-                console.log('⚠️ No telegram user ID, loading public strategies only');
-            }
-                
-            if (error) {
-                console.error('❌ Error loading strategies:', error);
-                console.log('❌ Full error details:', JSON.stringify(error, null, 2));
-            } else if (dbStrategies && Array.isArray(dbStrategies)) {
-                strategies = dbStrategies;
-                console.log(`✅ Loaded ${strategies.length} strategies from database`);
-                console.log('✅ Strategies data:', strategies);
-        
-                // Обновляем статистику пользователя
-                if (typeof window.updateUserStats === 'function') {
-                    window.updateUserStats();
-                }
-            } else {
-                console.log('📝 No strategies found in database');
-                console.log('📝 dbStrategies:', dbStrategies);
-            }
-        } catch (error) {
-            console.error('❌ Exception loading strategies:', error);
-            console.log('❌ Full exception:', JSON.stringify(error, null, 2));
-        }
-    } else {
-        console.warn('⚠️ Supabase client not available or not functional');
-        console.log('⚠️ window.supabase:', window.supabase);
-        console.log('⚠️ typeof window.supabase.from:', typeof window.supabase?.from);
-        
-        // Новые пользователи начинают с пустым списком
-        console.log('📝 New user - starting with empty strategies list');
-        strategies = [];
-    }
+    // Подождем для инициализации Supabase и UserManager
+    setTimeout(async () => {
+        await loadStrategiesFromDatabase();
+    }, 3000); // 3 секунды для стабильности
     
     setupEventListeners();
     
@@ -2301,6 +2224,62 @@ async function refreshStrategiesFromDB() {
     } catch (error) {
         console.error('❌ Exception refreshing strategies:', error);
         showNotification('Ошибка обновления стратегий', 'error');
+    }
+}
+
+// 💾 ФУНКЦИЯ ЗАГРУЗКИ СТРАТЕГИЙ ИЗ БД
+async function loadStrategiesFromDatabase() {
+    console.log('💾 loadStrategiesFromDatabase: Starting...');
+    
+    if (!window.supabase) {
+        console.warn('⚠️ Supabase not available');
+        return;
+    }
+    
+    if (!window.userManager || !window.userManager.isInitialized) {
+        console.warn('⚠️ User manager not initialized');
+        return;
+    }
+    
+    const userId = window.userManager.getUserId();
+    console.log('👤 Loading strategies for user:', userId);
+    
+    if (!userId) {
+        console.warn('⚠️ No user ID available');
+        return;
+    }
+    
+    try {
+        const { data, error } = await window.supabase
+            .from('strategies')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('❌ Error loading strategies:', error);
+            showNotification('Ошибка загрузки стратегий', 'error');
+        } else {
+            strategies.length = 0; // Очищаем массив
+            if (data && Array.isArray(data)) {
+                strategies.push(...data);
+            }
+            console.log(`✅ Loaded ${strategies.length} strategies from database`);
+            
+            // Обновляем UI
+            if (typeof updateStrategySelect === 'function') {
+                updateStrategySelect();
+            }
+            if (typeof renderStrategies === 'function') {
+                renderStrategies();
+            }
+            if (typeof window.updateUserStats === 'function') {
+                window.updateUserStats();
+            }
+        }
+    } catch (err) {
+        console.error('❌ Exception loading strategies:', err);
+        showNotification('Ошибка подключения к базе данных', 'error');
     }
 }
 
