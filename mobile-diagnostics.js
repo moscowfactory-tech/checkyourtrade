@@ -77,7 +77,7 @@ function createDiagnosticPanel() {
         { text: '👥 Проверить пользователей', action: 'checkUsers' },
         { text: '🔧 Синхронизация пользователя', action: 'syncUser' },
         { text: '📊 Тест загрузки', action: 'testLoad' },
-        { text: '🔒 Исправить RLS', action: 'fixRLS' },
+        { text: '🔒 Тест доступа БД', action: 'fixRLS' },
         { text: '🧪 Создать тест', action: 'createTest' },
         { text: '🔄 Очистить', action: 'clear' }
     ];
@@ -370,9 +370,9 @@ async function syncUserVisual() {
     }
 }
 
-// Исправление RLS политик
+// Простое тестирование без RLS (отключение RLS)
 async function fixRLSVisual() {
-    addDiagnosticMessage('🔒 Fixing RLS policies...', 'info');
+    addDiagnosticMessage('🔒 Testing database access without RLS...', 'info');
     
     if (!window.supabase) {
         addDiagnosticMessage('❌ Supabase not available', 'error');
@@ -380,60 +380,64 @@ async function fixRLSVisual() {
     }
     
     try {
-        addDiagnosticMessage('🛠️ Executing RLS fix script...', 'info');
+        addDiagnosticMessage('📊 Trying direct strategies access...', 'info');
         
-        // Удаляем старые политики
-        const dropPolicies = [
-            'DROP POLICY IF EXISTS "Users can view public strategies and their own" ON strategies',
-            'DROP POLICY IF EXISTS "Users can insert their own strategies" ON strategies',
-            'DROP POLICY IF EXISTS "Users can update their own strategies" ON strategies',
-            'DROP POLICY IF EXISTS "Users can delete their own strategies" ON strategies',
-            'DROP POLICY IF EXISTS "Users can view their own profile" ON users',
-            'DROP POLICY IF EXISTS "Users can insert their own profile" ON users',
-            'DROP POLICY IF EXISTS "Users can update their own profile" ON users',
-            'DROP POLICY IF EXISTS "Users can view their own analysis results" ON analysis_results',
-            'DROP POLICY IF EXISTS "Users can insert their own analysis results" ON analysis_results',
-            'DROP POLICY IF EXISTS "Allow all operations on users" ON users',
-            'DROP POLICY IF EXISTS "Allow all operations on strategies" ON strategies',
-            'DROP POLICY IF EXISTS "Allow all operations on analysis_results" ON analysis_results'
-        ];
+        // Пробуем прямой доступ к стратегиям без фильтров
+        const { data: allStrategies, error: allError } = await window.supabase
+            .from('strategies')
+            .select('*');
         
-        for (const sql of dropPolicies) {
-            try {
-                await window.supabase.rpc('exec_sql', { sql_query: sql });
-            } catch (err) {
-                // Игнорируем ошибки удаления
+        if (allError) {
+            addDiagnosticMessage(`❌ Direct access error: ${allError.message}`, 'error');
+            addDiagnosticMessage('📝 Error details: ' + JSON.stringify(allError), 'error');
+        } else {
+            addDiagnosticMessage(`✅ Direct access works! Found ${allStrategies?.length || 0} total strategies`, 'success');
+            
+            if (allStrategies && allStrategies.length > 0) {
+                addDiagnosticMessage('📊 Strategies in database:', 'info');
+                allStrategies.forEach((strategy, index) => {
+                    addDiagnosticMessage(`  ${index + 1}. ${strategy.name} (user: ${strategy.user_id})`, 'info');
+                });
             }
         }
         
-        addDiagnosticMessage('✅ Old policies dropped', 'success');
-        
-        // Создаем новые политики
-        const createPolicies = [
-            'CREATE POLICY "users_all_access" ON users FOR ALL USING (true)',
-            'CREATE POLICY "strategies_all_access" ON strategies FOR ALL USING (true)',
-            'CREATE POLICY "analysis_results_all_access" ON analysis_results FOR ALL USING (true)'
-        ];
-        
-        for (const sql of createPolicies) {
-            try {
-                await window.supabase.rpc('exec_sql', { sql_query: sql });
-                addDiagnosticMessage(`✅ Created policy: ${sql.split('"')[1]}`, 'success');
-            } catch (err) {
-                addDiagnosticMessage(`❌ Error creating policy: ${err.message}`, 'error');
+        // Проверяем доступ с фильтром по user_id
+        if (window.userManager && window.userManager.isInitialized) {
+            const userId = window.userManager.getUserId();
+            if (userId) {
+                addDiagnosticMessage(`👤 Testing filtered access for user: ${userId}`, 'info');
+                
+                const { data: userStrategies, error: userError } = await window.supabase
+                    .from('strategies')
+                    .select('*')
+                    .eq('user_id', userId);
+                
+                if (userError) {
+                    addDiagnosticMessage(`❌ Filtered access error: ${userError.message}`, 'error');
+                } else {
+                    addDiagnosticMessage(`✅ Filtered access works! Found ${userStrategies?.length || 0} user strategies`, 'success');
+                    
+                    // Обновляем локальные стратегии
+                    if (userStrategies && Array.isArray(userStrategies)) {
+                        window.strategies = userStrategies;
+                        addDiagnosticMessage(`🔄 Updated local strategies: ${window.strategies.length}`, 'success');
+                        
+                        // Обновляем UI
+                        if (typeof updateStrategySelect === 'function') {
+                            updateStrategySelect();
+                        }
+                        if (typeof renderStrategies === 'function') {
+                            renderStrategies();
+                        }
+                    }
+                }
             }
         }
         
-        addDiagnosticMessage('✅ RLS policies fixed!', 'success');
-        addDiagnosticMessage('🔄 Testing strategies load after RLS fix...', 'info');
-        
-        // Тестируем загрузку стратегий
-        setTimeout(async () => {
-            await testLoadVisual();
-        }, 1000);
+        addDiagnosticMessage('✅ Database access test completed!', 'success');
         
     } catch (err) {
-        addDiagnosticMessage(`❌ RLS fix error: ${err.message}`, 'error');
+        addDiagnosticMessage(`❌ Test error: ${err.message}`, 'error');
     }
 }
 
