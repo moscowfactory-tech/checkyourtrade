@@ -140,16 +140,21 @@ class UnifiedUserManager {
         console.log('💾 Ensuring user exists in database...');
         
         try {
-            // Проверяем, есть ли пользователь
-            const { data: existingUser, error: findError } = await window.supabase
+            console.log('🔍 Searching for user with telegram_id:', this.currentUser.telegram_id);
+            
+            // Проверяем, есть ли пользователь (без .single())
+            const { data: existingUsers, error: findError } = await window.supabase
                 .from('users')
                 .select('id')
-                .eq('telegram_id', this.currentUser.telegram_id)
-                .single();
+                .eq('telegram_id', this.currentUser.telegram_id);
+                
+            console.log('🔍 Database lookup result:', { existingUsers, findError });
 
-            if (existingUser) {
+            if (existingUsers && existingUsers.length > 0) {
+                const existingUser = existingUsers[0]; // Берем первого
                 console.log('✅ User found in database:', existingUser.id);
                 this.currentUser.uuid = existingUser.id;
+                console.log('✅ UUID assigned to user:', this.currentUser.uuid);
             } else {
                 console.log('🆕 Creating new user in database...');
                 
