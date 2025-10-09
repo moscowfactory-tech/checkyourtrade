@@ -75,6 +75,7 @@ function createDiagnosticPanel() {
     const buttons = [
         { text: '🔍 Полная диагностика', action: 'fullDiagnostic' },
         { text: '👥 Проверить пользователей', action: 'checkUsers' },
+        { text: '🔧 Синхронизация пользователя', action: 'syncUser' },
         { text: '📊 Тест загрузки', action: 'testLoad' },
         { text: '🧪 Создать тест', action: 'createTest' },
         { text: '🔄 Очистить', action: 'clear' }
@@ -124,6 +125,9 @@ async function handleDiagnosticAction(action) {
         case 'createTest':
             await createTestVisual();
             break;
+        case 'syncUser':
+            await syncUserVisual();
+            break;
     }
 }
 
@@ -170,12 +174,24 @@ async function runFullMobileDiagnostic() {
     
     if (hasUserManager) {
         const user = window.userManager.getCurrentUser();
-        const userId = window.userManager.getUserId();
+        let userId = window.userManager.getUserId();
         const telegramId = window.userManager.getTelegramId();
         
         addDiagnosticMessage(`👤 User Type: ${user?.type || 'unknown'}`, 'info');
         addDiagnosticMessage(`👤 Telegram ID: ${telegramId || 'none'}`, 'info');
-        addDiagnosticMessage(`👤 User UUID: ${userId || 'none'}`, userId ? 'success' : 'error');
+        addDiagnosticMessage(`👤 User UUID (before): ${userId || 'none'}`, userId ? 'success' : 'error');
+        
+        // Если UUID нет, принудительно вызываем ensureUserInDatabase
+        if (!userId && hasSupabase) {
+            addDiagnosticMessage('🔧 Forcing user database sync...', 'warning');
+            try {
+                await window.userManager.ensureUserInDatabase();
+                userId = window.userManager.getUserId();
+                addDiagnosticMessage(`👤 User UUID (after sync): ${userId || 'still none'}`, userId ? 'success' : 'error');
+            } catch (err) {
+                addDiagnosticMessage(`❌ Error syncing user: ${err.message}`, 'error');
+            }
+        }
     }
     
     // Проверка стратегий
@@ -304,6 +320,49 @@ async function createTestVisual() {
         }
     } catch (err) {
         addDiagnosticMessage(`❌ Exception: ${err.message}`, 'error');
+    }
+}
+
+// Синхронизация пользователя
+async function syncUserVisual() {
+    addDiagnosticMessage('🔧 Syncing user with database...', 'info');
+    
+    if (!window.userManager || !window.userManager.isInitialized) {
+        addDiagnosticMessage('❌ User manager not ready', 'error');
+        return;
+    }
+    
+    if (!window.supabase) {
+        addDiagnosticMessage('❌ Supabase not available', 'error');
+        return;
+    }
+    
+    try {
+        const beforeUserId = window.userManager.getUserId();
+        addDiagnosticMessage(`👤 UUID before sync: ${beforeUserId || 'none'}`, 'info');
+        
+        // Принудительная синхронизация
+        await window.userManager.ensureUserInDatabase();
+        
+        const afterUserId = window.userManager.getUserId();
+        addDiagnosticMessage(`👤 UUID after sync: ${afterUserId || 'still none'}`, afterUserId ? 'success' : 'error');
+        
+        if (afterUserId) {
+            addDiagnosticMessage('✅ User sync successful!', 'success');
+            
+            // Пробуем загрузить стратегии
+            if (typeof loadStrategiesFromDatabase === 'function') {
+                addDiagnosticMessage('🔄 Reloading strategies...', 'info');
+                await loadStrategiesFromDatabase();
+                const strategiesCount = window.strategies ? window.strategies.length : 0;
+                addDiagnosticMessage(`📊 Strategies loaded: ${strategiesCount}`, strategiesCount > 0 ? 'success' : 'warning');
+            }
+        } else {
+            addDiagnosticMessage('❌ User sync failed - UUID still missing', 'error');
+        }
+        
+    } catch (err) {
+        addDiagnosticMessage(`❌ Sync error: ${err.message}`, 'error');
     }
 }
 
