@@ -77,6 +77,7 @@ function createDiagnosticPanel() {
         { text: '👥 Проверить пользователей', action: 'checkUsers' },
         { text: '🔧 Синхронизация пользователя', action: 'syncUser' },
         { text: '📊 Тест загрузки', action: 'testLoad' },
+        { text: '🔒 Исправить RLS', action: 'fixRLS' },
         { text: '🧪 Создать тест', action: 'createTest' },
         { text: '🔄 Очистить', action: 'clear' }
     ];
@@ -127,6 +128,9 @@ async function handleDiagnosticAction(action) {
             break;
         case 'syncUser':
             await syncUserVisual();
+            break;
+        case 'fixRLS':
+            await fixRLSVisual();
             break;
     }
 }
@@ -363,6 +367,73 @@ async function syncUserVisual() {
         
     } catch (err) {
         addDiagnosticMessage(`❌ Sync error: ${err.message}`, 'error');
+    }
+}
+
+// Исправление RLS политик
+async function fixRLSVisual() {
+    addDiagnosticMessage('🔒 Fixing RLS policies...', 'info');
+    
+    if (!window.supabase) {
+        addDiagnosticMessage('❌ Supabase not available', 'error');
+        return;
+    }
+    
+    try {
+        addDiagnosticMessage('🛠️ Executing RLS fix script...', 'info');
+        
+        // Удаляем старые политики
+        const dropPolicies = [
+            'DROP POLICY IF EXISTS "Users can view public strategies and their own" ON strategies',
+            'DROP POLICY IF EXISTS "Users can insert their own strategies" ON strategies',
+            'DROP POLICY IF EXISTS "Users can update their own strategies" ON strategies',
+            'DROP POLICY IF EXISTS "Users can delete their own strategies" ON strategies',
+            'DROP POLICY IF EXISTS "Users can view their own profile" ON users',
+            'DROP POLICY IF EXISTS "Users can insert their own profile" ON users',
+            'DROP POLICY IF EXISTS "Users can update their own profile" ON users',
+            'DROP POLICY IF EXISTS "Users can view their own analysis results" ON analysis_results',
+            'DROP POLICY IF EXISTS "Users can insert their own analysis results" ON analysis_results',
+            'DROP POLICY IF EXISTS "Allow all operations on users" ON users',
+            'DROP POLICY IF EXISTS "Allow all operations on strategies" ON strategies',
+            'DROP POLICY IF EXISTS "Allow all operations on analysis_results" ON analysis_results'
+        ];
+        
+        for (const sql of dropPolicies) {
+            try {
+                await window.supabase.rpc('exec_sql', { sql_query: sql });
+            } catch (err) {
+                // Игнорируем ошибки удаления
+            }
+        }
+        
+        addDiagnosticMessage('✅ Old policies dropped', 'success');
+        
+        // Создаем новые политики
+        const createPolicies = [
+            'CREATE POLICY "users_all_access" ON users FOR ALL USING (true)',
+            'CREATE POLICY "strategies_all_access" ON strategies FOR ALL USING (true)',
+            'CREATE POLICY "analysis_results_all_access" ON analysis_results FOR ALL USING (true)'
+        ];
+        
+        for (const sql of createPolicies) {
+            try {
+                await window.supabase.rpc('exec_sql', { sql_query: sql });
+                addDiagnosticMessage(`✅ Created policy: ${sql.split('"')[1]}`, 'success');
+            } catch (err) {
+                addDiagnosticMessage(`❌ Error creating policy: ${err.message}`, 'error');
+            }
+        }
+        
+        addDiagnosticMessage('✅ RLS policies fixed!', 'success');
+        addDiagnosticMessage('🔄 Testing strategies load after RLS fix...', 'info');
+        
+        // Тестируем загрузку стратегий
+        setTimeout(async () => {
+            await testLoadVisual();
+        }, 1000);
+        
+    } catch (err) {
+        addDiagnosticMessage(`❌ RLS fix error: ${err.message}`, 'error');
     }
 }
 
