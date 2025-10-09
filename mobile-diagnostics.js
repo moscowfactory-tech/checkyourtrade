@@ -79,6 +79,7 @@ function createDiagnosticPanel() {
         { text: '📊 Тест загрузки', action: 'testLoad' },
         { text: '🔒 Тест доступа БД', action: 'fixRLS' },
         { text: '🔍 Детальная синхронизация', action: 'detailedSync' },
+        { text: '⚠️ Показать SQL решение', action: 'showSQL' },
         { text: '🧪 Создать тест', action: 'createTest' },
         { text: '🔄 Очистить', action: 'clear' }
     ];
@@ -135,6 +136,9 @@ async function handleDiagnosticAction(action) {
             break;
         case 'detailedSync':
             await detailedSyncVisual();
+            break;
+        case 'showSQL':
+            showSQLSolution();
             break;
     }
 }
@@ -577,6 +581,30 @@ async function detailedSyncVisual() {
     } catch (err) {
         addDiagnosticMessage(`❌ Analysis error: ${err.message}`, 'error');
     }
+}
+
+// Показать SQL решение для RLS
+function showSQLSolution() {
+    addDiagnosticMessage('⚠️ RLS PROBLEM DETECTED!', 'error');
+    addDiagnosticMessage('📝 SOLUTION: Execute this SQL in Supabase Dashboard:', 'warning');
+    addDiagnosticMessage('', 'info');
+    addDiagnosticMessage('-- 1. DISABLE RLS ON ALL TABLES', 'info');
+    addDiagnosticMessage('ALTER TABLE users DISABLE ROW LEVEL SECURITY;', 'warning');
+    addDiagnosticMessage('ALTER TABLE strategies DISABLE ROW LEVEL SECURITY;', 'warning');
+    addDiagnosticMessage('ALTER TABLE analysis_results DISABLE ROW LEVEL SECURITY;', 'warning');
+    addDiagnosticMessage('', 'info');
+    addDiagnosticMessage('-- 2. TEST ACCESS', 'info');
+    addDiagnosticMessage('SELECT COUNT(*) FROM users;', 'warning');
+    addDiagnosticMessage('SELECT COUNT(*) FROM strategies;', 'warning');
+    addDiagnosticMessage('', 'info');
+    addDiagnosticMessage('🔧 HOW TO DO IT:', 'success');
+    addDiagnosticMessage('1. Open Supabase Dashboard', 'info');
+    addDiagnosticMessage('2. Go to SQL Editor', 'info');
+    addDiagnosticMessage('3. Copy-paste the SQL above', 'info');
+    addDiagnosticMessage('4. Click RUN', 'info');
+    addDiagnosticMessage('5. Reload Telegram WebApp', 'info');
+    addDiagnosticMessage('', 'info');
+    addDiagnosticMessage('✅ After this, all data should be accessible!', 'success');
 }
 
 // Добавляем кнопку диагностики в интерфейс
