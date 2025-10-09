@@ -221,9 +221,135 @@ setTimeout(() => {
     setTimeout(testStrategiesLoad, 2000);
 }, 1000);
 
+// Функция для создания тестовой стратегии
+async function createTestStrategy() {
+    console.log('🧪 CREATING TEST STRATEGY...');
+    
+    if (!window.supabase) {
+        console.log('❌ Supabase not available');
+        return;
+    }
+
+    if (!window.userManager || !window.userManager.isInitialized) {
+        console.log('❌ User manager not initialized');
+        return;
+    }
+
+    const userId = window.userManager.getUserId();
+    console.log('👤 Creating test strategy for user:', userId);
+
+    if (!userId) {
+        console.log('❌ No user ID available');
+        return;
+    }
+
+    try {
+        const testStrategy = {
+            name: 'Test Strategy ' + Date.now(),
+            description: 'Automatically created test strategy',
+            fields: [
+                {
+                    name: 'Test Field',
+                    description: 'Test field description',
+                    inputs: [
+                        {
+                            type: 'text',
+                            label: 'Test Input',
+                            required: true
+                        }
+                    ]
+                }
+            ],
+            user_id: userId
+        };
+
+        console.log('📝 Test strategy data:', testStrategy);
+
+        const { data, error } = await window.supabase
+            .from('strategies')
+            .insert(testStrategy)
+            .select()
+            .single();
+
+        if (error) {
+            console.log('❌ Error creating test strategy:', error);
+        } else {
+            console.log('✅ Test strategy created successfully:', data);
+            
+            // Перезагружаем стратегии
+            if (typeof loadStrategiesFromDatabase === 'function') {
+                await loadStrategiesFromDatabase();
+            }
+        }
+    } catch (err) {
+        console.log('❌ Exception creating test strategy:', err);
+    }
+}
+
 // Экспорт функций для ручного вызова
 window.runTelegramDiagnostics = runTelegramDiagnostics;
 window.testButtons = testButtons;
 window.testStrategiesLoad = testStrategiesLoad;
+window.createTestStrategy = createTestStrategy;
 
-console.log('🔍 Telegram diagnostics loaded. Use runTelegramDiagnostics() for manual testing.');
+// Функция для проверки пользователей в БД
+async function checkUsersInDatabase() {
+    console.log('👥 CHECKING USERS IN DATABASE...');
+    
+    if (!window.supabase) {
+        console.log('❌ Supabase not available');
+        return;
+    }
+
+    try {
+        // Проверяем всех пользователей
+        const { data: allUsers, error: allError } = await window.supabase
+            .from('users')
+            .select('*');
+
+        console.log('👥 All users in database:', allUsers);
+        console.log('👥 Users count:', allUsers?.length || 0);
+
+        if (window.userManager && window.userManager.isInitialized) {
+            const currentUser = window.userManager.getCurrentUser();
+            const telegramId = window.userManager.getTelegramId();
+            const userId = window.userManager.getUserId();
+            
+            console.log('👤 Current user from UserManager:', currentUser);
+            console.log('👤 Telegram ID:', telegramId);
+            console.log('👤 User UUID:', userId);
+
+            if (telegramId) {
+                // Проверяем конкретного пользователя
+                const { data: specificUser, error: specificError } = await window.supabase
+                    .from('users')
+                    .select('*')
+                    .eq('telegram_id', telegramId)
+                    .single();
+
+                console.log('👤 Specific user lookup:', { specificUser, specificError });
+            }
+        }
+
+        // Проверяем все стратегии
+        const { data: allStrategies, error: strategiesError } = await window.supabase
+            .from('strategies')
+            .select('*');
+
+        console.log('📊 All strategies in database:', allStrategies);
+        console.log('📊 Strategies count:', allStrategies?.length || 0);
+
+    } catch (err) {
+        console.log('❌ Exception checking database:', err);
+    }
+}
+
+window.checkUsersInDatabase = checkUsersInDatabase;
+
+console.log('🔍 Telegram diagnostics loaded.');
+console.log('🔧 Available functions:');
+console.log('  - runTelegramDiagnostics() - полная диагностика');
+console.log('  - testButtons() - тест кнопок');
+console.log('  - testStrategiesLoad() - тест загрузки стратегий');
+console.log('  - createTestStrategy() - создать тестовую стратегию');
+console.log('  - checkUsersInDatabase() - проверить пользователей в БД');
