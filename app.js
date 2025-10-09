@@ -55,15 +55,32 @@ function initializeButtonsImmediately() {
                     console.log('📊 Navigation clicked:', sectionId);
                     
                     // Принудительно загружаем стратегии перед отображением конструктора
-                    if (sectionId === 'constructor' && typeof loadStrategiesFromDatabase === 'function') {
-                        console.log('🔄 Force loading strategies before showing constructor...');
-                        await loadStrategiesFromDatabase();
-                    }
-                    
-                    if (typeof showSection === 'function') {
-                        showSection(sectionId);
+                    if (sectionId === 'constructor') {
+                        console.log('🔄 Loading strategies and showing constructor...');
+                        
+                        // Сначала показываем секцию
+                        if (typeof showSection === 'function') {
+                            showSection(sectionId);
+                        }
+                        
+                        // Затем загружаем стратегии и обновляем UI
+                        if (typeof loadStrategiesFromDatabase === 'function') {
+                            await loadStrategiesFromDatabase();
+                            // Принудительно обновляем UI после загрузки
+                            setTimeout(() => {
+                                if (typeof renderStrategies === 'function') {
+                                    renderStrategies();
+                                    console.log('✅ Strategies force-rendered after navigation');
+                                }
+                            }, 100);
+                        }
                     } else {
-                        console.log('⚠️ showSection not ready yet');
+                        // Обычная навигация для других секций
+                        if (typeof showSection === 'function') {
+                            showSection(sectionId);
+                        } else {
+                            console.log('⚠️ showSection not ready yet');
+                        }
                     }
                 };
             });
@@ -2280,23 +2297,82 @@ async function loadStrategiesFromDatabase() {
             if (data && Array.isArray(data)) {
                 strategies.push(...data);
             }
-            console.log(`✅ Loaded ${strategies.length} strategies from database`);
+            console.log('🔄 Forcing UI update after loading strategies...');
             
-            // Обновляем UI
-            if (typeof updateStrategySelect === 'function') {
-                updateStrategySelect();
+            // Проверяем, что элемент strategiesGrid доступен
+            const strategiesGrid = document.getElementById('strategiesGrid');
+            console.log('💻 strategiesGrid element found:', !!strategiesGrid);
+            
+            if (typeof forceUIUpdate === 'function') {
+                forceUIUpdate();
+            } else {
+                // Фолбэк на старые функции
+                if (typeof updateStrategySelect === 'function') {
+                    updateStrategySelect();
+                }
+                if (typeof renderStrategies === 'function') {
+                    renderStrategies();
+                    console.log('✅ renderStrategies() called from loadStrategiesFromDatabase');
+                }
+                if (typeof window.updateUserStats === 'function') {
+                    window.updateUserStats();
+                }
             }
-            if (typeof renderStrategies === 'function') {
-                renderStrategies();
-            }
-            if (typeof window.updateUserStats === 'function') {
-                window.updateUserStats();
-            }
+            
+            // Дополнительная проверка через 500мс
+            setTimeout(() => {
+                const grid = document.getElementById('strategiesGrid');
+                if (grid) {
+                    console.log('🔄 Double-checking UI update...');
+                    if (typeof renderStrategies === 'function') {
+                        renderStrategies();
+                        console.log('✅ Double-check renderStrategies() completed');
+                    }
+                } else {
+                    console.error('❌ strategiesGrid still not found after 500ms');
+                }
+            }, 500);
         }
     } catch (err) {
         console.error('❌ Exception loading strategies:', err);
         showNotification('Ошибка подключения к базе данных', 'error');
     }
+}
+
+// 🔧 ФУНКЦИЯ ПРИНУДИТЕЛЬНОГО ОБНОВЛЕНИЯ UI
+function forceUIUpdate() {
+    console.log('🔧 FORCE UI UPDATE...');
+    console.log('📊 Current strategies count:', strategies.length);
+    console.log('📊 Strategies data:', strategies);
+    
+    // Проверяем элементы
+    const strategiesGrid = document.getElementById('strategiesGrid');
+    const strategySelect = document.getElementById('strategySelect');
+    
+    console.log('💻 strategiesGrid element:', strategiesGrid);
+    console.log('💻 strategySelect element:', strategySelect);
+    
+    if (strategiesGrid) {
+        console.log('✅ strategiesGrid found - updating...');
+        renderStrategies();
+    } else {
+        console.error('❌ strategiesGrid NOT FOUND!');
+    }
+    
+    if (strategySelect) {
+        console.log('✅ strategySelect found - updating...');
+        updateStrategySelect();
+    } else {
+        console.error('❌ strategySelect NOT FOUND!');
+    }
+    
+    // Обновляем счетчики
+    if (typeof window.updateUserStats === 'function') {
+        console.log('✅ Updating user stats...');
+        window.updateUserStats();
+    }
+    
+    console.log('✅ Force UI update completed!');
 }
 
 // Make functions globally accessible for onclick handlers
@@ -2307,4 +2383,5 @@ window.deleteStrategy = deleteStrategy;
 window.viewAnalysis = viewAnalysis;
 window.refreshStrategiesFromDB = refreshStrategiesFromDB;
 window.deleteAnalysis = deleteAnalysis;
+window.forceUIUpdate = forceUIUpdate;
 window.strategies = strategies;
