@@ -78,6 +78,7 @@ function createDiagnosticPanel() {
         { text: '🔧 Синхронизация пользователя', action: 'syncUser' },
         { text: '📊 Тест загрузки', action: 'testLoad' },
         { text: '🔒 Тест доступа БД', action: 'fixRLS' },
+        { text: '🔍 Детальная синхронизация', action: 'detailedSync' },
         { text: '🧪 Создать тест', action: 'createTest' },
         { text: '🔄 Очистить', action: 'clear' }
     ];
@@ -131,6 +132,9 @@ async function handleDiagnosticAction(action) {
             break;
         case 'fixRLS':
             await fixRLSVisual();
+            break;
+        case 'detailedSync':
+            await detailedSyncVisual();
             break;
     }
 }
@@ -438,6 +442,140 @@ async function fixRLSVisual() {
         
     } catch (err) {
         addDiagnosticMessage(`❌ Test error: ${err.message}`, 'error');
+    }
+}
+
+// Детальная синхронизация с анализом архитектуры
+async function detailedSyncVisual() {
+    addDiagnosticMessage('🔍 DETAILED ARCHITECTURE ANALYSIS...', 'info');
+    
+    if (!window.supabase) {
+        addDiagnosticMessage('❌ Supabase not available', 'error');
+        return;
+    }
+    
+    try {
+        // 1. Анализ всех пользователей в БД
+        addDiagnosticMessage('👥 Step 1: Analyzing all users in database...', 'info');
+        
+        const { data: allUsers, error: usersError } = await window.supabase
+            .from('users')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (usersError) {
+            addDiagnosticMessage(`❌ Users query error: ${usersError.message}`, 'error');
+            return;
+        }
+        
+        addDiagnosticMessage(`📊 Total users in database: ${allUsers?.length || 0}`, 'success');
+        
+        // Анализ типов пользователей
+        const browserUsers = allUsers?.filter(u => u.telegram_id < 0) || [];
+        const telegramUsers = allUsers?.filter(u => u.telegram_id > 0) || [];
+        
+        addDiagnosticMessage(`💻 Browser users (negative IDs): ${browserUsers.length}`, 'info');
+        addDiagnosticMessage(`📱 Telegram users (positive IDs): ${telegramUsers.length}`, 'info');
+        
+        // Показываем пользователей
+        if (allUsers && allUsers.length > 0) {
+            addDiagnosticMessage('📝 Users breakdown:', 'info');
+            allUsers.forEach((user, index) => {
+                const type = user.telegram_id < 0 ? 'BROWSER' : 'TELEGRAM';
+                addDiagnosticMessage(`  ${index + 1}. [${type}] ID: ${user.telegram_id}, Name: ${user.first_name}, UUID: ${user.id.substring(0, 8)}...`, 'info');
+            });
+        }
+        
+        // 2. Анализ стратегий
+        addDiagnosticMessage('📊 Step 2: Analyzing strategies distribution...', 'info');
+        
+        const { data: allStrategies, error: strategiesError } = await window.supabase
+            .from('strategies')
+            .select('*, users!inner(telegram_id, first_name)')
+            .order('created_at', { ascending: false });
+        
+        if (strategiesError) {
+            addDiagnosticMessage(`❌ Strategies query error: ${strategiesError.message}`, 'error');
+        } else {
+            addDiagnosticMessage(`📊 Total strategies: ${allStrategies?.length || 0}`, 'success');
+            
+            if (allStrategies && allStrategies.length > 0) {
+                const browserStrategies = allStrategies.filter(s => s.users.telegram_id < 0);
+                const telegramStrategies = allStrategies.filter(s => s.users.telegram_id > 0);
+                
+                addDiagnosticMessage(`💻 Browser strategies: ${browserStrategies.length}`, 'info');
+                addDiagnosticMessage(`📱 Telegram strategies: ${telegramStrategies.length}`, 'info');
+                
+                // Показываем стратегии
+                addDiagnosticMessage('📝 Strategies breakdown:', 'info');
+                allStrategies.slice(0, 5).forEach((strategy, index) => {
+                    const type = strategy.users.telegram_id < 0 ? 'BROWSER' : 'TELEGRAM';
+                    addDiagnosticMessage(`  ${index + 1}. [${type}] "${strategy.name}" by ${strategy.users.first_name}`, 'info');
+                });
+                
+                if (allStrategies.length > 5) {
+                    addDiagnosticMessage(`  ... and ${allStrategies.length - 5} more`, 'info');
+                }
+            }
+        }
+        
+        // 3. Текущий пользователь Telegram
+        addDiagnosticMessage('👤 Step 3: Current Telegram user analysis...', 'info');
+        
+        if (window.userManager && window.userManager.isInitialized) {
+            const currentUser = window.userManager.getCurrentUser();
+            const telegramId = window.userManager.getTelegramId();
+            
+            addDiagnosticMessage(`📱 Current Telegram ID: ${telegramId}`, 'info');
+            
+            // Проверяем, есть ли этот пользователь в БД
+            const existingTelegramUser = allUsers?.find(u => u.telegram_id === telegramId);
+            
+            if (existingTelegramUser) {
+                addDiagnosticMessage(`✅ Telegram user EXISTS in database!`, 'success');
+                addDiagnosticMessage(`👤 User UUID: ${existingTelegramUser.id}`, 'success');
+                
+                // Присваиваем UUID
+                window.userManager.currentUser.uuid = existingTelegramUser.id;
+                addDiagnosticMessage(`🔧 UUID assigned to current user!`, 'success');
+                
+                // Проверяем стратегии этого пользователя
+                const userStrategies = allStrategies?.filter(s => s.user_id === existingTelegramUser.id) || [];
+                addDiagnosticMessage(`📊 User has ${userStrategies.length} strategies`, userStrategies.length > 0 ? 'success' : 'warning');
+                
+                if (userStrategies.length > 0) {
+                    // Обновляем локальные стратегии
+                    window.strategies = userStrategies;
+                    addDiagnosticMessage(`🔄 Local strategies updated: ${window.strategies.length}`, 'success');
+                    
+                    // Обновляем UI
+                    if (typeof updateStrategySelect === 'function') {
+                        updateStrategySelect();
+                    }
+                    if (typeof renderStrategies === 'function') {
+                        renderStrategies();
+                    }
+                }
+            } else {
+                addDiagnosticMessage(`❌ Telegram user NOT FOUND in database`, 'error');
+                addDiagnosticMessage(`🆕 Need to create user for telegram_id: ${telegramId}`, 'warning');
+                
+                // Пробуем создать
+                addDiagnosticMessage(`🔧 Attempting to create user...`, 'info');
+                const success = await window.userManager.ensureUserInDatabase();
+                
+                if (success) {
+                    addDiagnosticMessage(`✅ User created successfully!`, 'success');
+                } else {
+                    addDiagnosticMessage(`❌ User creation failed`, 'error');
+                }
+            }
+        }
+        
+        addDiagnosticMessage('✅ DETAILED ANALYSIS COMPLETED!', 'success');
+        
+    } catch (err) {
+        addDiagnosticMessage(`❌ Analysis error: ${err.message}`, 'error');
     }
 }
 
