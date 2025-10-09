@@ -2266,63 +2266,21 @@ async function loadStrategiesFromDatabase() {
             }
             console.log(`✅ Loaded ${strategies.length} strategies from database`);
             
-            // Обновляем UI принудительно
-            console.log('🔄 Forcing UI update after loading strategies...');
-            if (typeof forceUIUpdate === 'function') {
-                forceUIUpdate();
-            } else {
-                // Фолбэк на старые функции
-                if (typeof updateStrategySelect === 'function') {
-                    updateStrategySelect();
-                }
-                if (typeof renderStrategies === 'function') {
-                    renderStrategies();
-                }
-                if (typeof window.updateUserStats === 'function') {
-                    window.updateUserStats();
-                }
+            // Обновляем UI
+            if (typeof updateStrategySelect === 'function') {
+                updateStrategySelect();
+            }
+            if (typeof renderStrategies === 'function') {
+                renderStrategies();
+            }
+            if (typeof window.updateUserStats === 'function') {
+                window.updateUserStats();
             }
         }
     } catch (err) {
         console.error('❌ Exception loading strategies:', err);
         showNotification('Ошибка подключения к базе данных', 'error');
     }
-}
-
-// 🔧 ФУНКЦИЯ ПРИНУДИТЕЛЬНОГО ОБНОВЛЕНИЯ UI
-function forceUIUpdate() {
-    console.log('🔧 FORCE UI UPDATE...');
-    console.log('📊 Current strategies count:', strategies.length);
-    console.log('📊 Strategies data:', strategies);
-    
-    // Проверяем элементы
-    const strategiesGrid = document.getElementById('strategiesGrid');
-    const strategySelect = document.getElementById('strategySelect');
-    
-    console.log('💻 strategiesGrid element:', strategiesGrid);
-    console.log('💻 strategySelect element:', strategySelect);
-    
-    if (strategiesGrid) {
-        console.log('✅ strategiesGrid found - updating...');
-        renderStrategies();
-    } else {
-        console.error('❌ strategiesGrid NOT FOUND!');
-    }
-    
-    if (strategySelect) {
-        console.log('✅ strategySelect found - updating...');
-        updateStrategySelect();
-    } else {
-        console.error('❌ strategySelect NOT FOUND!');
-    }
-    
-    // Обновляем счетчики
-    if (typeof window.updateUserStats === 'function') {
-        console.log('✅ Updating user stats...');
-        window.updateUserStats();
-    }
-    
-    console.log('✅ Force UI update completed!');
 }
 
 // Make functions globally accessible for onclick handlers
@@ -2333,5 +2291,4 @@ window.deleteStrategy = deleteStrategy;
 window.viewAnalysis = viewAnalysis;
 window.refreshStrategiesFromDB = refreshStrategiesFromDB;
 window.deleteAnalysis = deleteAnalysis;
-window.forceUIUpdate = forceUIUpdate;
 window.strategies = strategies;
