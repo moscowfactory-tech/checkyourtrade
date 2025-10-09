@@ -23,6 +23,76 @@ if (IS_TELEGRAM_WEBAPP) {
     console.log('💻 Browser version detected');
 }
 
+// ⚡ МГНОВЕННАЯ ИНИЦИАЛИЗАЦИЯ КНОПОК - БЕЗ ЗАДЕРЖКИ!
+// Инициализируем кнопки сразу, как только DOM готов
+function initializeButtonsImmediately() {
+    console.log('⚡ Initializing buttons immediately...');
+    
+    // Проверяем каждые 100мс, пока кнопки не появятся
+    const checkButtons = () => {
+        const createBtn = document.getElementById('createStrategyBtn');
+        const myStrategiesBtn = document.getElementById('myStrategiesBtn');
+        const profileBtn = document.getElementById('userButton');
+        
+        if (createBtn && myStrategiesBtn && profileBtn) {
+            console.log('✅ Buttons found - setting up event listeners immediately');
+            
+            // Основные кнопки
+            createBtn.onclick = () => {
+                console.log('📝 Create strategy clicked');
+                if (typeof openModal === 'function') {
+                    openModal();
+                } else {
+                    console.log('⚠️ openModal not ready yet');
+                }
+            };
+            
+            myStrategiesBtn.onclick = () => {
+                console.log('📊 My strategies clicked');
+                if (typeof showSection === 'function') {
+                    showSection('strategies');
+                } else {
+                    console.log('⚠️ showSection not ready yet');
+                }
+            };
+            
+            profileBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('👤 Profile clicked');
+                const dropdown = document.getElementById('userDropdown');
+                if (dropdown) {
+                    dropdown.classList.toggle('hidden');
+                }
+            };
+            
+            console.log('✅ Buttons activated immediately!');
+            return true;
+        }
+        return false;
+    };
+    
+    // Проверяем сразу
+    if (!checkButtons()) {
+        // Если кнопки еще не готовы, проверяем каждые 100мс
+        const interval = setInterval(() => {
+            if (checkButtons()) {
+                clearInterval(interval);
+            }
+        }, 100);
+        
+        // Останавливаем попытки через 5 секунд
+        setTimeout(() => clearInterval(interval), 5000);
+    }
+}
+
+// Запускаем сразу
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeButtonsImmediately);
+} else {
+    initializeButtonsImmediately();
+}
+
 // Функции для работы с localStorage (ОТКЛЮЧЕНО - используем только Supabase)
 function saveStrategiesToLocalStorage() {
     // ОТКЛЮЧЕНО: Не сохраняем в localStorage, только в Supabase

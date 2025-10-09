@@ -37,8 +37,7 @@ class UnifiedUserManager {
             
             if (tgUser && tgUser.id) {
                 this.currentUser = {
-                    id: `tg_${tgUser.id}`, // Префикс для Telegram пользователей
-                    telegram_id: tgUser.id,
+                    telegram_id: tgUser.id, // Основной ID для БД
                     first_name: tgUser.first_name || '',
                     last_name: tgUser.last_name || '',
                     username: tgUser.username || '',
@@ -46,41 +45,50 @@ class UnifiedUserManager {
                 };
                 
                 console.log('📱 Telegram user data:', this.currentUser);
+                
+                // Создаем или находим пользователя в БД
+                await this.ensureUserInDatabase();
                 return;
             }
         }
         
         // Fallback для Telegram WebApp без данных пользователя
-        console.warn('⚠️ No Telegram user data, using fallback');
+        console.warn('⚠️ No Telegram user data, using test user');
         this.currentUser = {
-            id: 'tg_anonymous',
-            telegram_id: 0,
-            first_name: 'Telegram User',
-            username: 'telegram_user',
-            type: 'telegram_anonymous'
+            telegram_id: 123456789, // Тестовый ID
+            first_name: 'Test User',
+            username: 'test_user',
+            type: 'telegram_test'
         };
+        
+        await this.ensureUserInDatabase();
     }
 
     // Инициализация пользователя браузера
     async initializeBrowserUser() {
         console.log('💻 Initializing browser user...');
         
-        // Получаем или создаем ID для браузерного пользователя
-        let browserId = localStorage.getItem('browser_user_id');
+        // Получаем или создаем telegram_id для браузерного пользователя
+        let browserTelegramId = localStorage.getItem('browser_telegram_id');
         
-        if (!browserId) {
-            browserId = 'browser_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('browser_user_id', browserId);
-            console.log('💻 Created new browser user ID:', browserId);
+        if (!browserTelegramId) {
+            // Создаем уникальный telegram_id для браузера (отрицательное число)
+            browserTelegramId = -Math.floor(Date.now() / 1000); // Отрицательный timestamp
+            localStorage.setItem('browser_telegram_id', browserTelegramId);
+            console.log('💻 Created new browser telegram_id:', browserTelegramId);
+        } else {
+            browserTelegramId = parseInt(browserTelegramId);
         }
         
         this.currentUser = {
-            id: browserId,
-            telegram_id: null,
+            telegram_id: browserTelegramId,
             first_name: 'Browser User',
             username: 'browser_user',
             type: 'browser'
         };
+        
+        // Создаем или находим пользователя в БД
+        await this.ensureUserInDatabase();
     }
 
     // Получить текущего пользователя
@@ -92,10 +100,10 @@ class UnifiedUserManager {
         return this.currentUser;
     }
 
-    // Получить ID пользователя для БД
+    // Получить ID пользователя для БД (UUID из таблицы users)
     getUserId() {
         const user = this.getCurrentUser();
-        return user ? user.id : null;
+        return user ? user.uuid : null;
     }
 
     // Получить Telegram ID (если есть)
@@ -120,6 +128,53 @@ class UnifiedUserManager {
         }
         
         return user.username || 'User';
+    }
+
+    // Создать или найти пользователя в БД
+    async ensureUserInDatabase() {
+        if (!window.supabase) {
+            console.warn('⚠️ Supabase not available, skipping user creation');
+            return;
+        }
+
+        console.log('💾 Ensuring user exists in database...');
+        
+        try {
+            // Проверяем, есть ли пользователь
+            const { data: existingUser, error: findError } = await window.supabase
+                .from('users')
+                .select('id')
+                .eq('telegram_id', this.currentUser.telegram_id)
+                .single();
+
+            if (existingUser) {
+                console.log('✅ User found in database:', existingUser.id);
+                this.currentUser.uuid = existingUser.id;
+            } else {
+                console.log('🆕 Creating new user in database...');
+                
+                // Создаем нового пользователя
+                const { data: newUser, error: createError } = await window.supabase
+                    .from('users')
+                    .insert({
+                        telegram_id: this.currentUser.telegram_id,
+                        username: this.currentUser.username,
+                        first_name: this.currentUser.first_name,
+                        last_name: this.currentUser.last_name
+                    })
+                    .select('id')
+                    .single();
+
+                if (createError) {
+                    console.error('❌ Error creating user:', createError);
+                } else {
+                    console.log('✅ User created:', newUser.id);
+                    this.currentUser.uuid = newUser.id;
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error in ensureUserInDatabase:', error);
+        }
     }
 }
 
