@@ -47,14 +47,26 @@ function initializeButtonsImmediately() {
                 }
             };
             
-            myStrategiesBtn.onclick = () => {
-                console.log('📊 My strategies clicked');
-                if (typeof showSection === 'function') {
-                    showSection('strategies');
-                } else {
-                    console.log('⚠️ showSection not ready yet');
-                }
-            };
+            // Настройка кнопок навигации по data-section
+            document.querySelectorAll('[data-section]').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.preventDefault();
+                    const sectionId = btn.getAttribute('data-section');
+                    console.log('📊 Navigation clicked:', sectionId);
+                    
+                    // Принудительно загружаем стратегии перед отображением конструктора
+                    if (sectionId === 'constructor' && typeof loadStrategiesFromDatabase === 'function') {
+                        console.log('🔄 Force loading strategies before showing constructor...');
+                        await loadStrategiesFromDatabase();
+                    }
+                    
+                    if (typeof showSection === 'function') {
+                        showSection(sectionId);
+                    } else {
+                        console.log('⚠️ showSection not ready yet');
+                    }
+                };
+            });
             
             profileBtn.onclick = (e) => {
                 e.preventDefault();
@@ -603,7 +615,11 @@ async function showSection(sectionId) {
         // Отображаем стратегии без перезагрузки (используем уже загруженные данные)
         if (sectionId === 'constructor') {
             console.log('🏠 Showing constructor with current strategies:', strategies.length);
-            renderStrategies();
+            // Принудительно обновляем отображение стратегий в конструкторе
+            setTimeout(() => {
+                renderStrategies();
+                console.log('✅ Strategies rendered for constructor section');
+            }, 200);
         } else if (sectionId === 'analysis') {
             console.log('📊 Showing analysis with current strategies:', strategies.length);
             updateStrategySelect();
