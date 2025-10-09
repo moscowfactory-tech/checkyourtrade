@@ -552,13 +552,28 @@ async function detailedSyncVisual() {
                     window.strategies = userStrategies;
                     addDiagnosticMessage(`🔄 Local strategies updated: ${window.strategies.length}`, 'success');
                     
-                    // Обновляем UI
-                    if (typeof updateStrategySelect === 'function') {
-                        updateStrategySelect();
-                    }
-                    if (typeof renderStrategies === 'function') {
-                        renderStrategies();
-                    }
+                    // Обновляем UI принудительно
+                    addDiagnosticMessage('🔄 Forcing UI update...', 'info');
+                    
+                    // Принудительно обновляем все элементы UI
+                    setTimeout(() => {
+                        if (typeof renderStrategies === 'function') {
+                            renderStrategies();
+                            addDiagnosticMessage('✅ renderStrategies() called', 'success');
+                        }
+                        if (typeof updateStrategySelect === 'function') {
+                            updateStrategySelect();
+                            addDiagnosticMessage('✅ updateStrategySelect() called', 'success');
+                        }
+                        
+                        // Проверяем, обновился ли UI
+                        const strategiesGrid = document.getElementById('strategiesGrid');
+                        if (strategiesGrid && strategiesGrid.children.length > 0) {
+                            addDiagnosticMessage('✅ UI updated successfully!', 'success');
+                        } else {
+                            addDiagnosticMessage('❌ UI still not updated', 'error');
+                        }
+                    }, 500);
                 }
             } else {
                 addDiagnosticMessage(`❌ Telegram user NOT FOUND in database`, 'error');
