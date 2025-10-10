@@ -1,5 +1,34 @@
 // Application State
 let strategies = [];
+
+// Keep window.strategies always bound to the internal array to avoid detaching references
+// Some modules may do `window.strategies = newArray`, which would otherwise break UI rendering.
+// This getter/setter ensures any assignment updates the same array in place.
+try {
+  const desc = Object.getOwnPropertyDescriptor(window, 'strategies');
+  if (!desc || desc.configurable) {
+    Object.defineProperty(window, 'strategies', {
+      configurable: true,
+      get() { return strategies; },
+      set(value) {
+        try {
+          console.log('🧩 window.strategies setter invoked', Array.isArray(value) ? `len=${value.length}` : typeof value);
+          strategies.length = 0;
+          if (Array.isArray(value)) {
+            strategies.push(...value);
+          } else if (value && Array.isArray(value.data)) {
+            // Support objects like { data: [...] }
+            strategies.push(...value.data);
+          }
+        } catch (e) {
+          console.warn('🧩 window.strategies setter error:', e);
+        }
+      }
+    });
+  }
+} catch (e) {
+  console.warn('🧩 Unable to bind window.strategies property:', e);
+}
 let currentStrategy = null;
 let isEditMode = false;
 let fieldCounter = 0;
