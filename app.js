@@ -675,6 +675,10 @@ function setupEventListeners() {
         mobileSupportIcon.addEventListener('click', openSupportModal);
         console.log('Mobile support icon event listener added');
     }
+    
+    // 📱 Инициализация мобильной диагностики
+    setupMobileDiagnostics();
+    console.log('📱 Mobile diagnostics initialized');
 }
 
 // Navigation Functions
@@ -2592,4 +2596,115 @@ window.viewAnalysis = viewAnalysis;
 window.refreshStrategiesFromDB = refreshStrategiesFromDB;
 window.deleteAnalysis = deleteAnalysis;
 window.forceUIUpdate = forceUIUpdate;
+
+// 📱 МОБИЛЬНАЯ ДИАГНОСТИКА ДЛЯ TELEGRAM WEBAPP
+function setupMobileDiagnostics() {
+    const diagnosticsBtn = document.getElementById('mobileDiagnosticsBtn');
+    const diagnosticsPanel = document.getElementById('mobileDiagnosticsPanel');
+    const diagnosticsOutput = document.getElementById('diagnosticsOutput');
+    const forceLoadBtn = document.getElementById('forceLoadBtn');
+    
+    if (!diagnosticsBtn || !diagnosticsPanel || !diagnosticsOutput) {
+        console.warn('⚠️ Mobile diagnostics elements not found');
+        return;
+    }
+    
+    function addDiagnosticLog(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        const color = type === 'error' ? '#ff4444' : type === 'success' ? '#44ff44' : '#00ff00';
+        const logEntry = document.createElement('div');
+        logEntry.style.color = color;
+        logEntry.style.marginBottom = '4px';
+        logEntry.innerHTML = `[${timestamp}] ${message}`;
+        diagnosticsOutput.appendChild(logEntry);
+        diagnosticsOutput.scrollTop = diagnosticsOutput.scrollHeight;
+    }
+    
+    diagnosticsBtn.addEventListener('click', async () => {
+        diagnosticsPanel.style.display = diagnosticsPanel.style.display === 'none' ? 'block' : 'none';
+        
+        if (diagnosticsPanel.style.display === 'block') {
+            diagnosticsOutput.innerHTML = '';
+            addDiagnosticLog('🔍 Начинаем диагностику...', 'info');
+            
+            // Проверяем компоненты
+            addDiagnosticLog(`🔍 window.supabase exists: ${!!window.supabase}`, window.supabase ? 'success' : 'error');
+            addDiagnosticLog(`🔍 window.userManager exists: ${!!window.userManager}`, window.userManager ? 'success' : 'error');
+            addDiagnosticLog(`🔍 IS_TELEGRAM_WEBAPP: ${typeof window.Telegram !== 'undefined'}`, typeof window.Telegram !== 'undefined' ? 'success' : 'info');
+            
+            if (window.userManager) {
+                addDiagnosticLog(`🔍 UserManager initialized: ${window.userManager.isInitialized}`, window.userManager.isInitialized ? 'success' : 'error');
+                
+                if (window.userManager.isInitialized) {
+                    const userId = window.userManager.getUserId();
+                    addDiagnosticLog(`🔍 Current UUID: ${userId || 'none'}`, userId ? 'success' : 'error');
+                }
+            }
+            
+            addDiagnosticLog(`🔍 Strategies count: ${window.strategies?.length || 0}`, window.strategies?.length > 0 ? 'success' : 'info');
+            
+            // Автоматически пробуем загрузить стратегии
+            if (typeof loadStrategiesFromDatabase === 'function') {
+                addDiagnosticLog('🔄 Автоматическая попытка загрузки...', 'info');
+                try {
+                    await loadStrategiesFromDatabase();
+                    addDiagnosticLog('✅ Автоматическая загрузка завершена', 'success');
+                } catch (err) {
+                    addDiagnosticLog(`❌ Автоматическая загрузка failed: ${err.message}`, 'error');
+                }
+            }
+        }
+    });
+    
+    if (forceLoadBtn) {
+        forceLoadBtn.addEventListener('click', async () => {
+            addDiagnosticLog('🔄 Принудительная загрузка...', 'info');
+            
+            if (!window.userManager) {
+                addDiagnosticLog('❌ UserManager не найден', 'error');
+                return;
+            }
+            
+            if (!window.userManager.isInitialized) {
+                addDiagnosticLog('🔧 Инициализируем UserManager...', 'info');
+                try {
+                    await window.userManager.initialize();
+                    addDiagnosticLog('✅ UserManager инициализирован', 'success');
+                } catch (err) {
+                    addDiagnosticLog(`❌ Ошибка инициализации: ${err.message}`, 'error');
+                    return;
+                }
+            }
+            
+            const userId = window.userManager.getUserId();
+            if (!userId) {
+                addDiagnosticLog('🔧 Создаем пользователя в БД...', 'info');
+                try {
+                    await window.userManager.ensureUserInDatabase();
+                    const newUserId = window.userManager.getUserId();
+                    addDiagnosticLog(`✅ Пользователь создан: ${newUserId}`, 'success');
+                } catch (err) {
+                    addDiagnosticLog(`❌ Ошибка создания пользователя: ${err.message}`, 'error');
+                    return;
+                }
+            }
+            
+            if (typeof loadStrategiesFromDatabase === 'function') {
+                try {
+                    await loadStrategiesFromDatabase();
+                    addDiagnosticLog(`✅ Стратегии загружены: ${window.strategies?.length || 0}`, 'success');
+                    
+                    if (typeof renderStrategies === 'function') {
+                        renderStrategies();
+                        addDiagnosticLog('✅ UI обновлен', 'success');
+                    }
+                } catch (err) {
+                    addDiagnosticLog(`❌ Ошибка загрузки: ${err.message}`, 'error');
+                }
+            }
+        });
+    }
+}
+
+window.setupMobileDiagnostics = setupMobileDiagnostics;
 window.strategies = strategies;
