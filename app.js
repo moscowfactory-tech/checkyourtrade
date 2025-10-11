@@ -763,40 +763,96 @@ function updateActiveNavLink(sectionId) {
     });
 }
 
-function toggleMobileMenu() {
-    navMenu.classList.toggle('active');
-    hamburger.classList.toggle('active');
-}
-
-// Modal Functions
+// 📱 ОПТИМИЗИРОВАННАЯ ФУНКЦИЯ ОТКРЫТИЯ МОДАЛЬНОГО ОКНА
 function openModal(strategy = null) {
+    console.log('📝 Opening modal for strategy:', strategy);
+    
     isEditMode = !!strategy;
     currentStrategy = strategy;
     
+    const modal = document.getElementById('strategyModal');
     const modalTitle = document.getElementById('modalTitle');
+    const strategyForm = document.getElementById('strategyForm');
+    
+    if (!modal || !modalTitle || !strategyForm) {
+        console.error('❌ Modal elements not found');
+        return;
+    }
+    
     modalTitle.textContent = isEditMode ? 'Редактировать стратегию' : 'Создать стратегию';
     
     if (isEditMode) {
         populateForm(strategy);
     } else {
-        resetForm();
+        strategyForm.reset();
+        const fieldsContainer = document.getElementById('fieldsContainer');
+        if (fieldsContainer) {
+            fieldsContainer.innerHTML = '';
+        }
+        fieldCounter = 0;
     }
     
-    strategyModal.classList.remove('hidden');
-    strategyModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    // 📱 Оптимизация для Telegram WebApp
+    if (IS_TELEGRAM_WEBAPP) {
+        // Расширяем WebApp для лучшей работы с клавиатурой
+        if (window.Telegram?.WebApp?.expand) {
+            window.Telegram.WebApp.expand();
+        }
+        
+        // Добавляем класс для мобильной оптимизации
+        modal.classList.add('telegram-webapp-modal');
+        
+        // Обработчик для клавиатуры
+        const handleKeyboard = () => {
+            // Прокручиваем к активному полю при открытии клавиатуры
+            setTimeout(() => {
+                const activeElement = document.activeElement;
+                if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+                    activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        };
+        
+        // Добавляем обработчики на все поля ввода
+        const inputs = modal.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('focus', handleKeyboard);
+        });
+    }
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('active');
+    
+    // Фокус на первом поле (с задержкой для мобильных)
+    setTimeout(() => {
+        const firstInput = modal.querySelector('input[type="text"]');
+        if (firstInput) {
+            firstInput.focus();
+        }
+    }, IS_TELEGRAM_WEBAPP ? 300 : 100);
 }
 
 function closeModal() {
-    strategyModal.classList.remove('active');
+    const modal = document.getElementById('strategyModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.classList.remove('telegram-webapp-modal');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+    
+    // Сбрасываем состояние
+    isEditMode = false;
+    currentStrategy = null;
+}
+
+function toggleMobileMenu() {
+    navMenu.classList.toggle('active');
     setTimeout(() => {
-        strategyModal.classList.add('hidden');
         document.body.style.overflow = 'auto';
         resetForm();
     }, 300);
-}
-
-function resetForm() {
     strategyForm.reset();
     fieldsContainer.innerHTML = '';
     fieldCounter = 0;

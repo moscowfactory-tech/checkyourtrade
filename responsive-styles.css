@@ -28,18 +28,15 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
   opacity: 0;
-  transform: scale(0.95);
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease;
 }
 
 .modal.active {
-  opacity: 1;
   transform: scale(1);
 }
 
@@ -47,11 +44,11 @@
   background: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: var(--modal-padding);
-  width: var(--modal-width);
+  width: 95vw;
   max-width: 95vw;
-  max-height: 90vh;
+  margin: 0 auto;
+  max-height: calc(100vh - 40px);
   overflow-y: auto;
-  position: relative;
 }
 
 /* Адаптивные классы для модальных окон */
@@ -234,17 +231,99 @@
 
 /* ========================================
    МЕДИА-ЗАПРОСЫ ДЛЯ АДАПТИВНОСТИ
-   ======================================== */
-
 /* Мобильные устройства */
 @media (max-width: 768px) {
   :root {
-    --modal-width: 95vw;
-    --modal-padding: 16px;
-    --button-size: 44px;
-    --font-scale: 0.9;
-    --circle-size: 60px;
-    --circle-border: 3px;
+    --modal-padding: 20px;
+    --form-spacing: 16px;
+    --circle-border: 2px;
+  }
+  
+  body {
+    font-size: 16px; /* Предотвращаем зум на iOS */
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* УЛУЧШЕННЫЕ МОДАЛЬНЫЕ ОКНА ДЛЯ TELEGRAM WEBAPP */
+  .modal {
+    align-items: flex-start;
+    padding: 10px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .modal-content {
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    margin: 10px auto !important;
+    max-height: none !important;
+    min-height: auto;
+    overflow: visible;
+  }
+  
+  /* УВЕЛИЧЕННЫЙ КРЕСТИК ЗАКРЫТИЯ */
+  .modal-close {
+    font-size: 28px !important;
+    width: 44px !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+  }
+  
+  /* УВЕЛИЧЕННОЕ ПОЛЕ НАЗВАНИЯ СТРАТЕГИИ */
+  #strategyName {
+    min-height: 50px !important;
+    padding: 16px !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+  
+  .form-control {
+    min-height: 48px !important;
+    padding: 14px 16px !important;
+    font-size: 16px !important;
+    border-radius: 12px !important;
+  }
+  
+  textarea.form-control {
+    min-height: 120px !important;
+    resize: vertical !important;
+  }
+  
+  /* 📱 СПЕЦИАЛЬНЫЕ СТИЛИ ДЛЯ TELEGRAM WEBAPP */
+  .telegram-webapp-modal {
+    /* Обеспечиваем прокрутку при открытой клавиатуре */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 10px !important;
+    align-items: flex-start !important;
+  }
+  
+  .telegram-webapp-modal .modal-content {
+    /* Максимально используем пространство */
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+    margin: 0 auto !important;
+    max-height: none !important;
+    /* Позволяем контенту растягиваться */
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+  
+  /* Улучшаем отзывчивость полей ввода */
+  .telegram-webapp-modal input:focus,
+  .telegram-webapp-modal textarea:focus {
+    /* Плавная прокрутка к полю */
+    scroll-margin-top: 100px;
+    scroll-margin-bottom: 100px;
   }
   
   /* Уменьшаем отступы между кружками */
