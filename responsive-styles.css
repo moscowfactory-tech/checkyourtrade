@@ -356,8 +356,9 @@
     text-indent: 4px !important;
   }
   
-  /* 🔧 КРУГИ ОЦЕНКИ В ОДНУ СТРОКУ */
-  .color-options {
+  /* 🔧 КРУГИ ОЦЕНКИ В ОДНУ СТРОКУ (ТОЛЬКО ДЛЯ АНАЛИЗА) */
+  .analysis-card .color-options,
+  .card-content .color-options {
     /* Горизонтальное расположение кругов */
     display: flex !important;
     flex-direction: row !important;
@@ -367,14 +368,16 @@
     flex-wrap: nowrap !important;
   }
   
-  /* Оптимизируем размер кругов для мобильных */
-  .color-option {
+  /* Оптимизируем размер кругов только в анализе */
+  .analysis-card .color-option,
+  .card-content .color-option {
     min-width: 60px !important;
     min-height: 60px !important;
     flex-shrink: 0 !important;
   }
   
-  .color-option span {
+  .analysis-card .color-option span,
+  .card-content .color-option span {
     font-size: 12px !important;
     margin-top: 4px !important;
     text-align: center !important;
