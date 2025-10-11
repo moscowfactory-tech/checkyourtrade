@@ -160,6 +160,30 @@
                         <div class="strategies-grid" id="strategiesGrid">
                             <!-- Strategies will be rendered here -->
                         </div>
+                        
+                        <!-- 🔧 ОТЛАДОЧНАЯ КНОПКА ДЛЯ TELEGRAM WEBAPP -->
+                        <div style="text-align: center; margin: 20px 0;">
+                            <button onclick="showMobileDebug()" style="background: #ff6b35; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 10px rgba(255,107,53,0.3);">
+                                🔧 Отладка загрузки
+                            </button>
+                        </div>
+                        
+                        <!-- 📱 МОБИЛЬНАЯ ОТЛАДКА -->
+                        <div id="mobileDebugPanel" style="display: none; background: #1a1a1a; color: #00ff00; padding: 15px; margin: 20px 0; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: auto; border: 2px solid #00ff00;">
+                            <div style="text-align: center; margin-bottom: 10px;">
+                                <strong style="color: #ff6b35;">🔧 МОБИЛЬНАЯ ОТЛАДКА</strong>
+                                <button onclick="closeMobileDebug()" style="float: right; background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">✖</button>
+                            </div>
+                            <div id="mobileDebugContent"></div>
+                            <div style="text-align: center; margin-top: 15px;">
+                                <button onclick="debugLoadStrategies()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin: 5px; cursor: pointer;">
+                                    🔄 Принудительная загрузка
+                                </button>
+                                <button onclick="clearMobileDebug()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin: 5px; cursor: pointer;">
+                                    🧹 Очистить
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Strategy Form Modal -->

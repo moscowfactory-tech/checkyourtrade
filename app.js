@@ -2502,34 +2502,103 @@ function forceUIUpdate() {
     console.log('✅ Force UI update completed!');
 }
 
+// 📱 МОБИЛЬНАЯ ОТЛАДКА ДЛЯ TELEGRAM WEBAPP
+function addMobileDebugLog(message, type = 'info') {
+    const content = document.getElementById('mobileDebugContent');
+    if (!content) return;
+    
+    const colors = {
+        info: '#00ff00',
+        success: '#00ff00',
+        warning: '#ffaa00',
+        error: '#ff4444'
+    };
+    
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = document.createElement('div');
+    logEntry.style.color = colors[type] || '#00ff00';
+    logEntry.style.marginBottom = '5px';
+    logEntry.innerHTML = `[${timestamp}] ${message}`;
+    
+    content.appendChild(logEntry);
+    content.scrollTop = content.scrollHeight;
+}
+
+function showMobileDebug() {
+    const panel = document.getElementById('mobileDebugPanel');
+    if (panel) {
+        panel.style.display = 'block';
+        addMobileDebugLog('🔧 Мобильная отладка запущена', 'info');
+        addMobileDebugLog('🔍 UserManager exists: ' + !!window.userManager, 'info');
+        addMobileDebugLog('🔍 Supabase exists: ' + !!window.supabase, 'info');
+        addMobileDebugLog('🔍 IS_TELEGRAM_WEBAPP: ' + IS_TELEGRAM_WEBAPP, 'info');
+        addMobileDebugLog('🔍 UserManager initialized: ' + (window.userManager?.isInitialized || false), 'info');
+        addMobileDebugLog('🔍 Current UUID: ' + (window.userManager?.getUserId() || 'none'), 'info');
+        addMobileDebugLog('🔍 Strategies count: ' + strategies.length, 'info');
+    }
+}
+
+function closeMobileDebug() {
+    const panel = document.getElementById('mobileDebugPanel');
+    if (panel) {
+        panel.style.display = 'none';
+    }
+}
+
+function clearMobileDebug() {
+    const content = document.getElementById('mobileDebugContent');
+    if (content) {
+        content.innerHTML = '';
+    }
+}
+
 // 🔧 ФУНКЦИЯ ДЛЯ ОТЛАДКИ - ПРИНУДИТЕЛЬНАЯ ЗАГРУЗКА
 async function debugLoadStrategies() {
-    console.log('🔧 DEBUG: Manual strategy loading started...');
-    console.log('🔧 DEBUG: UserManager exists:', !!window.userManager);
-    console.log('🔧 DEBUG: UserManager initialized:', window.userManager?.isInitialized);
-    console.log('🔧 DEBUG: Current UUID:', window.userManager?.getUserId());
+    addMobileDebugLog('🔧 Начало принудительной загрузки...', 'info');
     
-    if (!window.userManager?.isInitialized) {
-        console.log('🔧 DEBUG: Initializing UserManager...');
-        await window.userManager.initialize();
+    try {
+        addMobileDebugLog('🔍 UserManager exists: ' + !!window.userManager, 'info');
+        addMobileDebugLog('🔍 UserManager initialized: ' + (window.userManager?.isInitialized || false), 'info');
+        addMobileDebugLog('🔍 Current UUID: ' + (window.userManager?.getUserId() || 'none'), 'info');
+        
+        if (!window.userManager?.isInitialized) {
+            addMobileDebugLog('🔄 Инициализация UserManager...', 'warning');
+            await window.userManager.initialize();
+            addMobileDebugLog('✅ UserManager инициализирован', 'success');
+        }
+        
+        if (!window.userManager.getUserId()) {
+            addMobileDebugLog('🔄 Создание пользователя в БД...', 'warning');
+            const success = await window.userManager.ensureUserInDatabase();
+            if (success) {
+                addMobileDebugLog('✅ Пользователь создан в БД', 'success');
+            } else {
+                addMobileDebugLog('❌ Ошибка создания пользователя', 'error');
+                return;
+            }
+        }
+        
+        const finalUUID = window.userManager?.getUserId();
+        addMobileDebugLog('🔍 Итоговый UUID: ' + (finalUUID || 'none'), 'info');
+        
+        if (!finalUUID) {
+            addMobileDebugLog('❌ UUID не получен!', 'error');
+            return;
+        }
+        
+        addMobileDebugLog('🔄 Загрузка стратегий...', 'info');
+        await loadStrategiesFromDatabase();
+        
+        addMobileDebugLog('✅ Стратегий загружено: ' + strategies.length, 'success');
+        
+        addMobileDebugLog('🔄 Отображение стратегий...', 'info');
+        renderStrategies();
+        
+        addMobileDebugLog('✅ Принудительная загрузка завершена!', 'success');
+        
+    } catch (error) {
+        addMobileDebugLog('❌ Ошибка: ' + error.message, 'error');
     }
-    
-    if (!window.userManager.getUserId()) {
-        console.log('🔧 DEBUG: Ensuring user in database...');
-        await window.userManager.ensureUserInDatabase();
-    }
-    
-    console.log('🔧 DEBUG: Final UUID:', window.userManager?.getUserId());
-    console.log('🔧 DEBUG: Loading strategies...');
-    
-    await loadStrategiesFromDatabase();
-    
-    console.log('🔧 DEBUG: Strategies loaded:', strategies.length);
-    console.log('🔧 DEBUG: Rendering strategies...');
-    
-    renderStrategies();
-    
-    console.log('🔧 DEBUG: Manual loading completed!');
 }
 
 // Make functions globally accessible for onclick handlers
@@ -2542,4 +2611,7 @@ window.refreshStrategiesFromDB = refreshStrategiesFromDB;
 window.deleteAnalysis = deleteAnalysis;
 window.forceUIUpdate = forceUIUpdate;
 window.debugLoadStrategies = debugLoadStrategies;
+window.showMobileDebug = showMobileDebug;
+window.closeMobileDebug = closeMobileDebug;
+window.clearMobileDebug = clearMobileDebug;
 window.strategies = strategies;
