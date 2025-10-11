@@ -622,44 +622,14 @@ function showSQLSolution() {
     addDiagnosticMessage('✅ After this, all data should be accessible!', 'success');
 }
 
-// Добавляем кнопку диагностики в интерфейс
-function addDiagnosticButton() {
-    // Проверяем, что мы в Telegram WebApp
-    if (!(window.Telegram && window.Telegram.WebApp)) {
-        return;
-    }
-    
-    const button = document.createElement('button');
-    button.textContent = '🔍 Диагностика';
-    button.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 25px;
-        cursor: pointer;
-        z-index: 9999;
-        font-size: 14px;
-        box-shadow: 0 2px 10px rgba(0, 123, 255, 0.3);
-    `;
-    
-    button.onclick = () => {
-        createDiagnosticPanel();
-        setTimeout(runFullMobileDiagnostic, 500);
-    };
-    
-    document.body.appendChild(button);
-}
+// Кнопка диагностики удалена - архитектура работает корректно
 
 // Автоматически добавляем кнопку через 3 секунды
-setTimeout(() => {
-    if (window.Telegram && window.Telegram.WebApp) {
-        addDiagnosticButton();
-        console.log('🔍 Mobile diagnostics ready - look for blue button in bottom right');
-    }
-}, 3000);
+// setTimeout(() => {
+//     if (window.Telegram && window.Telegram.WebApp) {
+//         addDiagnosticButton();
+//         console.log('🔍 Mobile diagnostics ready - look for blue button in bottom right');
+//     }
+// }, 3000);
 
 console.log('📱 Mobile diagnostics loaded');
