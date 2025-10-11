@@ -88,34 +88,44 @@ function initializeButtonsImmediately() {
                     const sectionId = btn.getAttribute('data-section');
                     console.log('📊 Navigation clicked:', sectionId, 'from button:', btn.textContent.trim());
                     
-                    // Принудительно загружаем стратегии перед отображением конструктора
+                    // Мгновенное отображение конструктора с параллельной загрузкой
                     if (sectionId === 'constructor') {
-                        console.log('🔄 AUTO-LOADING strategies for constructor section...');
+                        console.log('⚡ INSTANT: Showing constructor immediately...');
                         
-                        // Сначала показываем секцию
+                        // Мгновенно показываем секцию
                         if (typeof showSection === 'function') {
                             showSection(sectionId);
                         }
                         
-                        // Затем загружаем стратегии и обновляем UI
-                        console.log('🔄 Checking loadStrategiesFromDatabase availability:', typeof loadStrategiesFromDatabase);
+                        // Проверяем готовность UserManager и запускаем загрузку
+                        console.log('⚡ INSTANT: Checking UserManager readiness...');
+                        console.log('⚡ INSTANT: UserManager exists:', !!window.userManager);
+                        console.log('⚡ INSTANT: UserManager initialized:', window.userManager?.isInitialized);
+                        console.log('⚡ INSTANT: Current strategies count:', strategies.length);
+                        
+                        if (!window.userManager?.isInitialized) {
+                            console.log('⚡ INSTANT: UserManager not ready, initializing now...');
+                            try {
+                                await window.userManager.initialize();
+                                console.log('⚡ INSTANT: UserManager initialized on demand');
+                            } catch (err) {
+                                console.error('❌ INSTANT: Failed to initialize UserManager:', err);
+                            }
+                        }
+                        
                         if (typeof loadStrategiesFromDatabase === 'function') {
-                            console.log('🔄 Starting automatic strategies loading...');
-                            await loadStrategiesFromDatabase();
-                            console.log('🔄 Strategies loaded, current count:', window.strategies ? window.strategies.length : 0);
-                            
-                            // Принудительно обновляем UI после загрузки
-                            setTimeout(() => {
-                                console.log('🔄 Force-rendering strategies after auto-load...');
+                            console.log('⚡ INSTANT: Starting parallel strategies loading...');
+                            loadStrategiesFromDatabase().then(() => {
+                                console.log('⚡ INSTANT: Parallel load completed, updating UI...');
                                 if (typeof renderStrategies === 'function') {
                                     renderStrategies();
-                                    console.log('✅ AUTO-LOAD: Strategies force-rendered after navigation');
-                                } else {
-                                    console.error('❌ AUTO-LOAD: renderStrategies function not available');
+                                    console.log('✅ INSTANT: Strategies updated after parallel load');
                                 }
-                            }, 100);
+                            }).catch(err => {
+                                console.error('❌ INSTANT: Parallel load failed:', err);
+                            });
                         } else {
-                            console.error('❌ AUTO-LOAD: loadStrategiesFromDatabase function not available');
+                            console.error('❌ INSTANT: loadStrategiesFromDatabase not available');
                         }
                     } else {
                         // Обычная навигация для других секций
@@ -414,27 +424,40 @@ let supportProjectBtn, supportProjectFooterBtn, supportModal, closeSupportModalB
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 Initializing TradeAnalyzer...');
     
-    // 👤 Инициализация пользователя
-    console.log('👤 Initializing user manager...');
-    const currentUser = await window.userManager.initialize();
+    // 👤 Агрессивная инициализация пользователя
+    console.log('👤 AGGRESSIVE: Initializing user manager immediately...');
     
-    if (currentUser) {
-        console.log('✅ User initialized:', currentUser.type, currentUser.id);
-    } else {
-        console.error('❌ Failed to initialize user');
-        showNotification('Ошибка инициализации пользователя', 'error');
+    try {
+        const currentUser = await window.userManager.initialize();
+        
+        if (currentUser) {
+            console.log('✅ AGGRESSIVE: User initialized:', currentUser.type, currentUser.id);
+            
+            // Сразу после инициализации пользователя загружаем стратегии
+            console.log('💾 AGGRESSIVE: Loading strategies immediately after user init...');
+            
+            // Множественные попытки загрузки с разными интервалами
+            const loadAttempts = [100, 500, 1000, 2000];
+            
+            loadAttempts.forEach((delay, index) => {
+                setTimeout(async () => {
+                    console.log(`💾 AGGRESSIVE: Load attempt #${index + 1} (${delay}ms delay)`);
+                    try {
+                        await loadStrategiesFromDatabase();
+                        console.log(`✅ AGGRESSIVE: Load attempt #${index + 1} completed, strategies:`, strategies.length);
+                    } catch (err) {
+                        console.error(`❌ AGGRESSIVE: Load attempt #${index + 1} failed:`, err);
+                    }
+                }, delay);
+            });
+            
+        } else {
+            console.error('❌ AGGRESSIVE: Failed to initialize user');
+            showNotification('Ошибка инициализации пользователя', 'error');
+        }
+    } catch (error) {
+        console.error('❌ AGGRESSIVE: User initialization exception:', error);
     }
-    
-    // 💾 Простая инициализация без конфликтов
-    console.log('💾 Skipping complex database initialization - using simple approach');
-    
-    // 💾 Простая загрузка стратегий
-    strategies = [];
-    
-    // Подождем для инициализации Supabase и UserManager
-    setTimeout(async () => {
-        await loadStrategiesFromDatabase();
-    }, 3000); // 3 секунды для стабильности
     
     setupEventListeners();
     
