@@ -2427,15 +2427,32 @@ async function refreshStrategiesFromDB() {
 // 💾 ФУНКЦИЯ ЗАГРУЗКИ СТРАТЕГИЙ ИЗ БД
 async function loadStrategiesFromDatabase() {
     console.log('💾 loadStrategiesFromDatabase: Starting...');
+    console.log('🔍 DEBUG: window.supabase exists:', !!window.supabase);
+    console.log('🔍 DEBUG: window.userManager exists:', !!window.userManager);
+    console.log('🔍 DEBUG: userManager.isInitialized:', window.userManager?.isInitialized);
     
     if (!window.supabase) {
-        console.warn('⚠️ Supabase not available');
+        console.error('❌ CRITICAL: Supabase not available');
+        showNotification('Ошибка загрузки стратегий: Нет подключения к БД', 'error');
         return;
     }
     
-    if (!window.userManager || !window.userManager.isInitialized) {
-        console.warn('⚠️ User manager not initialized');
+    if (!window.userManager) {
+        console.error('❌ CRITICAL: UserManager not available');
+        showNotification('Ошибка загрузки стратегий: Не инициализирован UserManager', 'error');
         return;
+    }
+    
+    if (!window.userManager.isInitialized) {
+        console.warn('⚠️ UserManager not initialized, trying to initialize...');
+        try {
+            await window.userManager.initialize();
+            console.log('✅ UserManager initialized successfully');
+        } catch (err) {
+            console.error('❌ Failed to initialize UserManager:', err);
+            showNotification('Ошибка загрузки стратегий: Не удалось инициализировать пользователя', 'error');
+            return;
+        }
     }
     
     let userId = window.userManager.getUserId();
@@ -2466,15 +2483,21 @@ async function loadStrategiesFromDatabase() {
     }
     
     try {
+        console.log('🔍 DEBUG: About to query strategies for userId:', userId);
+        console.log('🔍 DEBUG: Supabase client ready:', !!window.supabase.from);
+        
         const { data, error } = await window.supabase
             .from('strategies')
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
         
+        console.log('🔍 DEBUG: Query completed. Error:', error, 'Data count:', data?.length || 0);
+        
         if (error) {
             console.error('❌ Error loading strategies:', error);
-            showNotification('Ошибка загрузки стратегий', 'error');
+            console.error('❌ Error details:', JSON.stringify(error, null, 2));
+            showNotification(`Ошибка загрузки стратегий: ${error.message || error.code || 'Неизвестная ошибка'}`, 'error');
         } else {
             strategies.length = 0; // Очищаем массив
             if (data && Array.isArray(data)) {
