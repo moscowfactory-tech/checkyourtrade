@@ -422,7 +422,10 @@ let supportProjectBtn, supportProjectFooterBtn, supportModal, closeSupportModalB
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🚀 Initializing TradeAnalyzer...');
+    console.log('🚀🚀🚀 STARTING TradeAnalyzer INITIALIZATION 🚀🚀🚀');
+    console.log('🔍 DEBUG: window.userManager exists:', !!window.userManager);
+    console.log('🔍 DEBUG: window.supabase exists:', !!window.supabase);
+    console.log('🔍 DEBUG: IS_TELEGRAM_WEBAPP:', IS_TELEGRAM_WEBAPP);
     
     // 👤 Агрессивная инициализация пользователя
     console.log('👤 AGGRESSIVE: Initializing user manager immediately...');
@@ -2499,6 +2502,36 @@ function forceUIUpdate() {
     console.log('✅ Force UI update completed!');
 }
 
+// 🔧 ФУНКЦИЯ ДЛЯ ОТЛАДКИ - ПРИНУДИТЕЛЬНАЯ ЗАГРУЗКА
+async function debugLoadStrategies() {
+    console.log('🔧 DEBUG: Manual strategy loading started...');
+    console.log('🔧 DEBUG: UserManager exists:', !!window.userManager);
+    console.log('🔧 DEBUG: UserManager initialized:', window.userManager?.isInitialized);
+    console.log('🔧 DEBUG: Current UUID:', window.userManager?.getUserId());
+    
+    if (!window.userManager?.isInitialized) {
+        console.log('🔧 DEBUG: Initializing UserManager...');
+        await window.userManager.initialize();
+    }
+    
+    if (!window.userManager.getUserId()) {
+        console.log('🔧 DEBUG: Ensuring user in database...');
+        await window.userManager.ensureUserInDatabase();
+    }
+    
+    console.log('🔧 DEBUG: Final UUID:', window.userManager?.getUserId());
+    console.log('🔧 DEBUG: Loading strategies...');
+    
+    await loadStrategiesFromDatabase();
+    
+    console.log('🔧 DEBUG: Strategies loaded:', strategies.length);
+    console.log('🔧 DEBUG: Rendering strategies...');
+    
+    renderStrategies();
+    
+    console.log('🔧 DEBUG: Manual loading completed!');
+}
+
 // Make functions globally accessible for onclick handlers
 window.openModal = openModal;
 window.editStrategy = editStrategy;
@@ -2508,4 +2541,5 @@ window.viewAnalysis = viewAnalysis;
 window.refreshStrategiesFromDB = refreshStrategiesFromDB;
 window.deleteAnalysis = deleteAnalysis;
 window.forceUIUpdate = forceUIUpdate;
+window.debugLoadStrategies = debugLoadStrategies;
 window.strategies = strategies;
