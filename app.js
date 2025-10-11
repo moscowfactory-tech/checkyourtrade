@@ -677,9 +677,6 @@ function setupEventListeners() {
         console.log('Mobile support icon event listener added');
     }
     
-    // 🔍 Временная отладка
-    setupTempDebug();
-    
     // 🆘 Инициализация экстренной диагностики (скрыта по умолчанию)
     setupEmergencyDiagnostics();
     
@@ -2576,46 +2573,6 @@ window.viewAnalysis = viewAnalysis;
 window.refreshStrategiesFromDB = refreshStrategiesFromDB;
 window.deleteAnalysis = deleteAnalysis;
 window.forceUIUpdate = forceUIUpdate;
-
-// 🔍 ВРЕМЕННАЯ ОТЛАДКА - ПОКАЗЫВАЕТ ЧТО ПРОИСХОДИТ
-function setupTempDebug() {
-    const tempDebugBtn = document.getElementById('tempDebugBtn');
-    if (!tempDebugBtn) return;
-    
-    tempDebugBtn.addEventListener('click', async () => {
-        console.log('🔍 TEMP DEBUG: Starting comprehensive check...');
-        
-        // Проверяем все компоненты
-        console.log('🔍 window.supabase:', !!window.supabase);
-        console.log('🔍 window.userManager:', !!window.userManager);
-        console.log('🔍 userManager.isInitialized:', window.userManager?.isInitialized);
-        console.log('🔍 current UUID:', window.userManager?.getUserId());
-        console.log('🔍 strategies.length:', window.strategies?.length || 0);
-        console.log('🔍 loadStrategiesFromDatabase type:', typeof loadStrategiesFromDatabase);
-        console.log('🔍 renderStrategies type:', typeof renderStrategies);
-        console.log('🔍 ensureConstructorReady type:', typeof ensureConstructorReady);
-        
-        // Проверяем DOM элементы
-        const strategiesGrid = document.getElementById('strategiesGrid');
-        console.log('🔍 strategiesGrid element:', !!strategiesGrid);
-        if (strategiesGrid) {
-            console.log('🔍 strategiesGrid innerHTML length:', strategiesGrid.innerHTML.length);
-        }
-        
-        // Пробуем вызвать ensureConstructorReady
-        console.log('🔍 Calling ensureConstructorReady manually...');
-        try {
-            await ensureConstructorReady();
-            console.log('✅ ensureConstructorReady completed successfully');
-        } catch (err) {
-            console.error('❌ ensureConstructorReady failed:', err);
-        }
-        
-        // Проверяем результат
-        console.log('🔍 Final strategies count:', window.strategies?.length || 0);
-        console.log('🔍 Final strategiesGrid innerHTML length:', strategiesGrid?.innerHTML.length || 0);
-    });
-}
 
 // 🔧 НАДЕЖНАЯ ИНИЦИАЛИЗАЦИЯ КОНСТРУКТОРА (БЕЗ UI)
 async function ensureConstructorReady() {

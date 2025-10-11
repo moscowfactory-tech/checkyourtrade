@@ -2321,6 +2321,13 @@ main {
 #strategyModal .form-control {
   font-size: var(--font-size-base) !important; /* Увеличил текст в полях */
   padding: var(--space-3) var(--space-4) !important; /* Увеличил отступы */
+  padding-left: 16px !important; /* Увеличенный левый отступ для мобильных */
+}
+
+/* Отдельно для textarea (описание стратегии) */
+#strategyModal textarea.form-control {
+  padding-left: 16px !important;
+  padding-top: 12px !important;
 }
 
 #strategyModal h3 {
