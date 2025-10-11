@@ -228,20 +228,21 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
             }
         }
         
-        // Получаем ID текущего пользователя
-        const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        // Получаем ID текущего пользователя через UserManager
         let currentUserId = null;
         
-        if (telegramUserId) {
-            const { data: user } = await window.supabase
-                .from('users')
-                .select('id')
-                .eq('telegram_id', telegramUserId)
-                .single();
-                
-            if (user) {
-                currentUserId = user.id;
-                console.log('👤 Current user ID:', currentUserId);
+        if (window.userManager && window.userManager.isInitialized) {
+            currentUserId = window.userManager.getUserId();
+            console.log('👤 Current user UUID:', currentUserId);
+        } else {
+            console.warn('⚠️ UserManager not initialized, trying to initialize...');
+            try {
+                await window.userManager.initialize();
+                await window.userManager.ensureUserInDatabase();
+                currentUserId = window.userManager.getUserId();
+                console.log('👤 User initialized, UUID:', currentUserId);
+            } catch (err) {
+                console.error('❌ Failed to initialize user for analyses loading:', err);
             }
         }
         
@@ -724,7 +725,10 @@ async function showSection(sectionId) {
         // 🔧 НАДЕЖНАЯ ИНИЦИАЛИЗАЦИЯ КОНСТРУКТОРА
         if (sectionId === 'constructor') {
             console.log('🏠 CONSTRUCTOR: Activating with reliable initialization...');
-            await ensureConstructorReady();
+            ensureConstructorReady().catch(err => {
+                console.error('❌ CONSTRUCTOR: Initialization failed:', err);
+                showEmergencyDiagnostics();
+            });
         } else if (sectionId === 'analysis') {
             console.log('📊 Showing analysis with current strategies:', strategies.length);
             updateStrategySelect();
@@ -2643,6 +2647,18 @@ async function ensureConstructorReady() {
         if (typeof renderStrategies === 'function') {
             renderStrategies();
             console.log('✅ CONSTRUCTOR: UI updated');
+        }
+        
+        // 5. Загружаем анализы и обновляем статистику
+        console.log('🔧 CONSTRUCTOR: Loading analyses and updating stats...');
+        if (typeof loadAnalysesFromDatabase === 'function') {
+            await loadAnalysesFromDatabase();
+            console.log('✅ CONSTRUCTOR: Analyses loaded');
+        }
+        
+        if (typeof window.updateUserStats === 'function') {
+            window.updateUserStats();
+            console.log('✅ CONSTRUCTOR: User stats updated');
         }
         
         console.log('✅ CONSTRUCTOR: Reliable initialization completed successfully');
