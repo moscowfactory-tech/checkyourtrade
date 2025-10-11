@@ -327,15 +327,25 @@
   }
   
   /* 🔧 КОМПАКТНЫЕ КНОПКИ В КОНСТРУКТОРЕ */
-  #addFieldBtn,
-  .add-input-btn {
+  #addFieldBtn {
     /* Компактные размеры для органичного вида */
     min-height: 32px !important;
     padding: 6px 12px !important;
     font-size: 13px !important;
     font-weight: 500 !important;
     border-radius: 6px !important;
-    /* Сохраняем touch-friendly для мобильных */
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+  }
+  
+  /* 🔧 ОЧЕНЬ МАЛЕНЬКАЯ КНОПКА "ДОБАВИТЬ ПОДПУНКТ" */
+  .add-input-btn {
+    /* Очень маленькая кнопка с текстом в одну строку */
+    min-height: 24px !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
     -webkit-tap-highlight-color: rgba(0,0,0,0.1);
   }
   
@@ -346,9 +356,29 @@
     text-indent: 4px !important;
   }
   
-  /* Уменьшаем отступы между кружками */
+  /* 🔧 КРУГИ ОЦЕНКИ В ОДНУ СТРОКУ */
   .color-options {
-    gap: 12px;
+    /* Горизонтальное расположение кругов */
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 16px !important;
+    flex-wrap: nowrap !important;
+  }
+  
+  /* Оптимизируем размер кругов для мобильных */
+  .color-option {
+    min-width: 60px !important;
+    min-height: 60px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .color-option span {
+    font-size: 12px !important;
+    margin-top: 4px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
   }
   
   /* Мобильная статистика профиля */
