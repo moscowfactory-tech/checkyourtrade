@@ -676,7 +676,16 @@ function setupEventListeners() {
         console.log('Mobile support icon event listener added');
     }
     
-    // ✅ Система инициализирована и работает корректно
+    // 🔄 Автоматическая загрузка стратегий после инициализации
+    console.log('🔄 Auto-loading strategies after initialization...');
+    if (typeof loadStrategiesFromDatabase === 'function') {
+        loadStrategiesFromDatabase().then(() => {
+            console.log('✅ Strategies auto-loaded successfully');
+        }).catch(err => {
+            console.error('❌ Auto-loading strategies failed:', err);
+        });
+    }
+    
     console.log('✅ TradeAnalyzer initialization completed successfully');
 }
 
