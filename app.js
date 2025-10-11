@@ -77,15 +77,20 @@ function initializeButtonsImmediately() {
             };
             
             // Настройка кнопок навигации по data-section
-            document.querySelectorAll('[data-section]').forEach(btn => {
+            const navigationButtons = document.querySelectorAll('[data-section]');
+            console.log('🔍 Found navigation buttons:', navigationButtons.length);
+            navigationButtons.forEach((btn, index) => {
+                const section = btn.getAttribute('data-section');
+                console.log(`🔍 Button ${index + 1}: section="${section}", text="${btn.textContent.trim()}"`);
+                
                 btn.onclick = async (e) => {
                     e.preventDefault();
                     const sectionId = btn.getAttribute('data-section');
-                    console.log('📊 Navigation clicked:', sectionId);
+                    console.log('📊 Navigation clicked:', sectionId, 'from button:', btn.textContent.trim());
                     
                     // Принудительно загружаем стратегии перед отображением конструктора
                     if (sectionId === 'constructor') {
-                        console.log('🔄 Loading strategies and showing constructor...');
+                        console.log('🔄 AUTO-LOADING strategies for constructor section...');
                         
                         // Сначала показываем секцию
                         if (typeof showSection === 'function') {
@@ -93,15 +98,24 @@ function initializeButtonsImmediately() {
                         }
                         
                         // Затем загружаем стратегии и обновляем UI
+                        console.log('🔄 Checking loadStrategiesFromDatabase availability:', typeof loadStrategiesFromDatabase);
                         if (typeof loadStrategiesFromDatabase === 'function') {
+                            console.log('🔄 Starting automatic strategies loading...');
                             await loadStrategiesFromDatabase();
+                            console.log('🔄 Strategies loaded, current count:', window.strategies ? window.strategies.length : 0);
+                            
                             // Принудительно обновляем UI после загрузки
                             setTimeout(() => {
+                                console.log('🔄 Force-rendering strategies after auto-load...');
                                 if (typeof renderStrategies === 'function') {
                                     renderStrategies();
-                                    console.log('✅ Strategies force-rendered after navigation');
+                                    console.log('✅ AUTO-LOAD: Strategies force-rendered after navigation');
+                                } else {
+                                    console.error('❌ AUTO-LOAD: renderStrategies function not available');
                                 }
                             }, 100);
+                        } else {
+                            console.error('❌ AUTO-LOAD: loadStrategiesFromDatabase function not available');
                         }
                     } else {
                         // Обычная навигация для других секций
@@ -658,14 +672,41 @@ async function showSection(sectionId) {
         
         console.log('Section activated:', sectionId);
         
-        // Отображаем стратегии без перезагрузки (используем уже загруженные данные)
+        // Отображаем стратегии с автоматической загрузкой
         if (sectionId === 'constructor') {
-            console.log('🏠 Showing constructor with current strategies:', strategies.length);
-            // Принудительно обновляем отображение стратегий в конструкторе
-            setTimeout(() => {
-                renderStrategies();
-                console.log('✅ Strategies rendered for constructor section');
-            }, 200);
+            console.log('🏠 SHOWSECTION: Constructor activated, strategies count:', strategies.length);
+            
+            // Если стратегий нет, загружаем их автоматически
+            if (strategies.length === 0) {
+                console.log('🏠 SHOWSECTION: No strategies found, auto-loading...');
+                if (typeof loadStrategiesFromDatabase === 'function') {
+                    loadStrategiesFromDatabase().then(() => {
+                        console.log('🏠 SHOWSECTION: Auto-load completed, rendering...');
+                        setTimeout(() => {
+                            renderStrategies();
+                            console.log('✅ SHOWSECTION: Auto-loaded strategies rendered');
+                        }, 100);
+                    }).catch(err => {
+                        console.error('❌ SHOWSECTION: Auto-load failed:', err);
+                        // Всё равно пытаемся отобразить
+                        setTimeout(() => {
+                            renderStrategies();
+                        }, 100);
+                    });
+                } else {
+                    console.error('❌ SHOWSECTION: loadStrategiesFromDatabase not available');
+                    setTimeout(() => {
+                        renderStrategies();
+                    }, 100);
+                }
+            } else {
+                // Стратегии уже есть, просто отображаем
+                console.log('🏠 SHOWSECTION: Strategies already loaded, rendering...');
+                setTimeout(() => {
+                    renderStrategies();
+                    console.log('✅ SHOWSECTION: Existing strategies rendered');
+                }, 100);
+            }
         } else if (sectionId === 'analysis') {
             console.log('📊 Showing analysis with current strategies:', strategies.length);
             updateStrategySelect();
