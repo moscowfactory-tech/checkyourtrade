@@ -433,23 +433,35 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (currentUser) {
             console.log('✅ AGGRESSIVE: User initialized:', currentUser.type, currentUser.id);
             
-            // Сразу после инициализации пользователя загружаем стратегии
-            console.log('💾 AGGRESSIVE: Loading strategies immediately after user init...');
+            // Критически важно: сразу создаём/находим пользователя в БД
+            console.log('💾 AGGRESSIVE: Ensuring user in database first...');
             
-            // Множественные попытки загрузки с разными интервалами
-            const loadAttempts = [100, 500, 1000, 2000];
-            
-            loadAttempts.forEach((delay, index) => {
-                setTimeout(async () => {
-                    console.log(`💾 AGGRESSIVE: Load attempt #${index + 1} (${delay}ms delay)`);
-                    try {
-                        await loadStrategiesFromDatabase();
-                        console.log(`✅ AGGRESSIVE: Load attempt #${index + 1} completed, strategies:`, strategies.length);
-                    } catch (err) {
-                        console.error(`❌ AGGRESSIVE: Load attempt #${index + 1} failed:`, err);
-                    }
-                }, delay);
-            });
+            try {
+                const ensureSuccess = await window.userManager.ensureUserInDatabase();
+                if (ensureSuccess) {
+                    console.log('✅ AGGRESSIVE: User ensured in database, UUID:', window.userManager.getUserId());
+                    
+                    // Теперь загружаем стратегии с множественными попытками
+                    console.log('💾 AGGRESSIVE: Loading strategies with multiple attempts...');
+                    const loadAttempts = [100, 500, 1000, 2000];
+                    
+                    loadAttempts.forEach((delay, index) => {
+                        setTimeout(async () => {
+                            console.log(`💾 AGGRESSIVE: Load attempt #${index + 1} (${delay}ms delay)`);
+                            try {
+                                await loadStrategiesFromDatabase();
+                                console.log(`✅ AGGRESSIVE: Load attempt #${index + 1} completed, strategies:`, strategies.length);
+                            } catch (err) {
+                                console.error(`❌ AGGRESSIVE: Load attempt #${index + 1} failed:`, err);
+                            }
+                        }, delay);
+                    });
+                } else {
+                    console.error('❌ AGGRESSIVE: Failed to ensure user in database');
+                }
+            } catch (err) {
+                console.error('❌ AGGRESSIVE: Exception ensuring user in database:', err);
+            }
             
         } else {
             console.error('❌ AGGRESSIVE: Failed to initialize user');
@@ -2367,12 +2379,31 @@ async function loadStrategiesFromDatabase() {
         return;
     }
     
-    const userId = window.userManager.getUserId();
+    let userId = window.userManager.getUserId();
     console.log('👤 Loading strategies for user:', userId);
     
     if (!userId) {
-        console.warn('⚠️ No user ID available');
-        return;
+        console.warn('⚠️ No user ID available, ensuring user in database...');
+        
+        // Критически важно: создаём/находим пользователя в БД
+        try {
+            const success = await window.userManager.ensureUserInDatabase();
+            if (success) {
+                userId = window.userManager.getUserId();
+                console.log('✅ User ensured in database, UUID:', userId);
+            } else {
+                console.error('❌ Failed to ensure user in database');
+                return;
+            }
+        } catch (err) {
+            console.error('❌ Exception ensuring user in database:', err);
+            return;
+        }
+        
+        if (!userId) {
+            console.error('❌ Still no user ID after ensuring user in database');
+            return;
+        }
     }
     
     try {
