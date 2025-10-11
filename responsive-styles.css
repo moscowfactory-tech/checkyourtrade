@@ -326,6 +326,26 @@
     scroll-margin-bottom: 100px;
   }
   
+  /* 🔧 ВЫРОВНЯЛИВАНИЕ КНОПОК В КОНСТРУКТОРЕ */
+  #addFieldBtn,
+  .add-input-btn {
+    /* Одинаковые размеры для обеих кнопок */
+    min-height: 44px !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    border-radius: 8px !important;
+    /* Увеличиваем область нажатия */
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+  }
+  
+  /* 🔧 УЛУЧШЕННЫЕ ОТСТУПЫ В СЕЛЕКТАХ */
+  select.form-control {
+    /* Увеличиваем левый отступ для лучшего визуального выравнивания */
+    padding: 14px 40px 14px 20px !important;
+    text-indent: 4px !important;
+  }
+  
   /* Уменьшаем отступы между кружками */
   .color-options {
     gap: 12px;
