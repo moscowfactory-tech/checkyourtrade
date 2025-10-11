@@ -676,15 +676,11 @@ function setupEventListeners() {
         console.log('Mobile support icon event listener added');
     }
     
-    // 🔄 Автоматическая загрузка стратегий после инициализации
-    console.log('🔄 Auto-loading strategies after initialization...');
-    if (typeof loadStrategiesFromDatabase === 'function') {
-        loadStrategiesFromDatabase().then(() => {
-            console.log('✅ Strategies auto-loaded successfully');
-        }).catch(err => {
-            console.error('❌ Auto-loading strategies failed:', err);
-        });
-    }
+    // 🆘 Инициализация экстренной диагностики (скрыта по умолчанию)
+    setupEmergencyDiagnostics();
+    
+    // ✅ Стратегии теперь загружаются надежно при переходе в конструктор
+    console.log('✅ Initialization completed - strategies will load reliably when entering constructor');
     
     console.log('✅ TradeAnalyzer initialization completed successfully');
 }
@@ -722,47 +718,16 @@ async function showSection(sectionId) {
         
         console.log('Section activated:', sectionId);
         
-        // Отображаем стратегии с автоматической загрузкой
+        // 🔧 НАДЕЖНАЯ ИНИЦИАЛИЗАЦИЯ КОНСТРУКТОРА
         if (sectionId === 'constructor') {
-            console.log('🏠 SHOWSECTION: Constructor activated, strategies count:', strategies.length);
-            
-            // Если стратегий нет, загружаем их автоматически
-            if (strategies.length === 0) {
-                console.log('🏠 SHOWSECTION: No strategies found, auto-loading...');
-                if (typeof loadStrategiesFromDatabase === 'function') {
-                    loadStrategiesFromDatabase().then(() => {
-                        console.log('🏠 SHOWSECTION: Auto-load completed, rendering...');
-                        setTimeout(() => {
-                            renderStrategies();
-                            console.log('✅ SHOWSECTION: Auto-loaded strategies rendered');
-                        }, 100);
-                    }).catch(err => {
-                        console.error('❌ SHOWSECTION: Auto-load failed:', err);
-                        // Всё равно пытаемся отобразить
-                        setTimeout(() => {
-                            renderStrategies();
-                        }, 100);
-                    });
-                } else {
-                    console.error('❌ SHOWSECTION: loadStrategiesFromDatabase not available');
-                    setTimeout(() => {
-                        renderStrategies();
-                    }, 100);
-                }
-            } else {
-                // Стратегии уже есть, просто отображаем
-                console.log('🏠 SHOWSECTION: Strategies already loaded, rendering...');
-                setTimeout(() => {
-                    renderStrategies();
-                    console.log('✅ SHOWSECTION: Existing strategies rendered');
-                }, 100);
-            }
+            console.log('🏠 CONSTRUCTOR: Activating with reliable initialization...');
+            await ensureConstructorReady();
         } else if (sectionId === 'analysis') {
             console.log('📊 Showing analysis with current strategies:', strategies.length);
             updateStrategySelect();
         }
     } else {
-        console.error('Section not found:', sectionId);
+        console.error('❌ Section not found:', sectionId);
     }
 }
 
@@ -2605,5 +2570,154 @@ window.refreshStrategiesFromDB = refreshStrategiesFromDB;
 window.deleteAnalysis = deleteAnalysis;
 window.forceUIUpdate = forceUIUpdate;
 
-// ✅ Мобильная диагностика удалена - система работает корректно
+// 🔧 НАДЕЖНАЯ ИНИЦИАЛИЗАЦИЯ КОНСТРУКТОРА (БЕЗ UI)
+async function ensureConstructorReady() {
+    console.log('🔧 CONSTRUCTOR: Starting reliable initialization...');
+    
+    try {
+        // 1. Проверяем и инициализируем UserManager
+        if (!window.userManager?.isInitialized) {
+            console.log('🔧 CONSTRUCTOR: Initializing UserManager...');
+            await window.userManager.initialize();
+            console.log('✅ CONSTRUCTOR: UserManager initialized');
+        }
+        
+        // 2. Проверяем UUID
+        let userId = window.userManager.getUserId();
+        if (!userId) {
+            console.log('🔧 CONSTRUCTOR: Creating user in database...');
+            await window.userManager.ensureUserInDatabase();
+            userId = window.userManager.getUserId();
+            console.log(`✅ CONSTRUCTOR: User created: ${userId?.substring(0, 8)}...`);
+        }
+        
+        // 3. Принудительная загрузка стратегий
+        console.log('🔧 CONSTRUCTOR: Loading strategies...');
+        await loadStrategiesFromDatabase();
+        console.log(`✅ CONSTRUCTOR: Strategies loaded: ${window.strategies?.length || 0}`);
+        
+        // 4. Обновляем UI
+        if (typeof renderStrategies === 'function') {
+            renderStrategies();
+            console.log('✅ CONSTRUCTOR: UI updated');
+        }
+        
+        console.log('✅ CONSTRUCTOR: Reliable initialization completed successfully');
+        
+    } catch (err) {
+        console.error('❌ CONSTRUCTOR: Initialization failed:', err);
+        // Показываем экстренную диагностику только при ошибке
+        showEmergencyDiagnostics();
+    }
+}
+
+// 🆘 ЭКСТРЕННАЯ ДИАГНОСТИКА (АКТИВИРУЕТСЯ ПРИ ОШИБКАХ)
+function showEmergencyDiagnostics() {
+    const emergencyBtn = document.getElementById('emergencyDiagnosticsBtn');
+    if (emergencyBtn) {
+        emergencyBtn.style.display = 'block';
+        console.log('🆘 Emergency diagnostics button activated');
+    }
+}
+
+function setupEmergencyDiagnostics() {
+    const emergencyBtn = document.getElementById('emergencyDiagnosticsBtn');
+    const emergencyPanel = document.getElementById('emergencyDiagnosticsPanel');
+    const emergencyOutput = document.getElementById('emergencyOutput');
+    const emergencyFixBtn = document.getElementById('emergencyFixBtn');
+    
+    if (!emergencyBtn || !emergencyPanel || !emergencyOutput) {
+        console.warn('⚠️ Emergency diagnostics elements not found');
+        return;
+    }
+    
+    function addEmergencyLog(message, type = 'error') {
+        const timestamp = new Date().toLocaleTimeString();
+        const color = type === 'success' ? '#66ff66' : type === 'warning' ? '#ffaa00' : '#ff6666';
+        const logEntry = document.createElement('div');
+        logEntry.style.color = color;
+        logEntry.style.marginBottom = '4px';
+        logEntry.innerHTML = `[${timestamp}] ${message}`;
+        emergencyOutput.appendChild(logEntry);
+        emergencyOutput.scrollTop = emergencyOutput.scrollHeight;
+    }
+    
+    emergencyBtn.addEventListener('click', async () => {
+        emergencyPanel.style.display = emergencyPanel.style.display === 'none' ? 'block' : 'none';
+        
+        if (emergencyPanel.style.display === 'block') {
+            emergencyOutput.innerHTML = '';
+            addEmergencyLog('🆘 Начинаем экстренную диагностику...', 'warning');
+            
+            // Проверяем компоненты
+            addEmergencyLog(`🔍 window.supabase: ${!!window.supabase}`, window.supabase ? 'success' : 'error');
+            addEmergencyLog(`🔍 window.userManager: ${!!window.userManager}`, window.userManager ? 'success' : 'error');
+            
+            if (window.userManager) {
+                addEmergencyLog(`🔍 UserManager.isInitialized: ${window.userManager.isInitialized}`, window.userManager.isInitialized ? 'success' : 'error');
+                
+                if (window.userManager.isInitialized) {
+                    const userId = window.userManager.getUserId();
+                    addEmergencyLog(`🔍 UUID: ${userId ? userId.substring(0, 8) + '...' : 'NONE'}`, userId ? 'success' : 'error');
+                } else {
+                    addEmergencyLog('❌ UserManager не инициализирован!', 'error');
+                }
+            }
+            
+            addEmergencyLog(`🔍 Количество стратегий: ${window.strategies?.length || 0}`, 'warning');
+            
+            // Проверяем функции
+            addEmergencyLog(`🔍 loadStrategiesFromDatabase: ${typeof loadStrategiesFromDatabase}`, typeof loadStrategiesFromDatabase === 'function' ? 'success' : 'error');
+            addEmergencyLog(`🔍 renderStrategies: ${typeof renderStrategies}`, typeof renderStrategies === 'function' ? 'success' : 'error');
+        }
+    });
+    
+    if (emergencyFixBtn) {
+        emergencyFixBtn.addEventListener('click', async () => {
+            addEmergencyLog('🔧 Попытка аварийного восстановления...', 'warning');
+            
+            try {
+                // Проверяем и инициализируем UserManager
+                if (!window.userManager?.isInitialized) {
+                    addEmergencyLog('🔧 Переинициализация UserManager...', 'warning');
+                    await window.userManager.initialize();
+                    addEmergencyLog('✅ UserManager переинициализирован', 'success');
+                }
+                
+                // Проверяем UUID
+                let userId = window.userManager.getUserId();
+                if (!userId) {
+                    addEmergencyLog('🔧 Создание пользователя...', 'warning');
+                    await window.userManager.ensureUserInDatabase();
+                    userId = window.userManager.getUserId();
+                    addEmergencyLog(`✅ Пользователь создан: ${userId?.substring(0, 8)}...`, 'success');
+                }
+                
+                // Принудительная загрузка стратегий
+                addEmergencyLog('🔧 Принудительная загрузка стратегий...', 'warning');
+                await loadStrategiesFromDatabase();
+                addEmergencyLog(`✅ Стратегии загружены: ${window.strategies?.length || 0}`, 'success');
+                
+                // Обновляем UI
+                if (typeof renderStrategies === 'function') {
+                    renderStrategies();
+                    addEmergencyLog('✅ UI обновлен', 'success');
+                }
+                
+                // Скрываем кнопку после успешного исправления
+                setTimeout(() => {
+                    emergencyBtn.style.display = 'none';
+                    emergencyPanel.style.display = 'none';
+                    addEmergencyLog('✅ Проблема устранена, скрываем диагностику', 'success');
+                }, 2000);
+                
+            } catch (err) {
+                addEmergencyLog(`❌ Ошибка восстановления: ${err.message}`, 'error');
+            }
+        });
+    }
+}
+
+window.showEmergencyDiagnostics = showEmergencyDiagnostics;
+window.setupEmergencyDiagnostics = setupEmergencyDiagnostics;
 window.strategies = strategies;
