@@ -682,6 +682,117 @@ function setupEventListeners() {
     
     // ✅ Стратегии теперь загружаются надежно при переходе в конструктор
     console.log('✅ Initialization completed - strategies will load reliably when entering constructor');
+
+// 📊 СИСТЕМА АНАЛИТИКИ ДЛЯ АДМИН ПАНЕЛИ
+class SimpleAnalytics {
+    constructor() {
+        this.sessionId = this.generateSessionId();
+        this.sessionStart = Date.now();
+        this.setupEventTracking();
+    }
+    
+    generateSessionId() {
+        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    setupEventTracking() {
+        // Отслеживаем начало сессии
+        this.trackEvent('session_start', {
+            user_agent: navigator.userAgent,
+            screen_resolution: `${screen.width}x${screen.height}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        });
+        
+        // Отслеживаем закрытие
+        window.addEventListener('beforeunload', () => {
+            this.trackEvent('session_end', {
+                duration: Date.now() - this.sessionStart
+            });
+        });
+    }
+    
+    async trackEvent(eventName, properties = {}) {
+        try {
+            const event = {
+                event_name: eventName,
+                user_id: window.userManager?.getUserId(),
+                session_id: this.sessionId,
+                timestamp: new Date().toISOString(),
+                properties: {
+                    ...properties,
+                    url: window.location.href
+                }
+            };
+            
+            if (window.supabase) {
+                await window.supabase
+                    .from('user_events')
+                    .insert(event);
+                    
+                console.log('📊 Event tracked:', eventName);
+            }
+        } catch (error) {
+            console.error('Analytics error:', error);
+        }
+    }
+    
+    async trackError(error, context = {}) {
+        try {
+            const errorLog = {
+                type: 'javascript_error',
+                message: error.message || error,
+                stack: error.stack,
+                user_id: window.userManager?.getUserId(),
+                session_id: this.sessionId,
+                user_agent: navigator.userAgent,
+                url: window.location.href,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (window.supabase) {
+                await window.supabase
+                    .from('error_logs')
+                    .insert(errorLog);
+            }
+                
+        } catch (e) {
+            console.error('Error logging failed:', e);
+        }
+    }
+}
+
+// Инициализация аналитики
+window.analytics = new SimpleAnalytics();
+
+// Интеграция с существующими функциями
+const originalOpenModal = window.openModal;
+if (originalOpenModal) {
+    window.openModal = function() {
+        window.analytics.trackEvent('strategy_creation_started');
+        return originalOpenModal.apply(this, arguments);
+    };
+}
+
+const originalSaveStrategy = window.saveStrategy;
+if (originalSaveStrategy) {
+    window.saveStrategy = function() {
+        window.analytics.trackEvent('strategy_created', {
+            strategy_name: document.getElementById('strategyName')?.value
+        });
+        return originalSaveStrategy.apply(this, arguments);
+    };
+}
+
+// Глобальная обработка ошибок
+window.addEventListener('error', (event) => {
+    window.analytics.trackError(event.error, {
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+    });
+});
+
+console.log('📊 Analytics system initialized');
     
     console.log('✅ TradeAnalyzer initialization completed successfully');
 }

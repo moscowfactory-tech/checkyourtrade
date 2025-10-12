@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 
 # Токен и URL
 TOKEN = "8235902798:AAG5X7lI8-WCQ0G1iAxjs6lqvD55Ffr7Ujc"
+# Используем GitHub Pages (уже опубликовано)
 WEB_APP_URL = "https://moscowfactory-tech.github.io/checkyourtrade/"
+# WEB_APP_URL = "http://localhost:8000"  # Для локального тестирования
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обработчик команды /start"""
@@ -20,7 +22,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
-        "Привет! Нажми кнопку, чтобы открыть мой сайт:",
+        "Привет! Нажми кнопку, чтобы открыть приложение:",
         reply_markup=reply_markup
     )
 
