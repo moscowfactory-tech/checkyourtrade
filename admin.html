@@ -84,6 +84,14 @@
             border-color: #4fd1c7;
         }
 
+        .metric-card.clickable {
+            cursor: pointer;
+        }
+
+        .metric-card.clickable:hover {
+            background: #1f2937;
+        }
+
         .metric-header {
             display: flex;
             justify-content: space-between;
@@ -132,6 +140,10 @@
 
         .chart-card {
             background: #1a1f2e;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-height: 400px;
         }
 
         .chart-header {
@@ -159,6 +171,59 @@
         .period-selector:focus {
             outline: none;
             border-color: #4fd1c7;
+        }
+
+        .details-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .details-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1f2e;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .details-modal h3 {
+            color: #4fd1c7;
+            margin-bottom: 1rem;
+        }
+
+        .details-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .details-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #2d3748;
+            color: #ffffff;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: #a0aec0;
+            font-size: 1.5rem;
+            cursor: pointer;
         }
 
         .period-selector {
@@ -282,7 +347,7 @@
 
         <!-- Основные метрики -->
         <div class="metrics-grid">
-            <div class="metric-card">
+            <div class="metric-card clickable" onclick="dashboard.showUserDetails('registrations')">
                 <div class="metric-header">
                     <span class="metric-title">👤 Пользователи со стратегиями</span>
                     <span class="metric-icon">👥</span>
@@ -313,7 +378,7 @@
                 <div class="metric-change" id="analysesChange"></div>
             </div>
 
-            <div class="metric-card">
+            <div class="metric-card clickable" onclick="dashboard.showUserDetails('active')">
                 <div class="metric-header">
                     <span class="metric-title">👥 Активные пользователи (24ч)</span>
                     <span class="metric-icon">🟢</span>
@@ -377,6 +442,17 @@
         </div>
     </div>
 
+    <!-- Модальное окно для деталей -->
+    <div id="detailsModal" class="details-modal">
+        <div class="details-modal-content">
+            <button class="close-modal" onclick="dashboard.closeModal()">&times;</button>
+            <h3 id="modalTitle">Детали</h3>
+            <div id="modalContent">
+                <div class="loading"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Конфигурация Supabase (ваши реальные данные)
         const SUPABASE_URL = 'https://wpexepphsdzwopltunnn.supabase.co';
@@ -434,20 +510,38 @@
                 }
             }
 
-            async getActiveUsers() {
-                // Активные пользователи за 24 часа (по любым событиям)
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&timestamp=gte.${new Date(Date.now() - 24*60*60*1000).toISOString()}`, {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
+            async getActiveUsersCount() {
+                // Активные пользователи за 24 часа - те, кто создавал стратегии или анализы
+                const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
                 
-                if (!response.ok) throw new Error('Failed to fetch active users');
+                const [strategiesResponse, analysesResponse] = await Promise.all([
+                    fetch(`${SUPABASE_URL}/rest/v1/strategies?select=user_id&created_at=gte.${yesterday}`, {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    }),
+                    fetch(`${SUPABASE_URL}/rest/v1/analysis_results?select=user_id&created_at=gte.${yesterday}`, {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    })
+                ]);
                 
-                const data = await response.json();
-                const uniqueUsers = new Set(data.map(event => event.user_id));
-                return uniqueUsers.size;
+                const activeUsers = new Set();
+                
+                if (strategiesResponse.ok) {
+                    const strategies = await strategiesResponse.json();
+                    strategies.forEach(s => s.user_id && activeUsers.add(s.user_id));
+                }
+                
+                if (analysesResponse.ok) {
+                    const analyses = await analysesResponse.json();
+                    analyses.forEach(a => a.user_id && activeUsers.add(a.user_id));
+                }
+                
+                return activeUsers.size;
             }
 
             async getRegistrationsCount() {
@@ -466,7 +560,8 @@
             }
 
             async getStrategiesCount() {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=id&event_name=eq.strategy_created`, {
+                // Считаем общее количество стратегий из таблицы strategies
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/strategies?select=id`, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
                         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
@@ -478,7 +573,8 @@
             }
 
             async getAnalysesCount() {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=id&event_name=eq.analysis_completed`, {
+                // Считаем общее количество анализов из таблицы analysis_results
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/analysis_results?select=id`, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
                         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
@@ -686,6 +782,106 @@
                 });
             }
 
+            async showUserDetails(type) {
+                const modal = document.getElementById('detailsModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalContent = document.getElementById('modalContent');
+                
+                modal.style.display = 'block';
+                modalContent.innerHTML = '<div class="loading"></div>';
+                
+                try {
+                    if (type === 'registrations') {
+                        modalTitle.textContent = 'Пользователи со стратегиями';
+                        const response = await fetch(`${SUPABASE_URL}/rest/v1/strategies?select=user_id,users(telegram_id,username,first_name)&order=created_at.desc`, {
+                            headers: {
+                                'apikey': SUPABASE_ANON_KEY,
+                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            const uniqueUsers = new Map();
+                            data.forEach(strategy => {
+                                if (strategy.user_id && !uniqueUsers.has(strategy.user_id)) {
+                                    uniqueUsers.set(strategy.user_id, strategy.users);
+                                }
+                            });
+                            
+                            let html = '<ul class="details-list">';
+                            uniqueUsers.forEach((user, userId) => {
+                                const displayName = user?.first_name || user?.username || `User ${userId}`;
+                                html += `<li>👤 ${displayName} (ID: ${userId})</li>`;
+                            });
+                            html += '</ul>';
+                            modalContent.innerHTML = html;
+                        }
+                    } else if (type === 'active') {
+                        modalTitle.textContent = 'Активные пользователи (24ч)';
+                        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                        
+                        const [strategiesResponse, analysesResponse] = await Promise.all([
+                            fetch(`${SUPABASE_URL}/rest/v1/strategies?select=user_id,users(telegram_id,username,first_name),created_at&created_at=gte.${yesterday}`, {
+                                headers: {
+                                    'apikey': SUPABASE_ANON_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                                }
+                            }),
+                            fetch(`${SUPABASE_URL}/rest/v1/analysis_results?select=user_id,users(telegram_id,username,first_name),created_at&created_at=gte.${yesterday}`, {
+                                headers: {
+                                    'apikey': SUPABASE_ANON_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                                }
+                            })
+                        ]);
+                        
+                        const activeUsers = new Map();
+                        
+                        if (strategiesResponse.ok) {
+                            const strategies = await strategiesResponse.json();
+                            strategies.forEach(s => {
+                                if (s.user_id) {
+                                    activeUsers.set(s.user_id, {
+                                        user: s.users,
+                                        activity: 'Создал стратегию',
+                                        time: new Date(s.created_at).toLocaleString('ru-RU')
+                                    });
+                                }
+                            });
+                        }
+                        
+                        if (analysesResponse.ok) {
+                            const analyses = await analysesResponse.json();
+                            analyses.forEach(a => {
+                                if (a.user_id) {
+                                    const existing = activeUsers.get(a.user_id);
+                                    activeUsers.set(a.user_id, {
+                                        user: a.users,
+                                        activity: existing ? 'Создал стратегию и анализ' : 'Провел анализ',
+                                        time: new Date(a.created_at).toLocaleString('ru-RU')
+                                    });
+                                }
+                            });
+                        }
+                        
+                        let html = '<ul class="details-list">';
+                        activeUsers.forEach((data, userId) => {
+                            const displayName = data.user?.first_name || data.user?.username || `User ${userId}`;
+                            html += `<li>👤 ${displayName}<br><small>${data.activity} - ${data.time}</small></li>`;
+                        });
+                        html += '</ul>';
+                        modalContent.innerHTML = html;
+                    }
+                } catch (error) {
+                    modalContent.innerHTML = `<p style="color: #f56565;">Ошибка загрузки данных: ${error.message}</p>`;
+                }
+            }
+
+            closeModal() {
+                document.getElementById('detailsModal').style.display = 'none';
+            }
+
             showAlert(title, message) {
                 const alertsContainer = document.getElementById('alertsContainer');
                 const alert = document.createElement('div');
@@ -716,8 +912,8 @@
             }
         }
 
-        // Глобальные функции
-        let dashboard;
+        // Создаем экземпляр дашборда
+        const dashboard = new AdminDashboard();
 
         async function refreshData() {
             const refreshIcon = document.getElementById('refreshIcon');
