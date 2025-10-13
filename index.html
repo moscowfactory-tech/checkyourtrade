@@ -8,9 +8,9 @@
     <meta http-equiv="Expires" content="0">
     <title>Trade analyzer - Анализ торговых стратегий</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4.3.1">
-    <link rel="stylesheet" href="theme.css?v=4.3.1">
-    <link rel="stylesheet" href="responsive-styles.css?v=4.3.1">
+    <link rel="stylesheet" href="style.css?v=4.3.2">
+    <link rel="stylesheet" href="theme.css?v=4.3.2">
+    <link rel="stylesheet" href="responsive-styles.css?v=4.3.2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Принудительное обновление навигации */
@@ -18,6 +18,37 @@
             display: flex !important;
             align-items: center !important;
             gap: 16px !important;
+        }
+        
+        /* Принудительное исправление заголовка стратегий для десктопа */
+        @media (min-width: 641px) {
+            .strategies-header {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                flex-direction: row !important;
+                margin-bottom: 24px !important;
+            }
+            
+            .strategies-header h3 {
+                margin: 0 !important;
+                text-align: left !important;
+                width: auto !important;
+            }
+        }
+        
+        /* Мобильные устройства */
+        @media (max-width: 640px) {
+            .strategies-header {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 16px !important;
+                align-items: stretch !important;
+            }
+            
+            .strategies-header h3 {
+                text-align: center !important;
+            }
         }
     </style>
 </head>
