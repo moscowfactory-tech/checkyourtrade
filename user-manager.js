@@ -196,17 +196,41 @@ class UnifiedUserManager {
 
                 if (createError) {
                     console.error('❌ Error creating user:', createError);
+                    // Если таблицы users нет или ошибка создания — хотя бы зафиксируем регистрацию один раз
+                    this.trackRegistrationOnce();
                     return false;
                 } else {
                     console.log('✅ Step 6: User created successfully:', newUser);
                     this.currentUser.uuid = newUser.id;
                     console.log('✅ Step 7: UUID assigned:', this.currentUser.uuid);
+                    // Записываем событие регистрации
+                    this.trackRegistrationOnce();
                     return true;
                 }
             }
         } catch (error) {
             console.error('❌ Exception in ensureUserInDatabase:', error);
+            // В случае исключения также попытаемся зафиксировать регистрацию один раз
+            this.trackRegistrationOnce();
             return false;
+        }
+    }
+
+    // Записать событие регистрации один раз на устройство/пользователя
+    async trackRegistrationOnce() {
+        try {
+            const key = `reg_tracked_${this.currentUser?.telegram_id}`;
+            if (localStorage.getItem(key)) return;
+            localStorage.setItem(key, '1');
+            if (window.analytics && typeof window.analytics.trackEvent === 'function') {
+                await window.analytics.trackEvent('user_registered', {
+                    telegram_id: this.currentUser?.telegram_id,
+                    source: this.currentUser?.type || 'unknown'
+                });
+                console.log('📊 user_registered event tracked');
+            }
+        } catch (e) {
+            console.warn('Registration tracking failed:', e);
         }
     }
 }
