@@ -764,6 +764,23 @@ class SimpleAnalytics {
 // Инициализация аналитики
 window.analytics = new SimpleAnalytics();
 
+// Принудительная запись регистрации при первом запуске
+setTimeout(async () => {
+    if (window.userManager?.isInitialized && window.analytics) {
+        const regKey = `reg_tracked_${window.userManager.getTelegramId()}`;
+        if (!localStorage.getItem(regKey)) {
+            console.log('🔥 FORCE: Recording user_registered event...');
+            localStorage.setItem(regKey, '1');
+            await window.analytics.trackEvent('user_registered', {
+                telegram_id: window.userManager.getTelegramId(),
+                source: window.userManager.getCurrentUser()?.type || 'unknown',
+                forced: true
+            });
+            console.log('✅ FORCE: user_registered recorded');
+        }
+    }
+}, 2000);
+
 // Интеграция с существующими функциями
 const originalOpenModal = window.openModal;
 if (originalOpenModal) {
@@ -1333,6 +1350,14 @@ async function handleStrategySubmit(e) {
             strategy.id = savedStrategy.id;
             strategies.push(strategy);
             console.log('✅ Strategy saved successfully:', savedStrategy);
+            
+            // Записываем событие создания стратегии
+            if (window.analytics) {
+                await window.analytics.trackEvent('strategy_created', {
+                    strategy_name: strategyName,
+                    strategy_id: savedStrategy.id
+                });
+            }
             
             // Обновляем счетчик стратегий
             if (window.incrementStrategiesCount) {
@@ -2167,6 +2192,16 @@ async function saveCurrentAnalysis() {
             
             // Добавляем в локальный массив для отображения
             savedAnalyses.unshift(analysis); // unshift чтобы новые были сверху
+            
+            // Записываем событие завершения анализа
+            if (window.analytics) {
+                await window.analytics.trackEvent('analysis_completed', {
+                    strategy_name: currentAnalysisStrategy.name,
+                    strategy_id: currentAnalysisStrategy.id,
+                    coin: currentCoin,
+                    analysis_id: savedAnalysis.id
+                });
+            }
             
             // Обновляем счетчик анализов
             if (window.incrementAnalysesCount) {

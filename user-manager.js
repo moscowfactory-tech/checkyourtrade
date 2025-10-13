@@ -172,6 +172,8 @@ class UnifiedUserManager {
                 console.log('✅ Step 3: User found in database:', existingUser);
                 this.currentUser.uuid = existingUser.id;
                 console.log('✅ Step 4: UUID assigned to user:', this.currentUser.uuid);
+                // Зафиксируем регистрацию один раз, если ещё не фиксировали на этом устройстве
+                this.trackRegistrationOnce();
                 return true;
             } else {
                 console.log('🆕 Step 3: No existing user found, creating new user...');
@@ -222,12 +224,24 @@ class UnifiedUserManager {
             const key = `reg_tracked_${this.currentUser?.telegram_id}`;
             if (localStorage.getItem(key)) return;
             localStorage.setItem(key, '1');
-            if (window.analytics && typeof window.analytics.trackEvent === 'function') {
-                await window.analytics.trackEvent('user_registered', {
+            const payload = {
+                event_name: 'user_registered',
+                user_id: this.currentUser?.uuid || null,
+                session_id: 'registration_' + Date.now(),
+                timestamp: new Date().toISOString(),
+                properties: {
                     telegram_id: this.currentUser?.telegram_id,
                     source: this.currentUser?.type || 'unknown'
-                });
-                console.log('📊 user_registered event tracked');
+                }
+            };
+            if (window.supabase && typeof window.supabase.from === 'function') {
+                await window.supabase.from('user_events').insert(payload);
+                console.log('📊 user_registered event inserted via Supabase');
+                return;
+            }
+            if (window.analytics && typeof window.analytics.trackEvent === 'function') {
+                await window.analytics.trackEvent('user_registered', payload.properties);
+                console.log('📊 user_registered event tracked via Analytics');
             }
         } catch (e) {
             console.warn('Registration tracking failed:', e);
