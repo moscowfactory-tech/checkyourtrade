@@ -1863,7 +1863,7 @@ main {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   /* Navigation improvements */
   .nav-container {
     padding: 0 var(--space-12);
@@ -1967,6 +1967,10 @@ main {
     flex-direction: column;
     gap: var(--space-16);
     align-items: stretch;
+  }
+  
+  .strategies-header h3 {
+    text-align: center;
   }
 
   .modal {
@@ -2345,7 +2349,7 @@ main {
 /* 📱 TELEGRAM WEBAPP MINIMAL STYLES */
 
 /* Минимальные оптимизации для Telegram WebApp */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   /* Предотвращение зума на iOS */
   input, textarea, select {
     font-size: 16px !important;
@@ -2649,7 +2653,7 @@ main {
 }
 
 /* Mobile Navigation Improvements */
-@media (max-width: 768px) and (min-width: 481px) {
+@media (max-width: 640px) and (min-width: 481px) {
   .nav-container {
     position: relative;
   }
