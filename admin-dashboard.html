@@ -264,6 +264,16 @@
 
         <!-- Основные метрики -->
         <div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-header">
+            <span class="metric-title">👤 Всего регистраций</span>
+            <span class="metric-icon">🟦</span>
+        </div>
+        <div class="metric-value" id="registrationsCount">
+            <div class="loading"></div>
+        </div>
+        <div class="metric-change" id="registrationsChange"></div>
+    </div>
             <div class="metric-card">
                 <div class="metric-header">
                     <span class="metric-title">👥 Активные пользователи (24ч)</span>
@@ -512,17 +522,21 @@
                 return await response.json();
             }
 
-            updateMetrics(data) {
+            async updateMetrics(data) {
                 document.getElementById('activeUsers').textContent = data.activeUsers || 0;
                 document.getElementById('strategiesCount').textContent = data.strategies || 0;
                 document.getElementById('analysesCount').textContent = data.analyses || 0;
                 document.getElementById('errorsCount').textContent = data.errors || 0;
-                
-                // Вычисляем конверсию (примерно)
+                // Всего регистраций
+                const resp = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&event_name=eq.user_registered`, {
+                    headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
+                });
+                let regCount = 0;
+                if (resp.ok) regCount = (await resp.json()).length;
+                document.getElementById('registrationsCount').textContent = regCount;
+                // Конверсия
                 const conversionRate = data.activeUsers > 0 ? ((data.strategies / data.activeUsers) * 100).toFixed(1) : 0;
                 document.getElementById('conversionRate').textContent = `${conversionRate}%`;
-                
-                // Время отклика (можно получать из мониторинга)
                 document.getElementById('responseTime').textContent = '< 100ms';
             }
 
@@ -589,16 +603,51 @@
                 }
             }
 
-            setupCharts() {
-                // График активности пользователей
+            async setupCharts() {
+                // Авторизация по паролю (очень простая)
+                const ADMIN_PASSWORD = 'trade2024'; // Замените на свой сложный пароль
+                if (!window.sessionStorage.getItem('admin_auth')) {
+                    const entered = prompt('Введите пароль администратора:');
+                    if (entered !== ADMIN_PASSWORD) {
+                        alert('Доступ запрещён');
+                        window.location.href = '/';
+                        return;
+                    }
+                    window.sessionStorage.setItem('admin_auth', '1');
+                }
+                // Реальные данные для графика активности (по дням)
                 const ctx1 = document.getElementById('userActivityChart').getContext('2d');
+                const days = 7;
+                const now = new Date();
+                const labels = [];
+                const activityCounts = [];
+                for (let i = days - 1; i >= 0; i--) {
+                    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+                    labels.push(d.toLocaleDateString('ru-RU', {weekday: 'short'}));
+                    activityCounts.push(0);
+                }
+                // Получаем события за 7 дней
+                const resp = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=timestamp&event_name=eq.session_start&timestamp=gte.${new Date(Date.now() - days*24*60*60*1000).toISOString()}`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    data.forEach(ev => {
+                        const d = new Date(ev.timestamp);
+                        const idx = days - 1 - Math.floor((now - d) / (24*60*60*1000));
+                        if (idx >= 0 && idx < days) activityCounts[idx]++;
+                    });
+                }
                 this.charts.userActivity = new Chart(ctx1, {
                     type: 'line',
                     data: {
-                        labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+                        labels,
                         datasets: [{
                             label: 'Активные пользователи',
-                            data: [12, 19, 15, 25, 22, 18, 24],
+                            data: activityCounts,
                             borderColor: '#4fd1c7',
                             backgroundColor: 'rgba(79, 209, 199, 0.1)',
                             tension: 0.4,
@@ -607,43 +656,29 @@
                     },
                     options: {
                         responsive: true,
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: '#ffffff'
-                                }
-                            }
-                        },
+                        plugins: {legend: {labels: {color: '#ffffff'}}},
                         scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: '#a0aec0'
-                                },
-                                grid: {
-                                    color: '#2d3748'
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    color: '#a0aec0'
-                                },
-                                grid: {
-                                    color: '#2d3748'
-                                }
-                            }
+                            y: {beginAtZero: true, ticks: {color: '#a0aec0'}, grid: {color: '#2d3748'}},
+                            x: {ticks: {color: '#a0aec0'}, grid: {color: '#2d3748'}}
                         }
                     }
                 });
 
-                // График воронки конверсии
+                // Реальные данные для воронки конверсии
                 const ctx2 = document.getElementById('conversionFunnelChart').getContext('2d');
+                // Получаем все нужные числа
+                const [regCount, stratCount, analCount, premCount] = await Promise.all([
+                    fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&event_name=eq.user_registered`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}}).then(r=>r.ok?r.json():[]),
+                    fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&event_name=eq.strategy_created`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}}).then(r=>r.ok?r.json():[]),
+                    fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&event_name=eq.analysis_completed`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}}).then(r=>r.ok?r.json():[]),
+                    fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&event_name=eq.premium_purchased`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}}).then(r=>r.ok?r.json():[]),
+                ]);
                 this.charts.conversionFunnel = new Chart(ctx2, {
                     type: 'doughnut',
                     data: {
                         labels: ['Регистрации', 'Создали стратегию', 'Провели анализ', 'Купили премиум'],
                         datasets: [{
-                            data: [100, 65, 45, 12],
+                            data: [regCount.length, stratCount.length, analCount.length, premCount.length],
                             backgroundColor: [
                                 '#4fd1c7',
                                 '#38b2ac',
@@ -654,15 +689,7 @@
                     },
                     options: {
                         responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    color: '#ffffff',
-                                    padding: 20
-                                }
-                            }
-                        }
+                        plugins: {legend: {position: 'bottom', labels: {color: '#ffffff', padding: 20}}}
                     }
                 });
             }
