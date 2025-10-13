@@ -125,28 +125,46 @@
 
         .charts-section {
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: 1fr;
             gap: 2rem;
             margin-bottom: 2rem;
         }
 
         .chart-card {
             background: #1a1f2e;
-            border: 1px solid #2d3748;
-            border-radius: 12px;
-            padding: 1.5rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
         }
 
         .chart-title {
+            color: #4fd1c7;
+            margin: 0;
             font-size: 1.1rem;
-            color: #ffffff;
-            margin-bottom: 1rem;
-            font-weight: 600;
         }
 
-        .logs-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        .period-selector {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            color: #ffffff;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .period-selector:focus {
+            outline: none;
+            border-color: #4fd1c7;
+        }
+
+        .period-selector {
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            color: #ffffff;
             gap: 2rem;
         }
 
@@ -264,36 +282,24 @@
 
         <!-- Основные метрики -->
         <div class="metrics-grid">
-    <div class="metric-card">
-        <div class="metric-header">
-            <span class="metric-title">👤 Пользователи со стратегиями</span>
-            <span class="metric-icon">🟦</span>
-        </div>
-        <div class="metric-value" id="registrationsCount">
-            <div class="loading"></div>
-        </div>
-        <div class="metric-change" id="registrationsChange"></div>
-    </div>
             <div class="metric-card">
                 <div class="metric-header">
-                    <span class="metric-title">👥 Активные пользователи (24ч)</span>
-                    <span class="metric-icon">📊</span>
+                    <span class="metric-title">👤 Пользователи со стратегиями</span>
+                    <span class="metric-icon">👥</span>
                 </div>
-                <div class="metric-value" id="activeUsers">
+                <div class="metric-value" id="registrationsCount">
                     <div class="loading"></div>
                 </div>
-                <div class="metric-change" id="activeUsersChange"></div>
             </div>
 
             <div class="metric-card">
                 <div class="metric-header">
-                    <span class="metric-title">👤 Пользователи со стратегиями</span>
+                    <span class="metric-title">📋 Стратегий создано</span>
                     <span class="metric-icon">📈</span>
                 </div>
                 <div class="metric-value" id="strategiesCount">
                     <div class="loading"></div>
                 </div>
-                <div class="metric-change" id="strategiesChange"></div>
             </div>
 
             <div class="metric-card">
@@ -309,18 +315,23 @@
 
             <div class="metric-card">
                 <div class="metric-header">
+                    <span class="metric-title">👥 Активные пользователи (24ч)</span>
+                    <span class="metric-icon">🟢</span>
+                </div>
+                <div class="metric-value" id="activeUsers">
+                    <div class="loading"></div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
                     <span class="metric-title">🐛 Ошибки (24ч)</span>
                     <span class="metric-icon">⚠️</span>
                 </div>
                 <div class="metric-value" id="errorsCount">
                     <div class="loading"></div>
                 </div>
-                <div class="metric-change" id="errorsChange">
-                    <span>→</span> Без изменений
-                </div>
             </div>
-
-            
 
             <div class="metric-card">
                 <div class="metric-header">
@@ -330,22 +341,21 @@
                 <div class="metric-value" id="responseTime">
                     <div class="loading"></div>
                 </div>
-                <div class="metric-change positive" id="responseTimeChange">
-                    <span>↗</span> Отлично
-                </div>
             </div>
         </div>
 
         <!-- Графики -->
         <div class="charts-section">
             <div class="chart-card">
-                <h3 class="chart-title">📈 Активность пользователей (7 дней)</h3>
+                <div class="chart-header">
+                    <h3 class="chart-title">📈 Активность пользователей</h3>
+                    <select id="activityPeriod" class="period-selector">
+                        <option value="7">7 дней</option>
+                        <option value="30" selected>30 дней</option>
+                        <option value="90">90 дней</option>
+                    </select>
+                </div>
                 <canvas id="userActivityChart" width="400" height="200"></canvas>
-            </div>
-            
-            <div class="chart-card">
-                <h3 class="chart-title">🎯 Воронка конверсии</h3>
-                <canvas id="conversionFunnelChart" width="200" height="200"></canvas>
             </div>
         </div>
 
@@ -604,9 +614,21 @@
                     }
                     window.sessionStorage.setItem('admin_auth', '1');
                 }
-                // Реальные данные для графика активности (по дням)
+                
+                // Настройка фильтра периода
+                const periodSelector = document.getElementById('activityPeriod');
+                periodSelector.addEventListener('change', () => {
+                    this.updateActivityChart();
+                });
+                
+                // Инициализация графика активности
+                await this.updateActivityChart();
+            }
+
+            async updateActivityChart() {
+                const periodSelector = document.getElementById('activityPeriod');
+                const days = parseInt(periodSelector.value);
                 const ctx1 = document.getElementById('userActivityChart').getContext('2d');
-                const days = 7;
                 const now = new Date();
                 const labels = [];
                 const activityCounts = [];
@@ -633,6 +655,13 @@
                     });
                     daySets.forEach((s, i) => activityCounts[i] = s.size);
                 }
+                
+                // Уничтожаем старый график если он существует
+                if (this.charts.userActivity) {
+                    this.charts.userActivity.destroy();
+                }
+                
+                // Создаем новый график
                 this.charts.userActivity = new Chart(ctx1, {
                     type: 'line',
                     data: {
@@ -653,42 +682,6 @@
                             y: {beginAtZero: true, ticks: {color: '#a0aec0'}, grid: {color: '#2d3748'}},
                             x: {ticks: {color: '#a0aec0'}, grid: {color: '#2d3748'}}
                         }
-                    }
-                });
-
-                // Реальные данные для воронки (3 этапа)
-                const ctx2 = document.getElementById('conversionFunnelChart').getContext('2d');
-                // Получаем все нужные числа
-                const [usersCount, stratCount, analCount] = await Promise.all([
-                    (async ()=>{
-                        const r = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=id&event_name=eq.user_registered`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}});
-                        return r.ok ? (await r.json()).length : 0;
-                    })(),
-                    (async ()=>{
-                        const r = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=id&event_name=eq.strategy_created`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}});
-                        return r.ok ? (await r.json()).length : 0;
-                    })(),
-                    (async ()=>{
-                        const r = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=id&event_name=eq.analysis_completed`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}});
-                        return r.ok ? (await r.json()).length : 0;
-                    })(),
-                ]);
-                this.charts.conversionFunnel = new Chart(ctx2, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Регистрации', 'Создали стратегию', 'Провели анализ'],
-                        datasets: [{
-                            data: [usersCount, stratCount, analCount],
-                            backgroundColor: [
-                                '#4fd1c7',
-                                '#38b2ac',
-                                '#319795'
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {legend: {position: 'bottom', labels: {color: '#ffffff', padding: 20}}}
                     }
                 });
             }
