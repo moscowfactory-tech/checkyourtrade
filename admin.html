@@ -266,7 +266,7 @@
         <div class="metrics-grid">
     <div class="metric-card">
         <div class="metric-header">
-            <span class="metric-title">👤 Всего регистраций</span>
+            <span class="metric-title">👤 Пользователи со стратегиями</span>
             <span class="metric-icon">🟦</span>
         </div>
         <div class="metric-value" id="registrationsCount">
@@ -282,22 +282,18 @@
                 <div class="metric-value" id="activeUsers">
                     <div class="loading"></div>
                 </div>
-                <div class="metric-change positive" id="activeUsersChange">
-                    <span>↗</span> +12% за неделю
-                </div>
+                <div class="metric-change" id="activeUsersChange"></div>
             </div>
 
             <div class="metric-card">
                 <div class="metric-header">
-                    <span class="metric-title">📝 Стратегии создано</span>
+                    <span class="metric-title">👤 Пользователи со стратегиями</span>
                     <span class="metric-icon">📈</span>
                 </div>
                 <div class="metric-value" id="strategiesCount">
                     <div class="loading"></div>
                 </div>
-                <div class="metric-change positive" id="strategiesChange">
-                    <span>↗</span> +8 сегодня
-                </div>
+                <div class="metric-change" id="strategiesChange"></div>
             </div>
 
             <div class="metric-card">
@@ -308,9 +304,7 @@
                 <div class="metric-value" id="analysesCount">
                     <div class="loading"></div>
                 </div>
-                <div class="metric-change positive" id="analysesChange">
-                    <span>↗</span> +15 сегодня
-                </div>
+                <div class="metric-change" id="analysesChange"></div>
             </div>
 
             <div class="metric-card">
@@ -326,18 +320,7 @@
                 </div>
             </div>
 
-            <div class="metric-card">
-                <div class="metric-header">
-                    <span class="metric-title">💰 Конверсия в премиум</span>
-                    <span class="metric-icon">💎</span>
-                </div>
-                <div class="metric-value" id="conversionRate">
-                    <div class="loading"></div>
-                </div>
-                <div class="metric-change positive" id="conversionChange">
-                    <span>↗</span> +2.1% за месяц
-                </div>
-            </div>
+            
 
             <div class="metric-card">
                 <div class="metric-header">
@@ -407,6 +390,7 @@
                     // Загружаем все метрики параллельно
                     const [
                         activeUsers,
+                        registrations,
                         strategies,
                         analyses,
                         errors,
@@ -414,6 +398,7 @@
                         errorLogs
                     ] = await Promise.all([
                         this.getActiveUsers(),
+                        this.getRegistrationsCount(),
                         this.getStrategiesCount(),
                         this.getAnalysesCount(),
                         this.getErrorsCount(),
@@ -423,6 +408,7 @@
 
                     this.updateMetrics({
                         activeUsers,
+                        registrations,
                         strategies,
                         analyses,
                         errors
@@ -439,7 +425,7 @@
             }
 
             async getActiveUsers() {
-                // Запрос к Supabase для получения активных пользователей за 24 часа
+                // Активные пользователи за 24 часа (по любым событиям)
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&timestamp=gte.${new Date(Date.now() - 24*60*60*1000).toISOString()}`, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
@@ -454,32 +440,43 @@
                 return uniqueUsers.size;
             }
 
-            async getStrategiesCount() {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/strategies?select=count`, {
+            async getRegistrationsCount() {
+                // Количество уникальных пользователей, создавших хотя бы одну стратегию
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/strategies?select=user_id`, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'Prefer': 'count=exact'
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
                     }
                 });
-                
-                if (!response.ok) throw new Error('Failed to fetch strategies count');
-                
-                return parseInt(response.headers.get('content-range').split('/')[1]);
+                if (!response.ok) return 0;
+                const data = await response.json();
+                // Считаем уникальных пользователей
+                const uniqueUsers = new Set(data.map(strategy => strategy.user_id));
+                return uniqueUsers.size;
+            }
+
+            async getStrategiesCount() {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=id&event_name=eq.strategy_created`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                if (!response.ok) return 0;
+                const data = await response.json();
+                return data.length;
             }
 
             async getAnalysesCount() {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/analysis_results?select=count`, {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=id&event_name=eq.analysis_completed`, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'Prefer': 'count=exact'
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
                     }
                 });
-                
-                if (!response.ok) throw new Error('Failed to fetch analyses count');
-                
-                return parseInt(response.headers.get('content-range').split('/')[1]);
+                if (!response.ok) return 0;
+                const data = await response.json();
+                return data.length;
             }
 
             async getErrorsCount() {
@@ -527,16 +524,8 @@
                 document.getElementById('strategiesCount').textContent = data.strategies || 0;
                 document.getElementById('analysesCount').textContent = data.analyses || 0;
                 document.getElementById('errorsCount').textContent = data.errors || 0;
-                // Всего регистраций
-                const resp = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&event_name=eq.user_registered`, {
-                    headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}
-                });
-                let regCount = 0;
-                if (resp.ok) regCount = (await resp.json()).length;
-                document.getElementById('registrationsCount').textContent = regCount;
-                // Конверсия
-                const conversionRate = data.activeUsers > 0 ? ((data.strategies / data.activeUsers) * 100).toFixed(1) : 0;
-                document.getElementById('conversionRate').textContent = `${conversionRate}%`;
+                document.getElementById('registrationsCount').textContent = data.registrations || 0;
+                // Время отклика placeholder
                 document.getElementById('responseTime').textContent = '< 100ms';
             }
 
@@ -626,8 +615,8 @@
                     labels.push(d.toLocaleDateString('ru-RU', {weekday: 'short'}));
                     activityCounts.push(0);
                 }
-                // Получаем события за 7 дней
-                const resp = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=timestamp&event_name=eq.session_start&timestamp=gte.${new Date(Date.now() - days*24*60*60*1000).toISOString()}`, {
+                // Получаем события за 7 дней (любые события), считаем уникальных пользователей на день
+                const resp = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id,timestamp&timestamp=gte.${new Date(Date.now() - days*24*60*60*1000).toISOString()}`, {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
                         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
@@ -635,11 +624,14 @@
                 });
                 if (resp.ok) {
                     const data = await resp.json();
+                    // Для каждого дня считаем уникальные user_id
+                    const daySets = Array.from({length: days}, () => new Set());
                     data.forEach(ev => {
                         const d = new Date(ev.timestamp);
                         const idx = days - 1 - Math.floor((now - d) / (24*60*60*1000));
-                        if (idx >= 0 && idx < days) activityCounts[idx]++;
+                        if (idx >= 0 && idx < days) daySets[idx].add(ev.user_id || 'anon');
                     });
+                    daySets.forEach((s, i) => activityCounts[i] = s.size);
                 }
                 this.charts.userActivity = new Chart(ctx1, {
                     type: 'line',
@@ -664,26 +656,33 @@
                     }
                 });
 
-                // Реальные данные для воронки конверсии
+                // Реальные данные для воронки (3 этапа)
                 const ctx2 = document.getElementById('conversionFunnelChart').getContext('2d');
                 // Получаем все нужные числа
-                const [regCount, stratCount, analCount, premCount] = await Promise.all([
-                    fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&event_name=eq.user_registered`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}}).then(r=>r.ok?r.json():[]),
-                    fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&event_name=eq.strategy_created`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}}).then(r=>r.ok?r.json():[]),
-                    fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&event_name=eq.analysis_completed`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}}).then(r=>r.ok?r.json():[]),
-                    fetch(`${SUPABASE_URL}/rest/v1/user_events?select=user_id&event_name=eq.premium_purchased`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}}).then(r=>r.ok?r.json():[]),
+                const [usersCount, stratCount, analCount] = await Promise.all([
+                    (async ()=>{
+                        const r = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=id&event_name=eq.user_registered`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}});
+                        return r.ok ? (await r.json()).length : 0;
+                    })(),
+                    (async ()=>{
+                        const r = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=id&event_name=eq.strategy_created`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}});
+                        return r.ok ? (await r.json()).length : 0;
+                    })(),
+                    (async ()=>{
+                        const r = await fetch(`${SUPABASE_URL}/rest/v1/user_events?select=id&event_name=eq.analysis_completed`, {headers: {'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`}});
+                        return r.ok ? (await r.json()).length : 0;
+                    })(),
                 ]);
                 this.charts.conversionFunnel = new Chart(ctx2, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Регистрации', 'Создали стратегию', 'Провели анализ', 'Купили премиум'],
+                        labels: ['Регистрации', 'Создали стратегию', 'Провели анализ'],
                         datasets: [{
-                            data: [regCount.length, stratCount.length, analCount.length, premCount.length],
+                            data: [usersCount, stratCount, analCount],
                             backgroundColor: [
                                 '#4fd1c7',
                                 '#38b2ac',
-                                '#319795',
-                                '#2c7a7b'
+                                '#319795'
                             ]
                         }]
                     },
