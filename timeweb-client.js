@@ -2,7 +2,7 @@
 // Замена для supabase-config.js
 
 const TIMEWEB_CONFIG = {
-    // API endpoint на сервере Timeweb
+    // API endpoint - относительный путь (работает на том же домене)
     apiUrl: 'http://185.207.64.160/api',
     
     // Настройки для разработки
@@ -20,6 +20,23 @@ class TimewebClient {
         this.config = config;
         this.apiUrl = config.isDevelopment ? config.development.apiUrl : config.apiUrl;
         console.log('🔗 Timeweb API URL:', this.apiUrl);
+    }
+
+    // Нормализация данных для вставки под API Timeweb
+    prepareInsertBody(data) {
+        let body = { ...data };
+        if (this.tableName === 'user_events') {
+            const tgFromClient = this.getTelegramUserId();
+            const tgFromUM = (window.userManager && typeof window.userManager.getTelegramId === 'function')
+                ? window.userManager.getTelegramId()
+                : null;
+            const rawTg = (body.telegram_user_id ?? tgFromClient ?? tgFromUM ?? null);
+            const telegram_user_id = rawTg !== null && rawTg !== undefined ? String(rawTg) : null;
+            const event_type = body.event_type || body.event_name || body.type || 'event';
+            const event_data = body.event_data || body.properties || body.data || {};
+            body = { telegram_user_id, event_type, event_data };
+        }
+        return body;
     }
     
     // Эмуляция Supabase .from() метода
@@ -64,6 +81,29 @@ class TimewebTable {
         this.limitClause = '';
         this.returnSingle = false;
         this.insertData = null; // Для поддержки insert().select()
+        this._pendingPromise = null; // Промис для insert().select()
+    }
+    
+    // Делает билдер thenable, чтобы можно было: await from(...).select(...).eq(...)
+    then(resolve, reject) {
+        return this.execute().then(resolve, reject);
+    }
+    
+    // Нормализация данных для вставки под API Timeweb
+    prepareInsertBody(data) {
+        let body = { ...data };
+        if (this.tableName === 'user_events') {
+            const tgFromClient = this.getTelegramUserId();
+            const tgFromUM = (window.userManager && typeof window.userManager.getTelegramId === 'function')
+                ? window.userManager.getTelegramId()
+                : null;
+            const rawTg = (body.telegram_user_id ?? tgFromClient ?? tgFromUM ?? null);
+            const telegram_user_id = (rawTg !== null && rawTg !== undefined) ? String(rawTg) : null;
+            const event_type = body.event_type || body.event_name || body.type || 'event';
+            const event_data = body.event_data || body.properties || body.data || {};
+            body = { telegram_user_id, event_type, event_data };
+        }
+        return body;
     }
     
     eq(column, value) {
@@ -82,19 +122,86 @@ class TimewebTable {
         return this;
     }
     
-    single() {
+    async single() {
         this.returnSingle = true;
+        
+        // Если есть отложенная операция (после insert().select())
+        if (this._pendingPromise) {
+            const result = await this._pendingPromise;
+            this._pendingPromise = null;
+            if (result && result.data) {
+                if (Array.isArray(result.data)) {
+                    return { data: result.data[0] || null, error: result.error };
+                }
+                return { data: result.data, error: result.error };
+            }
+            return { data: null, error: result?.error || null };
+        }
+        
         return this;
     }
     
     // Выполнение SELECT запроса
     async execute() {
         try {
+            // Если есть отложенный промис (после insert().select()), вернём его результат
+            if (this._pendingPromise) {
+                const res = await this._pendingPromise;
+                this._pendingPromise = null;
+                return res;
+            }
+            // Если была вызвана insert() без select(), выполним POST здесь
+            if (this.insertData) {
+                const data = this.insertData;
+                this.insertData = null;
+                try {
+                    // Готовим тело запроса с нормализацией
+                    const payload = this.prepareInsertBody(data);
+                    if (this.tableName === 'user_events') {
+                        try { console.log('📊 user_events payload (execute):', payload); } catch (_) {}
+                    }
+                    
+                    // Используем правильные эндпоинты
+                    let endpoint = this.tableName;
+                    if (this.tableName === 'strategies') {
+                        endpoint = 'strategies';
+                    } else if (this.tableName === 'analysis_results') {
+                        endpoint = 'analysis_results';
+                    }
+                    
+                    const response = await fetch(`${this.apiUrl}/${endpoint}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    let parsed = null;
+                    try { parsed = await response.json(); } catch (_) {}
+                    if (!response.ok) {
+                        let msg = parsed?.error || parsed?.message || '';
+                        if (!msg) { try { msg = await response.text(); } catch (_) { msg = ''; } }
+                        if (this.tableName === 'user_events') {
+                            try { console.error('❌ user_events POST failed:', response.status, msg || parsed); } catch (_) {}
+                        }
+                        return { data: null, error: `HTTP ${response.status}${msg ? ' ' + msg : ''}` };
+                    }
+                    return parsed ?? { data: null, error: null };
+                } catch (e) {
+                    return { data: null, error: e.message };
+                }
+            }
             const params = new URLSearchParams();
             
             // Добавляем telegram_user_id для фильтрации
-            if (this.whereConditions.telegram_user_id) {
-                params.append('telegram_user_id', this.whereConditions.telegram_user_id);
+            let tgId = this.whereConditions.telegram_user_id || this.whereConditions.telegram_id;
+            // Если фильтруют по user_id (UUID), маппим на telegram_user_id текущего пользователя
+            if (!tgId && this.whereConditions.user_id) {
+                const umTg = (window.userManager && typeof window.userManager.getTelegramId === 'function')
+                    ? window.userManager.getTelegramId()
+                    : null;
+                if (umTg) tgId = String(umTg);
+            }
+            if (tgId !== undefined && tgId !== null) {
+                params.append('telegram_user_id', String(tgId));
             }
             
             // Для strategies и analysis_results используем правильные эндпоинты
@@ -137,17 +244,23 @@ class TimewebTable {
     // Метод select() - универсальный для SELECT и после INSERT
     select(columns = '*') {
         if (this.insertData) {
-            // Это вызов после insert() - выполняем вставку асинхронно
-            const insertPromise = (async () => {
+            // Это вызов после insert() - запускаем вставку и сохраняем промис
+            const data = this.insertData;
+            this.insertData = null;
+            this._pendingPromise = (async () => {
                 try {
-                    const data = this.insertData;
-                    
                     // Добавляем telegram_user_id если есть Telegram данные
                     const telegramUserId = this.getTelegramUserId();
-                    if (telegramUserId) {
+                    if (telegramUserId && !data.telegram_user_id) {
                         data.telegram_user_id = telegramUserId;
                     }
                     
+                    // Готовим тело запроса с нормализацией
+                    const payload = this.prepareInsertBody(data);
+                    if (this.tableName === 'user_events') {
+                        try { console.log('📊 user_events payload:', payload); } catch (_) {}
+                    }
+
                     // Используем правильные эндпоинты
                     let endpoint = this.tableName;
                     if (this.tableName === 'strategies') {
@@ -161,26 +274,26 @@ class TimewebTable {
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify(data)
+                        body: JSON.stringify(payload)
                     });
-                    
+                    // Пытаемся распарсить JSON даже при ошибке
+                    let parsed = null;
+                    try { parsed = await response.json(); } catch (_) {}
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        let msg = parsed?.error || parsed?.message || '';
+                        if (!msg) {
+                            try { msg = await response.text(); } catch (_) { msg = ''; }
+                        }
+                        return { data: null, error: `HTTP ${response.status}${msg ? ' ' + msg : ''}` };
                     }
-                    
-                    const result = await response.json();
-                    this.insertData = null; // Очищаем
-                    return result;
-                    
+                    return parsed ?? { data: null, error: null };
                 } catch (error) {
                     console.error('Insert error:', error);
-                    this.insertData = null;
                     return { data: null, error: error.message };
                 }
             })();
-            
-            // Возвращаем промис напрямую (для await)
-            return insertPromise;
+            // Возвращаем this для поддержки .single()
+            return this;
         } else {
             // Это обычный select для SELECT запроса
             this.selectColumns = columns;
