@@ -1,6 +1,23 @@
 // Application State
 let strategies = [];
 
+// Helper function to parse strategy fields
+function parseStrategyFields(strategy) {
+    if (!strategy || !strategy.fields) return [];
+    
+    try {
+        if (typeof strategy.fields === 'string') {
+            return JSON.parse(strategy.fields);
+        } else if (Array.isArray(strategy.fields)) {
+            return strategy.fields;
+        }
+    } catch (e) {
+        console.warn('Failed to parse strategy fields:', e);
+    }
+    
+    return [];
+}
+
 // Keep window.strategies always bound to the internal array to avoid detaching references
 // Some modules may do `window.strategies = newArray`, which would otherwise break UI rendering.
 // This getter/setter ensures any assignment updates the same array in place.
@@ -978,7 +995,9 @@ function populateForm(strategy) {
     fieldCounter = 0;
     inputCounter = 0;
     
-    strategy.fields.forEach(field => {
+    const fieldsArr = parseStrategyFields(strategy);
+    
+    fieldsArr.forEach(field => {
         addFieldBuilder(field);
     });
 }
@@ -1540,7 +1559,8 @@ function renderStrategies() {
     console.log('📋 Rendering', strategies.length, 'strategies');
     
     strategies.forEach(strategy => {
-        const totalInputs = strategy.fields.reduce((sum, field) => sum + field.inputs.length, 0);
+        const fieldsArr = parseStrategyFields(strategy);
+        const totalInputs = fieldsArr.reduce((sum, field) => sum + (Array.isArray(field?.inputs) ? field.inputs.length : 0), 0);
         const strategyCard = document.createElement('div');
         strategyCard.className = 'strategy-card';
         
@@ -1548,7 +1568,7 @@ function renderStrategies() {
             <h4>${strategy.name}</h4>
             <p>${strategy.description || 'Без описания'}</p>
             <div class="strategy-meta">
-                <span class="fields-count">${strategy.fields.length} пунктов, ${totalInputs} полей</span>
+                <span class="fields-count">${fieldsArr.length} пунктов, ${totalInputs} полей</span>
             </div>
             <div class="strategy-actions">
                 <button class="btn-icon edit" onclick="editStrategy(${strategy.id})" title="Редактировать"><i class="fas fa-edit"></i></button>
@@ -1605,7 +1625,9 @@ function startCardAnalysis(strategy) {
     currentAnalysisStrategy = strategy;
     currentCoin = coin;
     currentCardIndex = 0;
-    analysisAnswers = new Array(strategy.fields.length).fill(null);
+    
+    const fieldsArr = parseStrategyFields(strategy);
+    analysisAnswers = new Array(fieldsArr.length).fill(null);
     
     cardAnalysisContainer.classList.remove('hidden');
     analysisResults.classList.add('hidden');
@@ -1620,11 +1642,12 @@ function startCardAnalysis(strategy) {
 }
 
 function renderCurrentCard() {
-    if (!currentAnalysisStrategy || currentCardIndex >= currentAnalysisStrategy.fields.length) {
+    const fieldsArr = parseStrategyFields(currentAnalysisStrategy);
+    if (!currentAnalysisStrategy || currentCardIndex >= fieldsArr.length) {
         return;
     }
     
-    const currentField = currentAnalysisStrategy.fields[currentCardIndex];
+    const currentField = fieldsArr[currentCardIndex];
     
     // Update card content with field inputs
     const cardContent = analysisCard.querySelector('.card-content');
@@ -1820,7 +1843,8 @@ function handleNextCard() {
         return;
     }
     
-    if (currentCardIndex < currentAnalysisStrategy.fields.length - 1) {
+    const fieldsArr = parseStrategyFields(currentAnalysisStrategy);
+    if (currentCardIndex < fieldsArr.length - 1) {
         analysisCard.classList.add('slide-out-left');
         
         setTimeout(() => {
@@ -1843,7 +1867,8 @@ function handleNextCard() {
 
 function updateProgress() {
     const current = currentCardIndex + 1;
-    const total = currentAnalysisStrategy.fields.length;
+    const fieldsArr = parseStrategyFields(currentAnalysisStrategy);
+    const total = fieldsArr.length;
     
     progressText.textContent = `Карточка ${current} из ${total}`;
     
@@ -1858,7 +1883,8 @@ function updateNavigation() {
         prevBtn.classList.remove('visible');
     }
     
-    const isLastCard = currentCardIndex === currentAnalysisStrategy.fields.length - 1;
+    const fieldsArr = parseStrategyFields(currentAnalysisStrategy);
+    const isLastCard = currentCardIndex === fieldsArr.length - 1;
     nextBtnText.textContent = isLastCard ? 'Завершить анализ' : 'Далее →';
     
     const currentAnswer = analysisAnswers[currentCardIndex];
@@ -1884,7 +1910,8 @@ function displayAnalysisResults() {
     };
     
     // Process answers by field names
-    currentAnalysisStrategy.fields.forEach((field, index) => {
+    const fieldsArr = parseStrategyFields(currentAnalysisStrategy);
+    fieldsArr.forEach((field, index) => {
         const answer = analysisAnswers[index];
         if (answer && answer.rating) {
             const factor = {
@@ -2121,7 +2148,8 @@ async function saveCurrentAnalysis() {
     };
     
     // Process answers
-    currentAnalysisStrategy.fields.forEach((field, index) => {
+    const fieldsArr = parseStrategyFields(currentAnalysisStrategy);
+    fieldsArr.forEach((field, index) => {
         const answer = analysisAnswers[index];
         if (answer && answer.rating) {
             const factor = {
