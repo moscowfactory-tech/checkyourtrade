@@ -11,7 +11,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Токен и URL
-TOKEN = "8235902798:AAGaiZb1UvCALVVwYgpkHNrYDepzck4tBPw"
+TOKEN = "8235902798:AAEUBXf6Y2OWIKSOTciSC-qdOktApNA3d1A"
 # Используем GitHub Pages (уже опубликовано)
 WEB_APP_URL = "https://moscowfactory-tech.github.io/checkyourtrade/"
 # WEB_APP_URL = "http://localhost:8000"  # Для локального тестирования

@@ -1620,6 +1620,8 @@ function handleStrategySelection(e) {
 }
 
 function startCardAnalysis(strategy) {
+    console.log('🎯 Starting card analysis for strategy:', strategy);
+    
     // Проверяем, что введена монета
     const coin = coinInput.value.trim().toUpperCase();
     if (!coin) {
@@ -1633,6 +1635,14 @@ function startCardAnalysis(strategy) {
     currentCardIndex = 0;
     
     const fieldsArr = parseStrategyFields(strategy);
+    console.log('📊 Parsed fields:', fieldsArr);
+    
+    if (!fieldsArr || fieldsArr.length === 0) {
+        console.error('❌ No fields found in strategy');
+        alert('Ошибка: в стратегии нет полей для анализа');
+        return;
+    }
+    
     analysisAnswers = new Array(fieldsArr.length).fill(null);
     
     cardAnalysisContainer.classList.remove('hidden');
