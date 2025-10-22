@@ -3,7 +3,7 @@
 
 const TIMEWEB_CONFIG = {
     // API endpoint - относительный путь (работает на том же домене)
-    apiUrl: 'http://185.207.64.160/api',
+    apiUrl: 'https://concerts-achievements-speak-wealth.trycloudflare.com/api',
     
     // Настройки для разработки
     development: {
