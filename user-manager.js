@@ -55,7 +55,7 @@ class UnifiedUserManager {
         // Fallback для Telegram WebApp без данных пользователя
         console.warn('⚠️ No Telegram user data, using test user');
         this.currentUser = {
-            telegram_id: 123456789, // Тестовый ID
+            telegram_id: '123456789', // Тестовый ID как строка
             first_name: 'Test User',
             username: 'test_user',
             type: 'telegram_test'

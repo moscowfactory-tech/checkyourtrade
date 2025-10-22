@@ -1269,7 +1269,9 @@ async function handleStrategySubmit(e) {
             console.log('💾 Saving strategy to database...');
             
             // Получаем ID текущего пользователя Telegram
-            const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+            const telegramUserId = window.userManager && window.userManager.getTelegramId 
+                ? window.userManager.getTelegramId() 
+                : null;
             
             console.log('🔍 TELEGRAM USER ID:', telegramUserId);
             console.log('🔍 SUPABASE CLIENT:', window.supabase);
@@ -1412,7 +1414,9 @@ async function updateStrategyInDB(strategyId, updatedData) {
     try {
         console.log('🔄 Updating strategy in database...', strategyId);
         
-        const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        const telegramUserId = window.userManager && window.userManager.getTelegramId 
+            ? window.userManager.getTelegramId() 
+            : null;
         
         if (!telegramUserId) {
             console.error('❌ Cannot update strategy: No telegram user ID');
@@ -1478,7 +1482,9 @@ async function deleteStrategy(id) {
     if (confirm('Вы уверены, что хотите удалить эту стратегию?')) {
         try {
             // Получаем ID текущего пользователя Telegram
-            const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+            const telegramUserId = window.userManager && window.userManager.getTelegramId 
+                ? window.userManager.getTelegramId() 
+                : null;
             
             if (!telegramUserId) {
                 console.error('❌ Cannot delete strategy: No telegram user ID');
@@ -2170,7 +2176,9 @@ async function saveCurrentAnalysis() {
             console.log('💾 Saving analysis to database...');
             
             // Получаем ID пользователя
-            const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+            const telegramUserId = window.userManager && window.userManager.getTelegramId 
+                ? window.userManager.getTelegramId() 
+                : null;
             let userId = null;
             
             if (telegramUserId) {
@@ -2528,7 +2536,9 @@ async function refreshStrategiesFromDB() {
     try {
         console.log('🔄 Force refreshing strategies from database...');
         
-        const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        const telegramUserId = window.userManager && window.userManager.getTelegramId 
+            ? window.userManager.getTelegramId() 
+            : null;
         
         if (!telegramUserId) {
             console.error('❌ Cannot refresh: No telegram user ID');
