@@ -281,6 +281,8 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
             return;
         }
         
+        console.log('🔍 FIRST analysis from DB (raw):', analysesData && analysesData[0]);
+        
         if (analysesData && Array.isArray(analysesData)) {
             // Форматируем данные из БД в формат приложения
             console.log('📊 Raw analyses data from DB:', analysesData);
@@ -345,14 +347,28 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
                     coin = analysis.coin;
                 }
                 
+                // Факторы могут быть в results или на верхнем уровне
+                const positiveFactors = analysis.positive_factors || results.positive_factors || [];
+                const negativeFactors = analysis.negative_factors || results.negative_factors || [];
+                
+                console.log('📊 Factors for analysis:', {
+                    id: analysis.id,
+                    analysis_positive: analysis.positive_factors,
+                    analysis_negative: analysis.negative_factors,
+                    results_positive: results.positive_factors,
+                    results_negative: results.negative_factors,
+                    final_positive: positiveFactors,
+                    final_negative: negativeFactors
+                });
+                
                 return {
                     id: analysis.id,
                     date: analysis.created_at,
                     strategyName: strategyName,
                     coin: coin,
                     results: {
-                        positive: results.positive_factors || [],
-                        negative: results.negative_factors || [],
+                        positive: positiveFactors,
+                        negative: negativeFactors,
                         totalScore: analysis.total_score || results.total_score || 0,
                         maxScore: analysis.max_score || results.max_score || 0,
                         percentage: analysis.percentage || results.percentage || 0
