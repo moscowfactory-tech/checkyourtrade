@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeAnalyzer - Админ Панель v2</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f1419;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .header {
+            background: #1a1f2e;
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 1px solid #2d3748;
+        }
+
+        .header h1 {
+            color: #4fd1c7;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .refresh-btn {
+            background: #4fd1c7;
+            color: #0f1419;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #38b2ac;
+            transform: translateY(-2px);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #1a1f2e;
+            border-radius: 8px;
+            border: 1px solid #2d3748;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: #1a1f2e;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #2d3748;
+        }
+
+        .metric-title {
+            color: #a0aec0;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            color: #4fd1c7;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .chart-container {
+            background: #1a1f2e;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #2d3748;
+            margin-bottom: 2rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .chart-title {
+            color: #4fd1c7;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .date-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-input {
+            background: #0f1419;
+            border: 1px solid #2d3748;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #4fd1c7;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #2d3748;
+            border-top-color: #4fd1c7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #742a2a;
+            color: #feb2b2;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .header h1 {
+                font-size: 1.4rem;
+            }
+
+            .metric-value {
+                font-size: 2rem;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .date-filters {
+                width: 100%;
+            }
+
+            .date-input {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 TradeAnalyzer - Админ Панель v2</h1>
+        <p>Мониторинг приложения в реальном времени</p>
+        <div class="controls">
+            <button class="refresh-btn" onclick="loadAllData()">🔄 Обновить</button>
+            <div class="status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Загрузка...</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="errorContainer"></div>
+
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-title">👥 Всего пользователей</div>
+            <div class="metric-value" id="usersCount">
+                <div class="loading"></div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-title">👤 Активные пользователи</div>
+            <div class="metric-value" id="activeUsersCount">
+                <div class="loading"></div>
+            </div>
+            <div style="color: #a0aec0; font-size: 0.8rem; margin-top: 0.5rem;">
+                (с хотя бы 1 стратегией)
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-title">📊 Всего стратегий</div>
+            <div class="metric-value" id="strategiesCount">
+                <div class="loading"></div>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-title">📈 Всего анализов</div>
+            <div class="metric-value" id="analysesCount">
+                <div class="loading"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3 class="chart-title">📈 Регистрации пользователей по датам</h3>
+            <div class="date-filters">
+                <input type="date" id="startDate" class="date-input" />
+                <span style="color: #a0aec0;">—</span>
+                <input type="date" id="endDate" class="date-input" />
+                <button class="refresh-btn" onclick="loadChart()" style="padding: 0.5rem 1rem;">Применить</button>
+            </div>
+        </div>
+        <canvas id="usersChart"></canvas>
+    </div>
+
+    <script>
+        const API_URL = 'https://concerts-achievements-speak-wealth.trycloudflare.com/api';
+        let chart = null;
+
+        // Устанавливаем дефолтные даты (последние 30 дней)
+        function setDefaultDates() {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+        }
+
+        async function loadStats() {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = '';
+
+            try {
+                // Проверка здоровья API
+                const healthResponse = await fetch(`${API_URL}/health`);
+                const healthData = await healthResponse.json();
+
+                if (healthData.status === 'healthy') {
+                    document.getElementById('statusDot').style.background = '#48bb78';
+                    document.getElementById('statusText').textContent = 'API работает';
+                } else {
+                    throw new Error('API не отвечает');
+                }
+
+                // Получаем статистику через новый endpoint
+                const statsResponse = await fetch(`${API_URL}/admin/stats`);
+                const statsData = await statsResponse.json();
+
+                document.getElementById('usersCount').textContent = statsData.users || 0;
+                document.getElementById('activeUsersCount').textContent = statsData.active_users || 0;
+                document.getElementById('strategiesCount').textContent = statsData.strategies || 0;
+                document.getElementById('analysesCount').textContent = statsData.analyses || 0;
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('statusDot').style.background = '#f56565';
+                document.getElementById('statusText').textContent = 'Ошибка подключения';
+                
+                errorContainer.innerHTML = `
+                    <div class="error">
+                        <strong>Ошибка загрузки данных:</strong> ${error.message}
+                    </div>
+                `;
+
+                // Показываем "0" вместо загрузки
+                document.getElementById('usersCount').textContent = '0';
+                document.getElementById('activeUsersCount').textContent = '0';
+                document.getElementById('strategiesCount').textContent = '0';
+                document.getElementById('analysesCount').textContent = '0';
+            }
+        }
+
+        async function loadChart() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Пожалуйста, выберите даты');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/admin/users_by_date?start_date=${startDate}&end_date=${endDate}`);
+                const data = await response.json();
+
+                const chartData = data.data || [];
+                
+                // Подготовка данных для графика
+                const labels = chartData.map(item => {
+                    const date = new Date(item.date);
+                    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+                });
+                const values = chartData.map(item => item.users_count);
+
+                // Уничтожаем старый график если есть
+                if (chart) {
+                    chart.destroy();
+                }
+
+                // Создаем новый график
+                const ctx = document.getElementById('usersChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Новые пользователи',
+                            data: values,
+                            borderColor: '#4fd1c7',
+                            backgroundColor: 'rgba(79, 209, 199, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#ffffff'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#a0aec0',
+                                    stepSize: 1
+                                },
+                                grid: {
+                                    color: '#2d3748'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#a0aec0'
+                                },
+                                grid: {
+                                    color: '#2d3748'
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error loading chart:', error);
+                alert('Ошибка загрузки графика: ' + error.message);
+            }
+        }
+
+        async function loadAllData() {
+            await loadStats();
+            await loadChart();
+        }
+
+        // Автообновление каждые 60 секунд
+        setInterval(loadStats, 60000);
+
+        // Загрузка при открытии страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            setDefaultDates();
+            loadAllData();
+        });
+    </script>
+</body>
+</html>
