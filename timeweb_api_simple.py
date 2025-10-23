@@ -478,6 +478,64 @@ def api_info():
         }
     })
 
+@app.route('/api/admin/stats')
+def admin_stats():
+    """Статистика для админ-панели"""
+    try:
+        # Всего пользователей
+        users_result = execute_query("SELECT COUNT(*) as count FROM users", [])
+        users_count = users_result['data'][0]['count'] if users_result['data'] else 0
+        
+        # Всего стратегий
+        strategies_result = execute_query("SELECT COUNT(*) as count FROM strategies", [])
+        strategies_count = strategies_result['data'][0]['count'] if strategies_result['data'] else 0
+        
+        # Всего анализов
+        analyses_result = execute_query("SELECT COUNT(*) as count FROM analyses", [])
+        analyses_count = analyses_result['data'][0]['count'] if analyses_result['data'] else 0
+        
+        # Пользователи с хотя бы 1 стратегией
+        active_users_result = execute_query("""
+            SELECT COUNT(DISTINCT user_id) as count 
+            FROM strategies
+        """, [])
+        active_users_count = active_users_result['data'][0]['count'] if active_users_result['data'] else 0
+        
+        return jsonify({
+            'users': users_count,
+            'strategies': strategies_count,
+            'analyses': analyses_count,
+            'active_users': active_users_count
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users_by_date')
+def admin_users_by_date():
+    """Пользователи по датам (для графика)"""
+    try:
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        sql = """
+            SELECT 
+                DATE(s.created_at) as date,
+                COUNT(DISTINCT s.user_id) as users_count
+            FROM strategies s
+        """
+        
+        params = []
+        if start_date and end_date:
+            sql += " WHERE DATE(s.created_at) BETWEEN %s AND %s"
+            params = [start_date, end_date]
+        
+        sql += " GROUP BY DATE(s.created_at) ORDER BY date"
+        
+        result = execute_query(sql, params)
+        return jsonify({'data': result['data'] if result['data'] else []})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # ============================================================================
 # ЗАПУСК ПРИЛОЖЕНИЯ
 # ============================================================================
