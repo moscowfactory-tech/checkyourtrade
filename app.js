@@ -2252,7 +2252,7 @@ async function renderAnalysesList() {
                 <span class="negative-count">-${negativeCount}</span>
             </div>
             <div class="analysis-actions">
-                <button class="btn btn--outline btn--sm" onclick="viewAnalysis(${index})">Просмотр</button>
+                <button class="btn btn--outline btn--sm" onclick="viewAnalysis(${index})"><i class="fas fa-eye"></i></button>
                 <button class="btn btn--danger btn--sm" onclick="deleteAnalysis(${index})"><i class="fas fa-trash-alt"></i></button>
             </div>
         `;
