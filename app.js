@@ -299,11 +299,28 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
             
             savedAnalyses = analysesData.map(analysis => {
                 const results = analysis.results || {};
+                
+                // Получаем название стратегии
+                let strategyName = 'Неизвестная стратегия';
+                if (analysis.strategy_id && strategiesMap[analysis.strategy_id]) {
+                    strategyName = strategiesMap[analysis.strategy_id];
+                } else if (results.strategy_name) {
+                    strategyName = results.strategy_name;
+                }
+                
+                // Получаем монету
+                let coin = 'BTC';
+                if (results.coin) {
+                    coin = results.coin;
+                } else if (analysis.coin) {
+                    coin = analysis.coin;
+                }
+                
                 return {
                     id: analysis.id,
                     date: analysis.created_at,
-                    strategyName: strategiesMap[analysis.strategy_id] || 'Неизвестная стратегия',
-                    coin: results.coin || 'BTC',
+                    strategyName: strategyName,
+                    coin: coin,
                     results: {
                         positive: results.positive_factors || [],
                         negative: results.negative_factors || [],
@@ -1260,8 +1277,55 @@ async function handleStrategySubmit(e) {
         strategies[index] = strategy;
         console.log('Strategy updated:', strategy);
         
-        // TODO: Обновить стратегию в базе данных
-        // await StrategyDB.update(strategy);
+        // Обновляем стратегию в базе данных
+        try {
+            console.log('💾 Updating strategy in database...');
+            
+            const telegramUserId = window.userManager && window.userManager.getTelegramId 
+                ? window.userManager.getTelegramId() 
+                : null;
+            
+            if (!telegramUserId) {
+                console.error('❌ Cannot update strategy: No telegram user ID');
+                showNotification('Необходима авторизация через Telegram', 'error');
+                return;
+            }
+            
+            // Получаем user_id из таблицы users
+            const { data: user } = await window.supabase
+                .from('users')
+                .select('id')
+                .eq('telegram_id', telegramUserId)
+                .single();
+            
+            if (!user) {
+                console.error('❌ User not found');
+                showNotification('Пользователь не найден', 'error');
+                return;
+            }
+            
+            const { error } = await window.supabase
+                .from('strategies')
+                .update({
+                    name: strategyName,
+                    description: strategyDescription,
+                    fields: fields
+                })
+                .eq('id', currentStrategy.id)
+                .eq('user_id', user.id);
+            
+            if (error) {
+                console.error('❌ Error updating strategy:', error);
+                showNotification('Ошибка обновления стратегии: ' + error.message, 'error');
+                return;
+            }
+            
+            console.log('✅ Strategy updated successfully in database');
+        } catch (error) {
+            console.error('❌ Exception updating strategy:', error);
+            showNotification('Ошибка обновления стратегии', 'error');
+            return;
+        }
         
     } else {
         // Сохраняем новую стратегию в базу данных
@@ -2216,7 +2280,9 @@ async function saveCurrentAnalysis() {
                 .insert({
                     strategy_id: currentAnalysisStrategy.id,
                     user_id: userId,
+                    coin: currentCoin,
                     results: {
+                        strategy_name: currentAnalysisStrategy.name,
                         coin: currentCoin,
                         positive_factors: analysis.results.positive,
                         negative_factors: analysis.results.negative,
@@ -2224,6 +2290,8 @@ async function saveCurrentAnalysis() {
                         max_score: analysis.results.maxScore,
                         percentage: analysis.results.percentage
                     },
+                    positive_factors: analysis.results.positive,
+                    negative_factors: analysis.results.negative,
                     total_score: analysis.results.totalScore,
                     max_score: analysis.results.maxScore,
                     percentage: analysis.results.percentage
