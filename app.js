@@ -1485,42 +1485,27 @@ async function deleteStrategy(id) {
     
     if (confirm('Вы уверены, что хотите удалить эту стратегию?')) {
         try {
-            // Получаем ID текущего пользователя Telegram
-            const telegramUserId = window.userManager && window.userManager.getTelegramId 
-                ? window.userManager.getTelegramId() 
+            // Получаем ID текущего пользователя
+            const userId = window.userManager && window.userManager.getUserId 
+                ? window.userManager.getUserId() 
                 : null;
             
-            console.log('🔍 Telegram User ID for deletion:', telegramUserId);
+            console.log('🔍 User ID for deletion:', userId);
             
-            if (!telegramUserId) {
-                console.error('❌ Cannot delete strategy: No telegram user ID');
+            if (!userId) {
+                console.error('❌ Cannot delete strategy: No user ID');
                 alert('Ошибка: не удалось получить ID пользователя. Попробуйте перезагрузить приложение.');
                 return;
             }
             
-            // Сначала найдем user_id по telegram_id
-            const { data: userData } = await window.supabase
-                .from('users')
-                .select('id')
-                .eq('telegram_id', telegramUserId)
-                .single();
-            
-            if (!userData) {
-                console.error('❌ User not found for telegram_id:', telegramUserId);
-                showNotification('Пользователь не найден', 'error');
-                return;
-            }
-            
-            // Удаляем стратегию, проверяя владельца
-            const { error } = await window.supabase
+            // Удаляем стратегию через Timeweb API
+            const result = await window.supabase
                 .from('strategies')
-                .delete()
-                .eq('id', id)
-                .eq('user_id', userData.id); // Проверяем владельца по user_id
+                .delete(id, { user_id: userId });
             
-            if (error) {
-                console.error('❌ Error deleting strategy from database:', error);
-                showNotification('Ошибка удаления стратегии: ' + error.message, 'error');
+            if (result.error) {
+                console.error('❌ Error deleting strategy from database:', result.error);
+                showNotification('Ошибка удаления стратегии: ' + result.error, 'error');
                 return;
             }
             
@@ -1611,7 +1596,9 @@ function updateStrategySelect() {
 }
 
 function handleStrategySelection(e) {
-    const strategyId = parseInt(e.target.value);
+    const strategyId = e.target.value; // UUID - строка, не число!
+    
+    console.log('🎯 Strategy selected, ID:', strategyId);
     
     if (!strategyId) {
         cardAnalysisContainer.classList.add('hidden');
@@ -1620,8 +1607,12 @@ function handleStrategySelection(e) {
     }
     
     const strategy = strategies.find(s => s.id === strategyId);
+    console.log('🔍 Found strategy:', strategy);
+    
     if (strategy) {
         startCardAnalysis(strategy);
+    } else {
+        console.error('❌ Strategy not found for ID:', strategyId);
     }
 }
 
