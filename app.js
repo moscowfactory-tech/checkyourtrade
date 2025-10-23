@@ -2289,20 +2289,38 @@ async function saveCurrentAnalysis() {
     
     // Process answers
     const fieldsArr = parseStrategyFields(currentAnalysisStrategy);
+    console.log('🔄 Processing answers. Fields:', fieldsArr.length, 'Answers:', analysisAnswers.length);
+    
     fieldsArr.forEach((field, index) => {
         const answer = analysisAnswers[index];
+        console.log(`📝 Processing field ${index}:`, {
+            field: field,
+            answer: answer,
+            hasAnswer: !!answer,
+            rating: answer?.rating
+        });
+        
         if (answer && answer.rating) {
             const factor = {
                 name: field.name,
                 description: field.description
             };
+            
             if (answer.rating === 'positive') {
+                console.log('✅ Adding positive factor:', factor);
                 analysis.results.positive.push(factor);
             } else if (answer.rating === 'negative') {
+                console.log('❌ Adding negative factor:', factor);
                 analysis.results.negative.push(factor);
+            } else {
+                console.log('⚪ Skipping neutral/other rating:', answer.rating);
             }
+        } else {
+            console.log('⚠️ No answer or rating for field', index);
         }
     });
+    
+    console.log('📊 After processing - Positive:', analysis.results.positive.length, 'Negative:', analysis.results.negative.length);
     
     // Сохраняем в базу данных
     if (window.supabase && typeof window.supabase.from === 'function') {
@@ -2328,27 +2346,31 @@ async function saveCurrentAnalysis() {
                 }
             }
             
-            const { data: savedAnalysis, error } = await window.supabase
-                .from('analysis_results')
-                .insert({
-                    strategy_id: currentAnalysisStrategy.id,
-                    user_id: userId,
+            const dataToInsert = {
+                strategy_id: currentAnalysisStrategy.id,
+                user_id: userId,
+                coin: currentCoin,
+                results: {
+                    strategy_name: currentAnalysisStrategy.name,
                     coin: currentCoin,
-                    results: {
-                        strategy_name: currentAnalysisStrategy.name,
-                        coin: currentCoin,
-                        positive_factors: analysis.results.positive,
-                        negative_factors: analysis.results.negative,
-                        total_score: analysis.results.totalScore,
-                        max_score: analysis.results.maxScore,
-                        percentage: analysis.results.percentage
-                    },
                     positive_factors: analysis.results.positive,
                     negative_factors: analysis.results.negative,
                     total_score: analysis.results.totalScore,
                     max_score: analysis.results.maxScore,
                     percentage: analysis.results.percentage
-                })
+                },
+                positive_factors: analysis.results.positive,
+                negative_factors: analysis.results.negative,
+                total_score: analysis.results.totalScore,
+                max_score: analysis.results.maxScore,
+                percentage: analysis.results.percentage
+            };
+            
+            console.log('💾 Data to insert into DB:', dataToInsert);
+            
+            const { data: savedAnalysis, error } = await window.supabase
+                .from('analysis_results')
+                .insert(dataToInsert)
                 .select()
                 .single();
                 
