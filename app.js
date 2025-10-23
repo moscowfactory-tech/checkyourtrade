@@ -1583,8 +1583,8 @@ function renderStrategies() {
                 <span class="fields-count">${fieldsArr.length} пунктов, ${totalInputs} полей</span>
             </div>
             <div class="strategy-actions">
-                <button class="btn-icon edit" onclick="editStrategy(${strategy.id})" title="Редактировать"><i class="fas fa-edit"></i></button>
-                <button class="btn-icon delete" onclick="deleteStrategy(${strategy.id})" title="Удалить"><i class="fas fa-trash-alt"></i></button>
+                <button class="btn-icon edit" onclick="editStrategy('${strategy.id}')" title="Редактировать"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon delete" onclick="deleteStrategy('${strategy.id}')" title="Удалить"><i class="fas fa-trash-alt"></i></button>
             </div>
         `;
         
