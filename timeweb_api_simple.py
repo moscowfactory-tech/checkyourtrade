@@ -195,9 +195,9 @@ def get_analyses():
     
     # Получаем анализы через представление для совместимости
     sql = """
-    SELECT id, user_id, strategy_id, coin, answers, 
+    SELECT id, user_id, strategy_id, answers, 
            positive_factors, negative_factors, neutral_factors,
-           recommendation, created_at, results
+           recommendation, created_at
     FROM analysis_results 
     WHERE user_id = %s 
     ORDER BY created_at DESC
