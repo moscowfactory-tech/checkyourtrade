@@ -536,6 +536,51 @@ def admin_users_by_date():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/users_list')
+def admin_users_list():
+    """Список всех пользователей с детальной информацией"""
+    try:
+        user_type = request.args.get('type', 'all')  # all, active
+        
+        if user_type == 'active':
+            # Только пользователи с хотя бы 1 стратегией
+            sql = """
+                SELECT DISTINCT
+                    u.id,
+                    u.telegram_id,
+                    u.username,
+                    u.first_name,
+                    u.last_name,
+                    u.created_at,
+                    (SELECT COUNT(*) FROM strategies WHERE user_id = u.id) as strategies_count,
+                    (SELECT COUNT(*) FROM analyses WHERE user_id = u.id) as analyses_count,
+                    (SELECT MAX(created_at) FROM strategies WHERE user_id = u.id) as last_activity
+                FROM users u
+                INNER JOIN strategies s ON u.id = s.user_id
+                ORDER BY u.created_at DESC
+            """
+        else:
+            # Все пользователи
+            sql = """
+                SELECT 
+                    u.id,
+                    u.telegram_id,
+                    u.username,
+                    u.first_name,
+                    u.last_name,
+                    u.created_at,
+                    (SELECT COUNT(*) FROM strategies WHERE user_id = u.id) as strategies_count,
+                    (SELECT COUNT(*) FROM analyses WHERE user_id = u.id) as analyses_count,
+                    (SELECT MAX(created_at) FROM strategies WHERE user_id = u.id) as last_activity
+                FROM users u
+                ORDER BY u.created_at DESC
+            """
+        
+        result = execute_query(sql, [])
+        return jsonify({'data': result['data'] if result['data'] else []})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # ============================================================================
 # ЗАПУСК ПРИЛОЖЕНИЯ
 # ============================================================================

@@ -183,6 +183,106 @@
             margin-bottom: 1rem;
         }
 
+        .metric-card.clickable {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .metric-card.clickable:hover {
+            transform: translateY(-2px);
+            border-color: #4fd1c7;
+            box-shadow: 0 4px 12px rgba(79, 209, 199, 0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: #1a1f2e;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 900px;
+            border: 1px solid #2d3748;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            color: #4fd1c7;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #a0aec0;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #2d3748;
+            color: #ffffff;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table th {
+            background: #0f1419;
+            color: #4fd1c7;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #2d3748;
+        }
+
+        .users-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #2d3748;
+            color: #ffffff;
+        }
+
+        .users-table tr:hover {
+            background: #0f1419;
+        }
+
+        .user-name {
+            color: #4fd1c7;
+            font-weight: 600;
+        }
+
+        .user-stats {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
         @media (max-width: 640px) {
             .header h1 {
                 font-size: 1.4rem;
@@ -223,14 +323,17 @@
     <div id="errorContainer"></div>
 
     <div class="metrics-grid">
-        <div class="metric-card">
+        <div class="metric-card clickable" onclick="showUsersModal('all')">
             <div class="metric-title">👥 Всего пользователей</div>
             <div class="metric-value" id="usersCount">
                 <div class="loading"></div>
             </div>
+            <div style="color: #a0aec0; font-size: 0.8rem; margin-top: 0.5rem;">
+                Нажмите для просмотра
+            </div>
         </div>
 
-        <div class="metric-card">
+        <div class="metric-card clickable" onclick="showUsersModal('active')">
             <div class="metric-title">👤 Активные пользователи</div>
             <div class="metric-value" id="activeUsersCount">
                 <div class="loading"></div>
@@ -266,6 +369,19 @@
             </div>
         </div>
         <canvas id="usersChart"></canvas>
+    </div>
+
+    <!-- Модальное окно для списка пользователей -->
+    <div id="usersModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Пользователи</h3>
+                <button class="close-btn" onclick="closeUsersModal()">&times;</button>
+            </div>
+            <div id="usersTableContainer">
+                <div class="loading"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -411,6 +527,99 @@
         async function loadAllData() {
             await loadStats();
             await loadChart();
+        }
+
+        // Функции для модального окна пользователей
+        async function showUsersModal(type) {
+            const modal = document.getElementById('usersModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const container = document.getElementById('usersTableContainer');
+
+            // Устанавливаем заголовок
+            modalTitle.textContent = type === 'all' ? '👥 Все пользователи' : '👤 Активные пользователи';
+
+            // Показываем модальное окно
+            modal.style.display = 'block';
+
+            // Показываем загрузку
+            container.innerHTML = '<div class="loading"></div>';
+
+            try {
+                const response = await fetch(`${API_URL}/admin/users_list?type=${type}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                const users = data.data || [];
+
+                if (users.length === 0) {
+                    container.innerHTML = '<p style="color: #a0aec0; text-align: center; padding: 2rem;">Пользователи не найдены</p>';
+                    return;
+                }
+
+                // Создаем таблицу
+                let tableHTML = `
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Пользователь</th>
+                                <th>Telegram ID</th>
+                                <th>Стратегии</th>
+                                <th>Анализы</th>
+                                <th>Регистрация</th>
+                                <th>Последняя активность</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                users.forEach(user => {
+                    const displayName = user.first_name || user.username || 'Неизвестный';
+                    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'Неизвестный';
+                    const username = user.username ? `@${user.username}` : '';
+                    const createdAt = new Date(user.created_at).toLocaleDateString('ru-RU');
+                    const lastActivity = user.last_activity ? new Date(user.last_activity).toLocaleDateString('ru-RU') : '—';
+
+                    tableHTML += `
+                        <tr>
+                            <td>
+                                <div class="user-name">${fullName}</div>
+                                ${username ? `<div class="user-stats">${username}</div>` : ''}
+                            </td>
+                            <td>${user.telegram_id}</td>
+                            <td>${user.strategies_count || 0}</td>
+                            <td>${user.analyses_count || 0}</td>
+                            <td>${createdAt}</td>
+                            <td>${lastActivity}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = tableHTML;
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+                container.innerHTML = `<p style="color: #feb2b2; text-align: center; padding: 2rem;">Ошибка загрузки: ${error.message}</p>`;
+            }
+        }
+
+        function closeUsersModal() {
+            document.getElementById('usersModal').style.display = 'none';
+        }
+
+        // Закрытие модального окна при клике вне его
+        window.onclick = function(event) {
+            const modal = document.getElementById('usersModal');
+            if (event.target === modal) {
+                closeUsersModal();
+            }
         }
 
         // Автообновление каждые 60 секунд
