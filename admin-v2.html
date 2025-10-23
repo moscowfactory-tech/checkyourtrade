@@ -283,6 +283,32 @@
             font-size: 0.9rem;
         }
 
+        .clickable-count {
+            color: #4fd1c7;
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+
+        .clickable-count:hover {
+            color: #38b2ac;
+        }
+
+        .details-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .details-list li {
+            padding: 0.75rem;
+            border-bottom: 1px solid #2d3748;
+            color: #ffffff;
+        }
+
+        .details-list li:last-child {
+            border-bottom: none;
+        }
+
         @media (max-width: 640px) {
             .header h1 {
                 font-size: 1.4rem;
@@ -565,7 +591,6 @@
                         <thead>
                             <tr>
                                 <th>Пользователь</th>
-                                <th>Telegram ID</th>
                                 <th>Стратегии</th>
                                 <th>Анализы</th>
                                 <th>Регистрация</th>
@@ -580,7 +605,21 @@
                     const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'Неизвестный';
                     const username = user.username ? `@${user.username}` : '';
                     const createdAt = new Date(user.created_at).toLocaleDateString('ru-RU');
-                    const lastActivity = user.last_activity ? new Date(user.last_activity).toLocaleDateString('ru-RU') : '—';
+                    const lastActivity = user.last_activity ? new Date(user.last_activity).toLocaleString('ru-RU', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : '—';
+
+                    const strategiesHTML = user.strategies_count > 0 
+                        ? `<span class="clickable-count" onclick="showUserDetails('${user.id}', 'strategies')">${user.strategies_count}</span>`
+                        : '0';
+                    
+                    const analysesHTML = user.analyses_count > 0
+                        ? `<span class="clickable-count" onclick="showUserDetails('${user.id}', 'analyses')">${user.analyses_count}</span>`
+                        : '0';
 
                     tableHTML += `
                         <tr>
@@ -588,9 +627,8 @@
                                 <div class="user-name">${fullName}</div>
                                 ${username ? `<div class="user-stats">${username}</div>` : ''}
                             </td>
-                            <td>${user.telegram_id}</td>
-                            <td>${user.strategies_count || 0}</td>
-                            <td>${user.analyses_count || 0}</td>
+                            <td>${strategiesHTML}</td>
+                            <td>${analysesHTML}</td>
                             <td>${createdAt}</td>
                             <td>${lastActivity}</td>
                         </tr>
@@ -614,6 +652,65 @@
             document.getElementById('usersModal').style.display = 'none';
         }
 
+        // Показать детали пользователя (стратегии или анализы)
+        async function showUserDetails(userId, type) {
+            const container = document.getElementById('usersTableContainer');
+            container.innerHTML = '<div class="loading"></div>';
+
+            try {
+                let endpoint, title;
+                if (type === 'strategies') {
+                    endpoint = `/api/strategies`;
+                    title = '📊 Стратегии пользователя';
+                } else {
+                    endpoint = `/api/analysis_results`;
+                    title = '📈 Анализы пользователя';
+                }
+
+                // Получаем данные напрямую из БД через SQL
+                const response = await fetch(`${API_URL}/admin/user_details?user_id=${userId}&type=${type}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                const items = data.data || [];
+                document.getElementById('modalTitle').textContent = title;
+
+                if (items.length === 0) {
+                    container.innerHTML = '<p style="color: #a0aec0; text-align: center; padding: 2rem;">Нет данных</p>';
+                    return;
+                }
+
+                let html = '<ul class="details-list">';
+                items.forEach(item => {
+                    const date = new Date(item.created_at).toLocaleString('ru-RU', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    if (type === 'strategies') {
+                        html += `<li>📊 <strong>${item.name || 'Без названия'}</strong><br><span style="color: #a0aec0; font-size: 0.9rem;">${date}</span></li>`;
+                    } else {
+                        const strategyName = item.strategy_name || 'Неизвестная стратегия';
+                        html += `<li>📈 <strong>${strategyName}</strong><br><span style="color: #a0aec0; font-size: 0.9rem;">${date}</span></li>`;
+                    }
+                });
+                html += '</ul>';
+                html += `<button class="refresh-btn" onclick="showUsersModal('all')" style="margin-top: 1rem;">← Назад к списку</button>`;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading user details:', error);
+                container.innerHTML = `<p style="color: #feb2b2; text-align: center; padding: 2rem;">Ошибка загрузки: ${error.message}</p>`;
+            }
+        }
+
         // Закрытие модального окна при клике вне его
         window.onclick = function(event) {
             const modal = document.getElementById('usersModal');
@@ -622,13 +719,33 @@
             }
         }
 
+        // Проверка пароля при загрузке страницы
+        function checkPassword() {
+            const savedPassword = sessionStorage.getItem('admin_password');
+            if (savedPassword === 'matrix22matrix') {
+                return true;
+            }
+
+            const password = prompt('Введите пароль для доступа к админ-панели:');
+            if (password === 'matrix22matrix') {
+                sessionStorage.setItem('admin_password', password);
+                return true;
+            } else {
+                alert('Неверный пароль!');
+                window.location.href = 'https://moscowfactory-tech.github.io/checkyourtrade/';
+                return false;
+            }
+        }
+
         // Автообновление каждые 60 секунд
         setInterval(loadStats, 60000);
 
         // Загрузка при открытии страницы
         document.addEventListener('DOMContentLoaded', () => {
-            setDefaultDates();
-            loadAllData();
+            if (checkPassword()) {
+                setDefaultDates();
+                loadAllData();
+            }
         });
     </script>
 </body>

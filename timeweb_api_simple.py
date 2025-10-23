@@ -581,6 +581,40 @@ def admin_users_list():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/user_details')
+def admin_user_details():
+    """Детальная информация о стратегиях или анализах пользователя"""
+    try:
+        user_id = request.args.get('user_id')
+        detail_type = request.args.get('type')  # strategies, analyses
+        
+        if not user_id or not detail_type:
+            return jsonify({'error': 'Missing user_id or type parameter'}), 400
+        
+        if detail_type == 'strategies':
+            sql = """
+                SELECT id, name, created_at
+                FROM strategies
+                WHERE user_id = %s
+                ORDER BY created_at DESC
+            """
+        else:  # analyses
+            sql = """
+                SELECT 
+                    a.id,
+                    a.created_at,
+                    s.name as strategy_name
+                FROM analyses a
+                LEFT JOIN strategies s ON a.strategy_id = s.id
+                WHERE a.user_id = %s
+                ORDER BY a.created_at DESC
+            """
+        
+        result = execute_query(sql, [user_id])
+        return jsonify({'data': result['data'] if result['data'] else []})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # ============================================================================
 # ЗАПУСК ПРИЛОЖЕНИЯ
 # ============================================================================
