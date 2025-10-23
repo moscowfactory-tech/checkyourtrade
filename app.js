@@ -288,7 +288,7 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
             // Загружаем стратегии для получения названий
             const { data: strategiesData } = await window.supabase
                 .from('strategies')
-                .eq('user_id', userId)
+                .eq('user_id', currentUserId)
                 .select('id, name');
             
             console.log('📋 Loaded strategies for map:', strategiesData);
