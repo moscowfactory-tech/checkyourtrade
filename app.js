@@ -1479,6 +1479,10 @@ async function updateStrategyInDB(strategyId, updatedData) {
 }
 
 async function deleteStrategy(id) {
+    console.log('🗑️ Delete strategy called, ID:', id);
+    console.log('🔍 window.userManager exists:', !!window.userManager);
+    console.log('🔍 window.supabase exists:', !!window.supabase);
+    
     if (confirm('Вы уверены, что хотите удалить эту стратегию?')) {
         try {
             // Получаем ID текущего пользователя Telegram
@@ -1486,9 +1490,11 @@ async function deleteStrategy(id) {
                 ? window.userManager.getTelegramId() 
                 : null;
             
+            console.log('🔍 Telegram User ID for deletion:', telegramUserId);
+            
             if (!telegramUserId) {
                 console.error('❌ Cannot delete strategy: No telegram user ID');
-                showNotification('Необходима авторизация через Telegram', 'error');
+                alert('Ошибка: не удалось получить ID пользователя. Попробуйте перезагрузить приложение.');
                 return;
             }
             

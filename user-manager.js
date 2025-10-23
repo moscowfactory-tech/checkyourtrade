@@ -109,7 +109,10 @@ class UnifiedUserManager {
     // Получить Telegram ID (если есть)
     getTelegramId() {
         const user = this.getCurrentUser();
-        return user ? user.telegram_id : null;
+        console.log('🔍 getTelegramId called, user:', user);
+        const telegramId = user ? user.telegram_id : null;
+        console.log('🔍 Returning telegram_id:', telegramId);
+        return telegramId;
     }
 
     // Проверить, является ли пользователь Telegram пользователем
