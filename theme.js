@@ -215,10 +215,12 @@ document.addEventListener('DOMContentLoaded', function() {
     //     });
     // }
     
-    logoutBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        handleLogout();
-    });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleLogout();
+        });
+    }
     
     // Функция для входа пользователя
     async function handleLogin() {
@@ -229,8 +231,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Временная имитация входа
             document.getElementById('userName').textContent = 'Пользователь';
             document.getElementById('userStatus').textContent = 'Авторизован';
-            loginBtn.classList.add('hidden');
-            logoutBtn.classList.remove('hidden');
+            if (loginBtn) loginBtn.classList.add('hidden');
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
             
             userDropdown.classList.remove('active');
             showNotification('Вы успешно вошли в систему', 'success');
@@ -249,8 +251,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Временная имитация выхода
             document.getElementById('userName').textContent = 'Гость';
             document.getElementById('userStatus').textContent = 'Не авторизован';
-            loginBtn.classList.remove('hidden');
-            logoutBtn.classList.add('hidden');
+            if (loginBtn) loginBtn.classList.remove('hidden');
+            if (logoutBtn) logoutBtn.classList.add('hidden');
             
             userDropdown.classList.remove('active');
             showNotification('Вы вышли из системы', 'info');

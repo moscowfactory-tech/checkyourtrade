@@ -12,7 +12,10 @@ async function countAnalysesFromDB() {
         }
         
         // Получаем ID текущего пользователя Telegram
-        const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        let telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        if (!telegramUserId && window.userManager && typeof window.userManager.getTelegramId === 'function') {
+            telegramUserId = window.userManager.getTelegramId();
+        }
         
         if (!telegramUserId) {
             console.log('⚠️ No telegram user ID for analyses count');
@@ -67,7 +70,10 @@ async function countStrategiesFromDB() {
         }
         
         // Получаем ID текущего пользователя Telegram
-        const telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        let telegramUserId = window.getTelegramUserId ? window.getTelegramUserId() : null;
+        if (!telegramUserId && window.userManager && typeof window.userManager.getTelegramId === 'function') {
+            telegramUserId = window.userManager.getTelegramId();
+        }
         
         if (!telegramUserId) {
             console.log('⚠️ No telegram user ID for strategies count');
