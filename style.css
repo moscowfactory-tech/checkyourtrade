@@ -2388,6 +2388,22 @@ main {
     touch-action: manipulation;
   }
   
+  /* Исключение для кнопок анализов - делаем квадратными */
+  .analysis-actions .btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    max-width: 36px !important;
+    max-height: 36px !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .analysis-actions .btn i {
+    font-size: 16px !important;
+  }
+  
   /* Модальные окна на мобильных */
   .modal-content {
     width: 95vw !important;
