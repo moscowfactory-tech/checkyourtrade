@@ -1304,15 +1304,17 @@ async function handleStrategySubmit(e) {
                 return;
             }
             
-            const { error } = await window.supabase
+            const result = await window.supabase
                 .from('strategies')
+                .eq('id', currentStrategy.id)
                 .update({
                     name: strategyName,
                     description: strategyDescription,
-                    fields: fields
-                })
-                .eq('id', currentStrategy.id)
-                .eq('user_id', user.id);
+                    fields: fields,
+                    user_id: user.id
+                });
+            
+            const error = result.error;
             
             if (error) {
                 console.error('❌ Error updating strategy:', error);
@@ -2195,14 +2197,17 @@ async function renderAnalysesList() {
         analysisCard.className = 'analysis-item';
         
         const date = new Date(analysis.date).toLocaleDateString('ru-RU');
-        const positiveCount = analysis.results.positive.length;
-        const negativeCount = analysis.results.negative.length;
+        const positiveCount = (analysis.results && analysis.results.positive) ? analysis.results.positive.length : 0;
+        const negativeCount = (analysis.results && analysis.results.negative) ? analysis.results.negative.length : 0;
         
         const coinDisplay = analysis.coin ? ` (${analysis.coin})` : '';
+        const strategyName = analysis.strategyName || 'Неизвестная стратегия';
+        
+        console.log('📊 Rendering analysis:', { strategyName, coin: analysis.coin, positiveCount, negativeCount, analysis });
         
         analysisCard.innerHTML = `
             <div class="analysis-header">
-                <h4>${analysis.strategyName}${coinDisplay}</h4>
+                <h4>${strategyName}${coinDisplay}</h4>
                 <span class="analysis-date">${date}</span>
             </div>
             <div class="analysis-summary">
@@ -2211,7 +2216,7 @@ async function renderAnalysesList() {
             </div>
             <div class="analysis-actions">
                 <button class="btn btn--outline btn--sm" onclick="viewAnalysis(${index})">Просмотр</button>
-                <button class="btn btn--outline btn--sm" onclick="deleteAnalysis(${index})">Удалить</button>
+                <button class="btn btn--danger btn--sm" onclick="deleteAnalysis(${index})"><i class="fas fa-trash-alt"></i> Удалить</button>
             </div>
         `;
         
@@ -2458,10 +2463,12 @@ async function deleteAnalysis(index) {
         try {
             console.log('🗑️ Deleting analysis from database...');
             
-            const { error } = await window.supabase
+            const result = await window.supabase
                 .from('analysis_results')
-                .delete()
-                .eq('id', analysis.id);
+                .eq('id', analysis.id)
+                .delete();
+            
+            const error = result.error;
                 
             if (error) {
                 console.error('❌ Error deleting analysis from database:', error);

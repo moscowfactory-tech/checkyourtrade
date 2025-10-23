@@ -448,6 +448,17 @@ pre code {
   background: var(--color-secondary);
 }
 
+.btn--danger {
+  background: transparent;
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+}
+
+.btn--danger:hover {
+  background: var(--color-error);
+  color: white;
+}
+
 .btn--sm {
   padding: var(--space-4) var(--space-12);
   font-size: var(--font-size-sm);

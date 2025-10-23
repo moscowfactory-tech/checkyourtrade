@@ -130,9 +130,9 @@ async function updateUserStats() {
             return;
         }
         
-        // Показываем загрузку
-        analysesCountEl.textContent = '...';
-        strategiesCountEl.textContent = '...';
+        // Не показываем загрузку, чтобы избежать мигания
+        // analysesCountEl.textContent = '...';
+        // strategiesCountEl.textContent = '...';
         
         // Получаем данные
         const [analysesCount, strategiesCount] = await Promise.all([
