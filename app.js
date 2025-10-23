@@ -300,9 +300,20 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
             savedAnalyses = analysesData.map(analysis => {
                 // Парсим results если это строка JSON
                 let results = analysis.results || {};
+                console.log('🔍 Raw analysis from DB:', {
+                    id: analysis.id,
+                    strategy_id: analysis.strategy_id,
+                    coin: analysis.coin,
+                    results_type: typeof results,
+                    results: results,
+                    positive_factors: analysis.positive_factors,
+                    negative_factors: analysis.negative_factors
+                });
+                
                 if (typeof results === 'string') {
                     try {
                         results = JSON.parse(results);
+                        console.log('✅ Parsed results:', results);
                     } catch (e) {
                         console.error('❌ Error parsing results JSON:', e);
                         results = {};
@@ -313,8 +324,12 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
                 let strategyName = 'Неизвестная стратегия';
                 if (analysis.strategy_id && strategiesMap[analysis.strategy_id]) {
                     strategyName = strategiesMap[analysis.strategy_id];
+                    console.log('✅ Strategy name from map:', strategyName);
                 } else if (results.strategy_name) {
                     strategyName = results.strategy_name;
+                    console.log('✅ Strategy name from results:', strategyName);
+                } else {
+                    console.log('❌ No strategy name found. strategy_id:', analysis.strategy_id, 'results.strategy_name:', results.strategy_name);
                 }
                 
                 // Получаем монету
