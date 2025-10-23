@@ -1501,7 +1501,8 @@ async function deleteStrategy(id) {
             // Удаляем стратегию через Timeweb API
             const result = await window.supabase
                 .from('strategies')
-                .delete(id, { user_id: userId });
+                .eq('id', id)
+                .delete();
             
             if (result.error) {
                 console.error('❌ Error deleting strategy from database:', result.error);
