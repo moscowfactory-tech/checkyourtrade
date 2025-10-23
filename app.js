@@ -2251,7 +2251,13 @@ async function renderAnalysesList() {
         const analysisCard = document.createElement('div');
         analysisCard.className = 'analysis-item';
         
-        const date = new Date(analysis.date).toLocaleDateString('ru-RU');
+        const date = new Date(analysis.date).toLocaleString('ru-RU', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
         const positiveCount = (analysis.results && analysis.results.positive) ? analysis.results.positive.length : 0;
         const negativeCount = (analysis.results && analysis.results.negative) ? analysis.results.negative.length : 0;
         
