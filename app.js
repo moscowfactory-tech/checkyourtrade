@@ -298,7 +298,16 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
             }
             
             savedAnalyses = analysesData.map(analysis => {
-                const results = analysis.results || {};
+                // Парсим results если это строка JSON
+                let results = analysis.results || {};
+                if (typeof results === 'string') {
+                    try {
+                        results = JSON.parse(results);
+                    } catch (e) {
+                        console.error('❌ Error parsing results JSON:', e);
+                        results = {};
+                    }
+                }
                 
                 // Получаем название стратегии
                 let strategyName = 'Неизвестная стратегия';
@@ -1323,6 +1332,14 @@ async function handleStrategySubmit(e) {
             }
             
             console.log('✅ Strategy updated successfully in database');
+            
+            // Обновляем UI и закрываем модальное окно
+            renderStrategies();
+            updateStrategySelect();
+            closeModal();
+            showNotification('Стратегия обновлена!', 'success');
+            return;
+            
         } catch (error) {
             console.error('❌ Exception updating strategy:', error);
             showNotification('Ошибка обновления стратегии', 'error');
@@ -2216,7 +2233,7 @@ async function renderAnalysesList() {
             </div>
             <div class="analysis-actions">
                 <button class="btn btn--outline btn--sm" onclick="viewAnalysis(${index})">Просмотр</button>
-                <button class="btn btn--danger btn--sm" onclick="deleteAnalysis(${index})"><i class="fas fa-trash-alt"></i> Удалить</button>
+                <button class="btn btn--danger btn--sm" onclick="deleteAnalysis(${index})"><i class="fas fa-trash-alt"></i></button>
             </div>
         `;
         
