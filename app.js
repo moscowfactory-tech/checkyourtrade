@@ -1607,6 +1607,15 @@ function handleStrategySelection(e) {
         return;
     }
     
+    // Если уже был завершен анализ, сбрасываем результаты для нового анализа
+    if (!analysisResults.classList.contains('hidden')) {
+        console.log('🔄 Resetting previous analysis results for new analysis');
+        analysisResults.classList.add('hidden');
+        currentCardIndex = 0;
+        analysisAnswers = [];
+        analysisCard.classList.remove('active', 'slide-out-left', 'slide-out-right');
+    }
+    
     const strategy = strategies.find(s => s.id === strategyId);
     console.log('🔍 Found strategy:', strategy);
     
