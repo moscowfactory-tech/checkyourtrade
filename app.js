@@ -2362,13 +2362,21 @@ async function saveCurrentAnalysis() {
                 }
             }
             
+            console.log('🪙 currentCoin value before insert:', {
+                currentCoin: currentCoin,
+                type: typeof currentCoin,
+                isEmpty: currentCoin === '',
+                isNull: currentCoin === null,
+                isUndefined: currentCoin === undefined
+            });
+            
             const dataToInsert = {
                 strategy_id: currentAnalysisStrategy.id,
                 user_id: userId,
-                coin: currentCoin,
+                coin: currentCoin || 'BTC',  // Используем BTC как дефолт если пусто
                 results: {
                     strategy_name: currentAnalysisStrategy.name,
-                    coin: currentCoin,
+                    coin: currentCoin || 'BTC',
                     positive_factors: analysis.results.positive,
                     negative_factors: analysis.results.negative,
                     total_score: analysis.results.totalScore,
