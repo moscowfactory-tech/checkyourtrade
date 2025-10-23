@@ -593,7 +593,7 @@ def admin_user_details():
         
         if detail_type == 'strategies':
             sql = """
-                SELECT id, name, created_at
+                SELECT id, name, description, fields, created_at
                 FROM strategies
                 WHERE user_id = %s
                 ORDER BY created_at DESC
@@ -603,6 +603,10 @@ def admin_user_details():
                 SELECT 
                     a.id,
                     a.created_at,
+                    a.recommendation,
+                    a.positive_factors,
+                    a.negative_factors,
+                    a.neutral_factors,
                     s.name as strategy_name
                 FROM analyses a
                 LEFT JOIN strategies s ON a.strategy_id = s.id

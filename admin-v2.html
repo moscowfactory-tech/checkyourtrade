@@ -683,7 +683,7 @@
                     return;
                 }
 
-                let html = '<ul class="details-list">';
+                let html = '<div style="max-height: 60vh; overflow-y: auto;">';
                 items.forEach(item => {
                     const date = new Date(item.created_at).toLocaleString('ru-RU', {
                         year: 'numeric',
@@ -694,13 +694,99 @@
                     });
                     
                     if (type === 'strategies') {
-                        html += `<li>📊 <strong>${item.name || 'Без названия'}</strong><br><span style="color: #a0aec0; font-size: 0.9rem;">${date}</span></li>`;
+                        // Стратегия
+                        html += `
+                            <div style="background: #0f1419; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #2d3748;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                    <h4 style="color: #4fd1c7; margin: 0;">📊 ${item.name || 'Без названия'}</h4>
+                                    <span style="color: #a0aec0; font-size: 0.85rem;">${date}</span>
+                                </div>
+                        `;
+                        
+                        if (item.description) {
+                            html += `<p style="color: #a0aec0; margin-bottom: 1rem;">${item.description}</p>`;
+                        }
+                        
+                        // Поля стратегии
+                        if (item.fields) {
+                            try {
+                                const fields = typeof item.fields === 'string' ? JSON.parse(item.fields) : item.fields;
+                                if (fields && Array.isArray(fields) && fields.length > 0) {
+                                    html += '<div style="margin-top: 1rem;"><strong style="color: #4fd1c7;">Основания:</strong><ul style="margin: 0.5rem 0; padding-left: 1.5rem;">';
+                                    fields.forEach(field => {
+                                        html += `<li style="color: #ffffff; margin-bottom: 0.5rem;">${field.name || field.title || 'Без названия'}`;
+                                        if (field.subpoints && field.subpoints.length > 0) {
+                                            html += '<ul style="margin-top: 0.25rem; padding-left: 1.5rem;">';
+                                            field.subpoints.forEach(sub => {
+                                                html += `<li style="color: #a0aec0; font-size: 0.9rem;">${sub}</li>`;
+                                            });
+                                            html += '</ul>';
+                                        }
+                                        html += '</li>';
+                                    });
+                                    html += '</ul></div>';
+                                }
+                            } catch (e) {
+                                console.error('Error parsing fields:', e);
+                            }
+                        }
+                        
+                        html += '</div>';
                     } else {
+                        // Анализ
                         const strategyName = item.strategy_name || 'Неизвестная стратегия';
-                        html += `<li>📈 <strong>${strategyName}</strong><br><span style="color: #a0aec0; font-size: 0.9rem;">${date}</span></li>`;
+                        const recommendation = item.recommendation || 'Нет рекомендации';
+                        
+                        // Определяем цвет рекомендации
+                        let recColor = '#a0aec0';
+                        if (recommendation.includes('ОТКРЫВАТЬ') && !recommendation.includes('НЕ')) {
+                            recColor = '#48bb78';
+                        } else if (recommendation.includes('НЕ ОТКРЫВАТЬ')) {
+                            recColor = '#f56565';
+                        }
+                        
+                        html += `
+                            <div style="background: #0f1419; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #2d3748;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                    <h4 style="color: #4fd1c7; margin: 0;">📈 ${strategyName}</h4>
+                                    <span style="color: #a0aec0; font-size: 0.85rem;">${date}</span>
+                                </div>
+                                <div style="background: #1a1f2e; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                                    <strong style="color: ${recColor}; font-size: 1.1rem;">${recommendation}</strong>
+                                </div>
+                        `;
+                        
+                        // Положительные факторы
+                        if (item.positive_factors && item.positive_factors.length > 0) {
+                            html += '<div style="margin-bottom: 1rem;"><strong style="color: #48bb78;">✅ Положительные факторы:</strong><ul style="margin: 0.5rem 0; padding-left: 1.5rem;">';
+                            item.positive_factors.forEach(factor => {
+                                html += `<li style="color: #ffffff; margin-bottom: 0.25rem;">${factor}</li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+                        
+                        // Отрицательные факторы
+                        if (item.negative_factors && item.negative_factors.length > 0) {
+                            html += '<div style="margin-bottom: 1rem;"><strong style="color: #f56565;">❌ Отрицательные факторы:</strong><ul style="margin: 0.5rem 0; padding-left: 1.5rem;">';
+                            item.negative_factors.forEach(factor => {
+                                html += `<li style="color: #ffffff; margin-bottom: 0.25rem;">${factor}</li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+                        
+                        // Нейтральные факторы
+                        if (item.neutral_factors && item.neutral_factors.length > 0) {
+                            html += '<div><strong style="color: #a0aec0;">⚪ Нейтральные факторы:</strong><ul style="margin: 0.5rem 0; padding-left: 1.5rem;">';
+                            item.neutral_factors.forEach(factor => {
+                                html += `<li style="color: #ffffff; margin-bottom: 0.25rem;">${factor}</li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+                        
+                        html += '</div>';
                     }
                 });
-                html += '</ul>';
+                html += '</div>';
                 html += `<button class="refresh-btn" onclick="showUsersModal('all')" style="margin-top: 1rem;">← Назад к списку</button>`;
 
                 container.innerHTML = html;
