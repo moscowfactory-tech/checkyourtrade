@@ -340,12 +340,14 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
                 }
                 
                 // Получаем монету
-                let coin = 'BTC';
-                if (results.coin) {
-                    coin = results.coin;
-                } else if (analysis.coin) {
-                    coin = analysis.coin;
-                }
+                let coin = analysis.coin || results.coin || null;
+                
+                // Логируем для отладки
+                console.log('🪙 Coin detection:', {
+                    analysis_coin: analysis.coin,
+                    results_coin: results.coin,
+                    final_coin: coin
+                });
                 
                 // Факторы могут быть в results или на верхнем уровне
                 const positiveFactors = analysis.positive_factors || results.positive_factors || [];
@@ -2255,6 +2257,8 @@ async function renderAnalysesList() {
         
         const coinDisplay = analysis.coin ? ` (${analysis.coin})` : '';
         const strategyName = analysis.strategyName || 'Неизвестная стратегия';
+        
+        console.log('🎨 Rendering coin:', { coin: analysis.coin, coinDisplay });
         
         console.log('📊 Rendering analysis:', { strategyName, coin: analysis.coin, positiveCount, negativeCount, analysis });
         
