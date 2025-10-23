@@ -288,7 +288,10 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
             // Загружаем стратегии для получения названий
             const { data: strategiesData } = await window.supabase
                 .from('strategies')
+                .eq('user_id', userId)
                 .select('id, name');
+            
+            console.log('📋 Loaded strategies for map:', strategiesData);
             
             const strategiesMap = {};
             if (strategiesData) {
@@ -296,6 +299,8 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
                     strategiesMap[strategy.id] = strategy.name;
                 });
             }
+            
+            console.log('📋 Strategies map:', strategiesMap);
             
             savedAnalyses = analysesData.map(analysis => {
                 // Парсим results если это строка JSON
@@ -2257,7 +2262,16 @@ async function renderAnalysesList() {
 }
 
 async function saveCurrentAnalysis() {
-    if (!currentAnalysisStrategy || !analysisAnswers) return;
+    console.log('💾 saveCurrentAnalysis called with:', {
+        currentAnalysisStrategy: currentAnalysisStrategy,
+        currentCoin: currentCoin,
+        analysisAnswers: analysisAnswers
+    });
+    
+    if (!currentAnalysisStrategy || !analysisAnswers) {
+        console.error('❌ Cannot save: missing strategy or answers');
+        return;
+    }
     
     const analysis = {
         id: Date.now(),
@@ -2270,6 +2284,8 @@ async function saveCurrentAnalysis() {
             negative: []
         }
     };
+    
+    console.log('📊 Analysis object before processing:', analysis);
     
     // Process answers
     const fieldsArr = parseStrategyFields(currentAnalysisStrategy);
