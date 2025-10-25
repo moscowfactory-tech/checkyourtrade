@@ -619,6 +619,47 @@ def admin_user_details():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/check_duplicates')
+def admin_check_duplicates():
+    """Проверка дубликатов пользователей и потерянных стратегий"""
+    try:
+        username = request.args.get('username')
+        
+        if username:
+            # Поиск всех пользователей с этим username
+            sql = """
+                SELECT 
+                    u.id,
+                    u.telegram_id,
+                    u.username,
+                    u.first_name,
+                    u.created_at,
+                    (SELECT COUNT(*) FROM strategies WHERE user_id = u.id) as strategies_count,
+                    (SELECT COUNT(*) FROM analyses WHERE user_id = u.id) as analyses_count
+                FROM users u
+                WHERE u.username = %s
+                ORDER BY u.created_at DESC
+            """
+            result = execute_query(sql, [username])
+        else:
+            # Все дубликаты (пользователи с одинаковым username)
+            sql = """
+                SELECT 
+                    username,
+                    COUNT(*) as count,
+                    STRING_AGG(telegram_id::TEXT, ', ') as telegram_ids
+                FROM users
+                WHERE username IS NOT NULL AND username != ''
+                GROUP BY username
+                HAVING COUNT(*) > 1
+                ORDER BY count DESC
+            """
+            result = execute_query(sql, [])
+        
+        return jsonify({'data': result['data'] if result['data'] else []})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # ============================================================================
 # ЗАПУСК ПРИЛОЖЕНИЯ
 # ============================================================================
