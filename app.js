@@ -1653,6 +1653,66 @@ async function deleteStrategy(id) {
     }
 }
 
+// Просмотр стратегии
+function viewStrategy(strategyId) {
+    console.log('👁️ Viewing strategy:', strategyId);
+    
+    const strategy = strategies.find(s => s.id === strategyId);
+    if (!strategy) {
+        console.error('❌ Strategy not found:', strategyId);
+        return;
+    }
+    
+    const fieldsArr = parseStrategyFields(strategy);
+    
+    // Создаем модальное окно для просмотра
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>📊 ${strategy.name}</h3>
+                <button class="close-modal" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                ${strategy.description ? `<p style="color: #a0aec0; margin-bottom: 1.5rem;">${strategy.description}</p>` : ''}
+                
+                ${fieldsArr.length > 0 ? `
+                    <div style="margin-top: 1rem;">
+                        <h4 style="color: #4fd1c7; margin-bottom: 1rem;">Основания для входа:</h4>
+                        ${fieldsArr.map((field, index) => `
+                            <div style="background: #1a1f2e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid #4fd1c7;">
+                                <strong style="color: #ffffff; display: block; margin-bottom: 0.5rem;">${index + 1}. ${field.name || field.title || 'Без названия'}</strong>
+                                ${field.subpoints && field.subpoints.length > 0 ? `
+                                    <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
+                                        ${field.subpoints.map(sub => `
+                                            <li style="color: #a0aec0; margin-bottom: 0.25rem;">${sub}</li>
+                                        `).join('')}
+                                    </ul>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<p style="color: #a0aec0;">Нет оснований</p>'}
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Закрыть</button>
+                <button class="btn btn-primary" onclick="this.closest('.modal').remove(); editStrategy('${strategy.id}')">Редактировать</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Закрытие по клику вне модального окна
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
 function renderStrategies() {
     console.log('🎨 Rendering strategies...');
     console.log('Strategies to render:', strategies.length);
@@ -1682,16 +1742,19 @@ function renderStrategies() {
         const totalInputs = fieldsArr.reduce((sum, field) => sum + (Array.isArray(field?.inputs) ? field.inputs.length : 0), 0);
         const strategyCard = document.createElement('div');
         strategyCard.className = 'strategy-card';
+        strategyCard.style.cursor = 'pointer';
         
         strategyCard.innerHTML = `
-            <h4>${strategy.name}</h4>
-            <p>${strategy.description || 'Без описания'}</p>
-            <div class="strategy-meta">
-                <span class="fields-count">${fieldsArr.length} пунктов, ${totalInputs} полей</span>
+            <div class="strategy-card-content" onclick="viewStrategy('${strategy.id}')">
+                <h4>${strategy.name}</h4>
+                <p>${strategy.description || 'Без описания'}</p>
+                <div class="strategy-meta">
+                    <span class="fields-count">${fieldsArr.length} пунктов, ${totalInputs} полей</span>
+                </div>
             </div>
             <div class="strategy-actions">
-                <button class="btn-icon edit" onclick="editStrategy('${strategy.id}')" title="Редактировать"><i class="fas fa-edit"></i></button>
-                <button class="btn-icon delete" onclick="deleteStrategy('${strategy.id}')" title="Удалить"><i class="fas fa-trash-alt"></i></button>
+                <button class="btn-icon edit" onclick="event.stopPropagation(); editStrategy('${strategy.id}')" title="Редактировать"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon delete" onclick="event.stopPropagation(); deleteStrategy('${strategy.id}')" title="Удалить"><i class="fas fa-trash-alt"></i></button>
             </div>
         `;
         
