@@ -31,37 +31,67 @@ class UnifiedUserManager {
     // Инициализация пользователя Telegram WebApp
     async initializeTelegramUser() {
         console.log('📱 Initializing Telegram user...');
+        console.log('📱 window.Telegram exists:', !!window.Telegram);
+        console.log('📱 window.Telegram.WebApp exists:', !!(window.Telegram && window.Telegram.WebApp));
         
-        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-            const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+        if (window.Telegram && window.Telegram.WebApp) {
+            console.log('📱 Telegram WebApp available');
+            console.log('📱 initDataUnsafe:', window.Telegram.WebApp.initDataUnsafe);
+            
+            const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+            console.log('📱 Telegram user from initDataUnsafe:', tgUser);
             
             if (tgUser && tgUser.id) {
                 this.currentUser = {
-                    telegram_id: tgUser.id, // Основной ID для БД
+                    telegram_id: String(tgUser.id), // Преобразуем в строку
                     first_name: tgUser.first_name || '',
                     last_name: tgUser.last_name || '',
                     username: tgUser.username || '',
                     type: 'telegram'
                 };
                 
-                console.log('📱 Telegram user data:', this.currentUser);
+                console.log('✅ Telegram user data:', this.currentUser);
                 
                 // Создаем или находим пользователя в БД
-                await this.ensureUserInDatabase();
+                try {
+                    await this.ensureUserInDatabase();
+                    console.log('✅ User ensured in database');
+                } catch (error) {
+                    console.error('❌ Failed to ensure user in database:', error);
+                    alert('Ошибка подключения к серверу. Проверьте интернет-соединение.');
+                }
                 return;
             }
         }
         
         // Fallback для Telegram WebApp без данных пользователя
-        console.warn('⚠️ No Telegram user data, using test user');
+        console.warn('⚠️ No Telegram user data available');
+        console.warn('⚠️ Using fallback: creating unique ID based on device');
+        
+        // Создаем уникальный ID на основе устройства
+        let deviceId = localStorage.getItem('device_telegram_id');
+        if (!deviceId) {
+            deviceId = String(Date.now() + Math.floor(Math.random() * 10000));
+            localStorage.setItem('device_telegram_id', deviceId);
+            console.log('📱 Created new device ID:', deviceId);
+        }
+        
         this.currentUser = {
-            telegram_id: '123456789', // Тестовый ID как строка
-            first_name: 'Test User',
-            username: 'test_user',
-            type: 'telegram_test'
+            telegram_id: deviceId,
+            first_name: 'Telegram User',
+            username: 'tg_user_' + deviceId.substring(0, 6),
+            type: 'telegram_fallback'
         };
         
-        await this.ensureUserInDatabase();
+        console.log('⚠️ Using fallback user:', this.currentUser);
+        
+        try {
+            await this.ensureUserInDatabase();
+            console.log('✅ Fallback user ensured in database');
+        } catch (error) {
+            console.error('❌ Failed to ensure fallback user:', error);
+            alert('Ошибка подключения к серверу. Проверьте интернет-соединение.');
+        }
     }
 
     // Инициализация пользователя браузера
