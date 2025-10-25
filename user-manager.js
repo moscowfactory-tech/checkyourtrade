@@ -163,56 +163,45 @@ class UnifiedUserManager {
         return user.username || 'User';
     }
 
-    // Создать или найти пользователя в БД (улучшенная версия)
+    // Создать или найти пользователя в БД через Timeweb API
     async ensureUserInDatabase() {
-        console.log('💾 ENHANCED ensureUserInDatabase starting...');
+        console.log('💾 TIMEWEB: ensureUserInDatabase starting...');
         
-        if (!window.supabase) {
-            console.warn('⚠️ Supabase not available, skipping user creation');
-            return false;
-        }
-
         if (!this.currentUser || !this.currentUser.telegram_id) {
             console.error('❌ No current user or telegram_id available');
+            console.error('❌ Current user:', this.currentUser);
             return false;
         }
 
-        console.log('💾 Ensuring user exists in database...');
+        const API_URL = 'https://concerts-achievements-speak-wealth.trycloudflare.com/api';
+        
+        console.log('💾 Ensuring user exists in database via Timeweb API...');
         console.log('👤 Current user data:', this.currentUser);
+        console.log('👤 Telegram ID:', this.currentUser.telegram_id, 'Type:', typeof this.currentUser.telegram_id);
         
         try {
-            console.log('🔍 Step 1: Searching for existing user with telegram_id:', this.currentUser.telegram_id);
+            console.log('🔍 Step 1: Checking if user exists with telegram_id:', this.currentUser.telegram_id);
             
-            // Проверяем, есть ли пользователь
-            const { data: existingUsers, error: findError } = await window.supabase
-                .from('users')
-                .select('id, telegram_id, first_name')
-                .eq('telegram_id', this.currentUser.telegram_id);
-                
-            console.log('🔍 Step 2: Database lookup result:', { 
-                existingUsers, 
-                findError,
-                count: existingUsers?.length || 0 
-            });
+            // Проверяем, есть ли пользователь через Timeweb API
+            const checkResponse = await fetch(`${API_URL}/users?telegram_user_id=${this.currentUser.telegram_id}`);
+            const checkData = await checkResponse.json();
+            
+            console.log('🔍 Step 2: API response:', checkData);
 
-            if (findError) {
-                console.error('❌ Database lookup error:', findError);
-                return false;
-            }
-
-            if (existingUsers && existingUsers.length > 0) {
-                const existingUser = existingUsers[0];
+            if (checkData.data && checkData.data.length > 0) {
+                // Пользователь найден
+                const existingUser = checkData.data[0];
                 console.log('✅ Step 3: User found in database:', existingUser);
                 this.currentUser.uuid = existingUser.id;
                 console.log('✅ Step 4: UUID assigned to user:', this.currentUser.uuid);
-                // Зафиксируем регистрацию один раз, если ещё не фиксировали на этом устройстве
                 this.trackRegistrationOnce();
                 return true;
             } else {
+                // Пользователь не найден, создаем нового
                 console.log('🆕 Step 3: No existing user found, creating new user...');
                 
                 const newUserData = {
-                    telegram_id: this.currentUser.telegram_id,
+                    telegram_id: String(this.currentUser.telegram_id), // Преобразуем в строку
                     username: this.currentUser.username || null,
                     first_name: this.currentUser.first_name || 'Telegram User',
                     last_name: this.currentUser.last_name || null
@@ -220,32 +209,37 @@ class UnifiedUserManager {
                 
                 console.log('📝 Step 4: Creating user with data:', newUserData);
                 
-                // Создаем нового пользователя
-                const { data: newUser, error: createError } = await window.supabase
-                    .from('users')
-                    .insert(newUserData)
-                    .select('id')
-                    .single();
+                // Создаем пользователя через Timeweb API
+                const createResponse = await fetch(`${API_URL}/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newUserData)
+                });
+                
+                const createData = await createResponse.json();
+                console.log('🔍 Step 5: Create result:', createData);
 
-                console.log('🔍 Step 5: Create result:', { newUser, createError });
-
-                if (createError) {
-                    console.error('❌ Error creating user:', createError);
-                    // Если таблицы users нет или ошибка создания — хотя бы зафиксируем регистрацию один раз
+                if (createData.error) {
+                    console.error('❌ Error creating user:', createData.error);
                     this.trackRegistrationOnce();
                     return false;
-                } else {
+                } else if (createData.data && createData.data.length > 0) {
+                    const newUser = createData.data[0];
                     console.log('✅ Step 6: User created successfully:', newUser);
                     this.currentUser.uuid = newUser.id;
                     console.log('✅ Step 7: UUID assigned:', this.currentUser.uuid);
-                    // Записываем событие регистрации
                     this.trackRegistrationOnce();
                     return true;
+                } else {
+                    console.error('❌ Unexpected response format:', createData);
+                    return false;
                 }
             }
         } catch (error) {
             console.error('❌ Exception in ensureUserInDatabase:', error);
-            // В случае исключения также попытаемся зафиксировать регистрацию один раз
+            alert('Ошибка подключения к серверу. Проверьте интернет-соединение.');
             this.trackRegistrationOnce();
             return false;
         }
