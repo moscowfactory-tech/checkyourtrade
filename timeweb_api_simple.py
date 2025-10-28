@@ -71,6 +71,34 @@ def execute_query(sql, params=None, fetch=True):
 # ЭНДПОИНТЫ ДЛЯ СОВМЕСТИМОСТИ С ТЕКУЩИМ КОДОМ
 # ============================================================================
 
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Проверка работоспособности API"""
+    try:
+        # Проверяем подключение к БД
+        conn = get_db_connection()
+        if conn:
+            conn.close()
+            return jsonify({
+                'status': 'ok',
+                'message': 'API is running',
+                'database': 'connected',
+                'timestamp': datetime.now().isoformat()
+            }), 200
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Database connection failed',
+                'database': 'disconnected',
+                'timestamp': datetime.now().isoformat()
+            }), 503
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @app.route('/api/strategies', methods=['GET'])
 def get_strategies():
     """Получение стратегий пользователя"""

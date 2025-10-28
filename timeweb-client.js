@@ -2,8 +2,19 @@
 // Замена для supabase-config.js
 
 const TIMEWEB_CONFIG = {
-    // API endpoint - относительный путь (работает на том же домене)
-    apiUrl: 'https://concerts-achievements-speak-wealth.trycloudflare.com/api',
+    // 🌐 МНОЖЕСТВЕННЫЕ API ENDPOINTS - автоматический выбор рабочего
+    apiEndpoints: [
+        // ОСНОВНОЙ: Прямой Timeweb API (работает в РФ без VPN)
+        'https://YOUR_TIMEWEB_DOMAIN/api',  // ⚠️ ЗАМЕНИТЕ на ваш домен!
+        // или используйте IP:
+        // 'http://185.xxx.xxx.xxx:5000/api',  // ⚠️ ЗАМЕНИТЕ на ваш IP!
+        
+        // РЕЗЕРВНЫЙ: Cloudflare Tunnel (работает только с VPN)
+        'https://concerts-achievements-speak-wealth.trycloudflare.com/api',
+    ],
+    
+    // Текущий активный endpoint (определяется автоматически)
+    apiUrl: null,
     
     // Настройки для разработки
     development: {
@@ -14,10 +25,60 @@ const TIMEWEB_CONFIG = {
     timeout: 10000, // 10 секунд для обычных запросов
     retryAttempts: 3, // Количество попыток
     retryDelay: 1000, // Начальная задержка между попытками (экспоненциальная)
+    healthCheckTimeout: 2000, // 2 секунды для проверки доступности endpoint
     
     // Определение окружения
     isDevelopment: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 };
+
+// 🔍 АВТОМАТИЧЕСКИЙ ВЫБОР РАБОЧЕГО API ENDPOINT
+async function findWorkingEndpoint() {
+    console.log('🔍 Searching for working API endpoint...');
+    
+    const endpoints = TIMEWEB_CONFIG.isDevelopment 
+        ? [TIMEWEB_CONFIG.development.apiUrl]
+        : TIMEWEB_CONFIG.apiEndpoints;
+    
+    for (const endpoint of endpoints) {
+        try {
+            console.log(`🔄 Testing endpoint: ${endpoint}`);
+            
+            // Быстрая проверка доступности (2 секунды)
+            const response = await fetchWithTimeout(
+                `${endpoint}/health`,
+                { method: 'GET' },
+                TIMEWEB_CONFIG.healthCheckTimeout
+            );
+            
+            if (response.ok) {
+                console.log(`✅ Working endpoint found: ${endpoint}`);
+                TIMEWEB_CONFIG.apiUrl = endpoint;
+                
+                // Сохраняем в localStorage для быстрого доступа
+                try {
+                    localStorage.setItem('preferred_api_endpoint', endpoint);
+                } catch (e) {
+                    console.warn('⚠️ Failed to save preferred endpoint:', e);
+                }
+                
+                return endpoint;
+            }
+        } catch (error) {
+            console.warn(`⚠️ Endpoint unavailable: ${endpoint}`, error.message);
+        }
+    }
+    
+    // Если ни один endpoint не работает, пробуем использовать сохраненный
+    const savedEndpoint = localStorage.getItem('preferred_api_endpoint');
+    if (savedEndpoint) {
+        console.log(`📦 Using saved endpoint: ${savedEndpoint}`);
+        TIMEWEB_CONFIG.apiUrl = savedEndpoint;
+        return savedEndpoint;
+    }
+    
+    console.error('❌ No working API endpoint found!');
+    return null;
+}
 
 // Утилита для fetch с таймаутом
 async function fetchWithTimeout(url, options = {}, timeout = 10000) {
@@ -510,8 +571,23 @@ class TimewebCompatibility {
 let timewebClient;
 let timewebCompat;
 
-function initializeTimeweb() {
+async function initializeTimeweb() {
     try {
+        // 🔍 АВТОМАТИЧЕСКИЙ ВЫБОР РАБОЧЕГО ENDPOINT
+        console.log('🚀 Initializing Timeweb client with auto-endpoint selection...');
+        
+        // Сначала пробуем сохраненный endpoint для быстрого старта
+        const savedEndpoint = localStorage.getItem('preferred_api_endpoint');
+        if (savedEndpoint && !TIMEWEB_CONFIG.isDevelopment) {
+            console.log(`📦 Trying saved endpoint: ${savedEndpoint}`);
+            TIMEWEB_CONFIG.apiUrl = savedEndpoint;
+        } else if (TIMEWEB_CONFIG.isDevelopment) {
+            TIMEWEB_CONFIG.apiUrl = TIMEWEB_CONFIG.development.apiUrl;
+        } else {
+            // Используем первый endpoint по умолчанию
+            TIMEWEB_CONFIG.apiUrl = TIMEWEB_CONFIG.apiEndpoints[0];
+        }
+        
         timewebClient = new TimewebClient(TIMEWEB_CONFIG);
         timewebCompat = new TimewebCompatibility(timewebClient);
         
@@ -524,6 +600,18 @@ function initializeTimeweb() {
         
         console.log('✅ Timeweb client initialized successfully');
         console.log('🔗 API URL:', timewebClient.apiUrl);
+        
+        // 🔍 В ФОНЕ проверяем все endpoints и выбираем лучший
+        if (!TIMEWEB_CONFIG.isDevelopment) {
+            findWorkingEndpoint().then(workingEndpoint => {
+                if (workingEndpoint && workingEndpoint !== timewebClient.apiUrl) {
+                    console.log(`🔄 Switching to better endpoint: ${workingEndpoint}`);
+                    timewebClient.apiUrl = workingEndpoint;
+                }
+            }).catch(err => {
+                console.warn('⚠️ Failed to find working endpoint:', err);
+            });
+        }
         
         return timewebClient;
         
