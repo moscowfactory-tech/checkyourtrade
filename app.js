@@ -3070,21 +3070,39 @@ async function refreshStrategiesFromDB() {
 }
 
 // 💾 ФУНКЦИЯ ЗАГРУЗКИ СТРАТЕГИЙ ИЗ БД
+// ⚡ НЕБЛОКИРУЮЩАЯ ЗАГРУЗКА - UI РАБОТАЕТ ВСЕГДА!
 async function loadStrategiesFromDatabase() {
-    console.log('💾 loadStrategiesFromDatabase: Starting...');
+    console.log('💾 loadStrategiesFromDatabase: Starting (non-blocking)...');
     console.log('🔍 DEBUG: window.supabase exists:', !!window.supabase);
     console.log('🔍 DEBUG: window.userManager exists:', !!window.userManager);
     console.log('🔍 DEBUG: userManager.isInitialized:', window.userManager?.isInitialized);
     
+    // ⚡ КРИТИЧНО: Сначала показываем кешированные данные
+    let userId = window.userManager?.getUserId();
+    if (userId) {
+        const cacheKey = `strategies_${userId}`;
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+            try {
+                const parsed = JSON.parse(cachedData);
+                console.log('📦 Showing cached strategies immediately:', parsed.length);
+                strategies.length = 0;
+                strategies.push(...parsed);
+                forceUIUpdate(); // UI обновляется мгновенно!
+            } catch (e) {
+                console.warn('⚠️ Failed to parse cached strategies:', e);
+            }
+        }
+    }
+    
+    // Проверки делаем мягкими - не блокируем UI
     if (!window.supabase) {
-        console.error('❌ CRITICAL: Supabase not available');
-        showNotification('Ошибка загрузки стратегий: Нет подключения к БД', 'error');
+        console.warn('⚠️ Supabase not available - using cached data only');
         return;
     }
     
     if (!window.userManager) {
-        console.error('❌ CRITICAL: UserManager not available');
-        showNotification('Ошибка загрузки стратегий: Не инициализирован UserManager', 'error');
+        console.warn('⚠️ UserManager not available - using cached data only');
         return;
     }
     
@@ -3100,7 +3118,7 @@ async function loadStrategiesFromDatabase() {
         }
     }
     
-    let userId = window.userManager.getUserId();
+    userId = window.userManager.getUserId();
     console.log('👤 Loading strategies for user:', userId);
     
     if (!userId) {
@@ -3127,30 +3145,30 @@ async function loadStrategiesFromDatabase() {
         }
     }
     
+    // ⚡ ЗАГРУЗКА В ФОНЕ - НЕ БЛОКИРУЕТ UI
     try {
         console.log('🔍 DEBUG: About to query strategies for userId:', userId);
         console.log('🔍 DEBUG: Supabase client ready:', !!window.supabase.from);
         
-        // Пытаемся загрузить из кеша сначала для быстрого отображения
         const cacheKey = `strategies_${userId}`;
-        const cachedData = localStorage.getItem(cacheKey);
-        if (cachedData) {
-            try {
-                const parsed = JSON.parse(cachedData);
-                console.log('📦 Loaded strategies from cache:', parsed.length);
-                strategies.length = 0;
-                strategies.push(...parsed);
-                forceUIUpdate(); // Показываем кешированные данные сразу
-            } catch (e) {
-                console.warn('⚠️ Failed to parse cached strategies:', e);
-            }
-        }
         
-        const { data, error } = await window.supabase
+        // ⚡ ТАЙМАУТ 5 СЕКУНД - если API не отвечает, используем кеш
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('API timeout')), 5000)
+        );
+        
+        const apiPromise = window.supabase
             .from('strategies')
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
+        
+        // ⚡ ГОНКА: API vs ТАЙМАУТ - что быстрее
+        const { data, error } = await Promise.race([apiPromise, timeoutPromise])
+            .catch(err => {
+                console.warn('⚠️ API request failed or timed out:', err.message);
+                return { data: null, error: err };
+            });
         
         console.log('🔍 DEBUG: Query completed. Error:', error, 'Data count:', data?.length || 0);
         
@@ -3159,11 +3177,16 @@ async function loadStrategiesFromDatabase() {
             console.error('❌ Error details:', JSON.stringify(error, null, 2));
             
             // Если есть кешированные данные, используем их
+            const cachedData = localStorage.getItem(cacheKey);
             if (cachedData) {
                 console.log('📦 Using cached strategies due to API error');
-                showNotification('Загружены сохраненные стратегии (нет подключения к серверу)', 'warning');
+                // НЕ показываем уведомление - это нормально при переключении endpoints
+                // showNotification('Загружены сохраненные стратегии (нет подключения к серверу)', 'warning');
             } else {
-                showNotification(`Ошибка загрузки стратегий: ${error.message || error.code || 'Неизвестная ошибка'}`, 'error');
+                // Показываем ошибку только если нет кеша И данные не загрузились
+                if (!strategies.length) {
+                    showNotification('Не удалось загрузить стратегии. Проверьте подключение к интернету.', 'error');
+                }
             }
         } else {
             strategies.length = 0; // Очищаем массив
