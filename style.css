@@ -1040,6 +1040,39 @@ main {
   font-size: 12px;
 }
 
+/* Кнопка "Редактировать" в модальном окне просмотра стратегии */
+.btn-edit-strategy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-24);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-background);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+  -webkit-tap-highlight-color: rgba(79, 209, 199, 0.3);
+  touch-action: manipulation;
+}
+
+.btn-edit-strategy:hover {
+  background: #3db8af;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 209, 199, 0.4);
+}
+
+.btn-edit-strategy:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(79, 209, 199, 0.3);
+}
+
+.btn-edit-strategy i {
+  font-size: 14px;
+}
+
 .strategy-actions {
   display: flex;
   gap: var(--space-8);

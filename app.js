@@ -1801,14 +1801,17 @@ function viewStrategy(strategyId) {
             <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
                 <div class="modal-header">
                     <h3 id="viewStrategyTitle">📊 Стратегия</h3>
-                    <button class="close-modal" onclick="document.getElementById('viewStrategyModal').style.display='none'">&times;</button>
+                    <button class="btn-close" id="closeViewStrategyModal" aria-label="Закрыть">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
                 <div id="viewStrategyBody" class="modal-body" style="flex: 1; overflow-y: auto; padding: 1.5rem;">
                     <!-- Content will be inserted here -->
                 </div>
                 <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: flex-end; padding: 1rem; border-top: 1px solid #2d3748;">
-                    <button class="btn btn-secondary" onclick="document.getElementById('viewStrategyModal').style.display='none'">Закрыть</button>
-                    <button class="btn btn-primary" id="viewStrategyEditBtn">Редактировать</button>
+                    <button class="btn-edit-strategy" id="viewStrategyEditBtn">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </button>
                 </div>
             </div>
         `;
@@ -1820,6 +1823,19 @@ function viewStrategy(strategyId) {
                 viewModal.style.display = 'none';
             }
         });
+        
+        // Обработчик для кнопки закрытия с touch поддержкой
+        const closeBtn = document.getElementById('closeViewStrategyModal');
+        if (closeBtn) {
+            ['click', 'touchend'].forEach(eventType => {
+                closeBtn.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('📱 Close view strategy modal clicked/touched');
+                    viewModal.style.display = 'none';
+                }, { passive: false });
+            });
+        }
         
         console.log('✅ View modal created');
     }
