@@ -17,15 +17,18 @@ class HealthMonitor {
 
     // Запуск мониторинга
     start() {
-        console.log('🏥 Health Monitor started');
+        console.log('🏥 Health Monitor started (DISABLED - too many false positives)');
+        
+        // ВРЕМЕННО ОТКЛЮЧЕН - слишком много ложных срабатываний
+        // Health Monitor будет включен после исправления CORS проблем
         
         // Первая проверка через 2 секунды после загрузки
-        setTimeout(() => this.performHealthCheck(), 2000);
+        // setTimeout(() => this.performHealthCheck(), 2000);
         
         // Периодическая проверка каждые 30 секунд
-        this.checkInterval = setInterval(() => {
-            this.performHealthCheck();
-        }, 30000);
+        // this.checkInterval = setInterval(() => {
+        //     this.performHealthCheck();
+        // }, 30000);
     }
 
     // Выполнить проверку здоровья

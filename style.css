@@ -1054,20 +1054,22 @@ main {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.85);
   display: none; /* Hidden by default */
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 99999 !important; /* МАКСИМАЛЬНЫЙ z-index */
   padding: var(--space-16);
   overflow-y: auto;
 }
 
 .modal.active,
-.modal[style*="display: flex"] {
+.modal[style*="display: flex"],
+.modal[style*="display:flex"] {
   display: flex !important;
-  opacity: 1;
-  visibility: visible;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: all !important;
 }
 
 .modal-backdrop {
@@ -1084,21 +1086,25 @@ main {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
   max-width: 600px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--color-border);
-  z-index: 1;
-  transform: scale(0.9);
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  position: relative;
+  margin: auto;
+  transform: scale(1) !important; /* Всегда полный размер */
   transition: transform var(--duration-normal) var(--ease-standard);
-  margin: var(--space-24) auto;
+  max-height: 90vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
+  z-index: 100000 !important; /* Еще выше чем модал */
 }
 
-.modal.active .modal-content {
-  transform: scale(1);
+.modal.active .modal-content,
+.modal[style*="display: flex"] .modal-content,
+.modal[style*="display:flex"] .modal-content {
+  transform: scale(1) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .modal-header {
