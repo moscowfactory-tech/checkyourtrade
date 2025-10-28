@@ -5,9 +5,7 @@ const TIMEWEB_CONFIG = {
     // 🌐 МНОЖЕСТВЕННЫЕ API ENDPOINTS - автоматический выбор рабочего
     apiEndpoints: [
         // ОСНОВНОЙ: Прямой Timeweb API (работает в РФ без VPN)
-        'https://YOUR_TIMEWEB_DOMAIN/api',  // ⚠️ ЗАМЕНИТЕ на ваш домен!
-        // или используйте IP:
-        // 'http://185.xxx.xxx.xxx:5000/api',  // ⚠️ ЗАМЕНИТЕ на ваш IP!
+        'http://185.207.64.160:5000/api',  // Timeweb VPS IP
         
         // РЕЗЕРВНЫЙ: Cloudflare Tunnel (работает только с VPN)
         'https://concerts-achievements-speak-wealth.trycloudflare.com/api',
