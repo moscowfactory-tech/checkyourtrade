@@ -1044,9 +1044,12 @@ main {
 .btn-edit-strategy {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-8);
-  padding: var(--space-12) var(--space-24);
-  font-size: var(--font-size-base);
+  padding: 10px 20px;
+  min-width: 160px;
+  max-width: 200px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--color-background);
   background: var(--color-primary);
