@@ -2998,6 +2998,21 @@ async function loadStrategiesFromDatabase() {
         console.log('🔍 DEBUG: About to query strategies for userId:', userId);
         console.log('🔍 DEBUG: Supabase client ready:', !!window.supabase.from);
         
+        // Пытаемся загрузить из кеша сначала для быстрого отображения
+        const cacheKey = `strategies_${userId}`;
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+            try {
+                const parsed = JSON.parse(cachedData);
+                console.log('📦 Loaded strategies from cache:', parsed.length);
+                strategies.length = 0;
+                strategies.push(...parsed);
+                forceUIUpdate(); // Показываем кешированные данные сразу
+            } catch (e) {
+                console.warn('⚠️ Failed to parse cached strategies:', e);
+            }
+        }
+        
         const { data, error } = await window.supabase
             .from('strategies')
             .select('*')
@@ -3009,11 +3024,25 @@ async function loadStrategiesFromDatabase() {
         if (error) {
             console.error('❌ Error loading strategies:', error);
             console.error('❌ Error details:', JSON.stringify(error, null, 2));
-            showNotification(`Ошибка загрузки стратегий: ${error.message || error.code || 'Неизвестная ошибка'}`, 'error');
+            
+            // Если есть кешированные данные, используем их
+            if (cachedData) {
+                console.log('📦 Using cached strategies due to API error');
+                showNotification('Загружены сохраненные стратегии (нет подключения к серверу)', 'warning');
+            } else {
+                showNotification(`Ошибка загрузки стратегий: ${error.message || error.code || 'Неизвестная ошибка'}`, 'error');
+            }
         } else {
             strategies.length = 0; // Очищаем массив
             if (data && Array.isArray(data)) {
                 strategies.push(...data);
+                // Сохраняем в кеш для offline режима
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(data));
+                    console.log('💾 Strategies cached successfully');
+                } catch (e) {
+                    console.warn('⚠️ Failed to cache strategies:', e);
+                }
             }
             console.log('🔄 Forcing UI update after loading strategies...');
             

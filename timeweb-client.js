@@ -10,16 +10,73 @@ const TIMEWEB_CONFIG = {
         apiUrl: 'http://localhost:5000/api'
     },
     
+    // Таймауты для мобильных сетей
+    timeout: 10000, // 10 секунд для обычных запросов
+    retryAttempts: 3, // Количество попыток
+    retryDelay: 1000, // Начальная задержка между попытками (экспоненциальная)
+    
     // Определение окружения
     isDevelopment: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 };
+
+// Утилита для fetch с таймаутом
+async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('Request timeout');
+        }
+        throw error;
+    }
+}
+
+// Утилита для retry с экспоненциальной задержкой
+async function fetchWithRetry(url, options = {}, maxAttempts = 3, baseDelay = 1000, timeout = 10000) {
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            console.log(`🔄 Attempt ${attempt}/${maxAttempts} for ${url}`);
+            const response = await fetchWithTimeout(url, options, timeout);
+            console.log(`✅ Success on attempt ${attempt}`);
+            return response;
+        } catch (error) {
+            lastError = error;
+            console.warn(`⚠️ Attempt ${attempt} failed:`, error.message);
+            
+            if (attempt < maxAttempts) {
+                const delay = baseDelay * Math.pow(2, attempt - 1); // Экспоненциальная задержка
+                console.log(`⏳ Waiting ${delay}ms before retry...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    
+    console.error(`❌ All ${maxAttempts} attempts failed`);
+    throw lastError;
+}
 
 // Класс для работы с Timeweb API (эмуляция Supabase)
 class TimewebClient {
     constructor(config) {
         this.config = config;
         this.apiUrl = config.isDevelopment ? config.development.apiUrl : config.apiUrl;
+        this.timeout = config.timeout || 10000;
+        this.retryAttempts = config.retryAttempts || 3;
+        this.retryDelay = config.retryDelay || 1000;
         console.log('🔗 Timeweb API URL:', this.apiUrl);
+        console.log('⏱️ Timeout:', this.timeout, 'ms');
+        console.log('🔄 Retry attempts:', this.retryAttempts);
     }
 
     // Нормализация данных для вставки под API Timeweb
@@ -169,11 +226,17 @@ class TimewebTable {
                         endpoint = 'analysis_results';
                     }
                     
-                    const response = await fetch(`${this.apiUrl}/${endpoint}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
+                    const response = await fetchWithRetry(
+                        `${this.apiUrl}/${endpoint}`,
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        },
+                        TIMEWEB_CONFIG.retryAttempts,
+                        TIMEWEB_CONFIG.retryDelay,
+                        TIMEWEB_CONFIG.timeout
+                    );
                     let parsed = null;
                     try { parsed = await response.json(); } catch (_) {}
                     if (!response.ok) {
@@ -213,7 +276,13 @@ class TimewebTable {
             }
             
             const url = `${this.apiUrl}/${endpoint}?${params.toString()}`;
-            const response = await fetch(url);
+            const response = await fetchWithRetry(
+                url,
+                {},
+                TIMEWEB_CONFIG.retryAttempts,
+                TIMEWEB_CONFIG.retryDelay,
+                TIMEWEB_CONFIG.timeout
+            );
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -228,7 +297,23 @@ class TimewebTable {
             return result;
             
         } catch (error) {
-            console.error('Table query error:', error);
+            console.error('❌ Table query error:', error);
+            
+            // Понятные сообщения об ошибках для пользователя
+            let userMessage = 'Ошибка подключения к серверу';
+            if (error.message === 'Request timeout') {
+                userMessage = 'Превышено время ожидания. Проверьте интернет-соединение.';
+            } else if (error.message.includes('Failed to fetch')) {
+                userMessage = 'Нет подключения к интернету';
+            } else if (error.message.includes('NetworkError')) {
+                userMessage = 'Ошибка сети. Проверьте подключение.';
+            }
+            
+            // Показываем уведомление пользователю
+            if (window.showNotification) {
+                window.showNotification(userMessage, 'error');
+            }
+            
             return { data: null, error: error.message };
         }
     }
