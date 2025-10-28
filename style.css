@@ -1061,6 +1061,7 @@ main {
   z-index: 99999 !important; /* МАКСИМАЛЬНЫЙ z-index */
   padding: var(--space-16);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Плавная прокрутка на iOS */
 }
 
 .modal.active,
@@ -1070,6 +1071,20 @@ main {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: all !important;
+}
+
+/* МОБИЛЬНАЯ ПОДДЕРЖКА: улучшаем touch взаимодействие */
+.strategy-card,
+.strategy-card-content,
+button,
+[data-section],
+.btn,
+.btn-icon {
+  -webkit-tap-highlight-color: rgba(79, 209, 199, 0.3);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .modal-backdrop {

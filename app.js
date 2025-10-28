@@ -594,14 +594,18 @@ function setupEventListeners() {
         const section = btn.getAttribute('data-section');
         console.log(`Button ${index + 1}: section="${section}", text="${btn.textContent.trim()}"`);
         
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetSection = e.target.getAttribute('data-section') || e.target.closest('[data-section]')?.getAttribute('data-section');
-            console.log('Section button clicked:', targetSection);
-            if (targetSection) {
-                showSection(targetSection);
-                updateActiveNavLink(targetSection);
-            }
+        // МОБИЛЬНАЯ ПОДДЕРЖКА: добавляем touchend для мобильных устройств
+        ['click', 'touchend'].forEach(eventType => {
+            btn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const targetSection = e.target.getAttribute('data-section') || e.target.closest('[data-section]')?.getAttribute('data-section');
+                console.log('📱 Section button clicked/touched:', targetSection, 'event:', eventType);
+                if (targetSection) {
+                    showSection(targetSection);
+                    updateActiveNavLink(targetSection);
+                }
+            }, { passive: false });
         });
     });
     
@@ -1792,7 +1796,7 @@ function renderStrategies() {
         strategyCard.style.cursor = 'pointer';
         
         strategyCard.innerHTML = `
-            <div class="strategy-card-content" onclick="viewStrategy('${strategy.id}')">
+            <div class="strategy-card-content" data-strategy-id="${strategy.id}">
                 <h4>${strategy.name}</h4>
                 <p>${strategy.description || 'Без описания'}</p>
                 <div class="strategy-meta">
@@ -1800,10 +1804,45 @@ function renderStrategies() {
                 </div>
             </div>
             <div class="strategy-actions">
-                <button class="btn-icon edit" onclick="event.stopPropagation(); editStrategy('${strategy.id}')" title="Редактировать"><i class="fas fa-edit"></i></button>
-                <button class="btn-icon delete" onclick="event.stopPropagation(); deleteStrategy('${strategy.id}')" title="Удалить"><i class="fas fa-trash-alt"></i></button>
+                <button class="btn-icon edit" data-action="edit" data-strategy-id="${strategy.id}" title="Редактировать"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon delete" data-action="delete" data-strategy-id="${strategy.id}" title="Удалить"><i class="fas fa-trash-alt"></i></button>
             </div>
         `;
+        
+        // МОБИЛЬНАЯ ПОДДЕРЖКА: addEventListener вместо onclick
+        const cardContent = strategyCard.querySelector('.strategy-card-content');
+        const editBtn = strategyCard.querySelector('[data-action="edit"]');
+        const deleteBtn = strategyCard.querySelector('[data-action="delete"]');
+        
+        // Клик по карточке - просмотр стратегии (поддержка touch)
+        ['click', 'touchend'].forEach(eventType => {
+            cardContent.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Card clicked/touched:', strategy.id);
+                viewStrategy(strategy.id);
+            }, { passive: false });
+        });
+        
+        // Кнопка редактирования
+        ['click', 'touchend'].forEach(eventType => {
+            editBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Edit button clicked/touched:', strategy.id);
+                editStrategy(strategy.id);
+            }, { passive: false });
+        });
+        
+        // Кнопка удаления
+        ['click', 'touchend'].forEach(eventType => {
+            deleteBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Delete button clicked/touched:', strategy.id);
+                deleteStrategy(strategy.id);
+            }, { passive: false });
+        });
         
         strategiesGrid.appendChild(strategyCard);
     });
