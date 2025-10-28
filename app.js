@@ -676,44 +676,118 @@ function setupEventListeners() {
         });
     }
     
-    createStrategyBtn.addEventListener('click', () => openModal());
-    closeModalBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
+    // МОБИЛЬНАЯ ПОДДЕРЖКА: добавляем touch события для кнопок модального окна
+    ['click', 'touchend'].forEach(eventType => {
+        createStrategyBtn.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📱 Create strategy button clicked/touched');
+            openModal();
+        }, { passive: false });
+        
+        closeModalBtn.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📱 Close modal button clicked/touched');
+            closeModal();
+        }, { passive: false });
+        
+        cancelBtn.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📱 Cancel button clicked/touched');
+            closeModal();
+        }, { passive: false });
+    });
+    
     strategyModal.addEventListener('click', (e) => {
         if (e.target === strategyModal) closeModal();
     });
     strategyForm.addEventListener('submit', handleStrategySubmit);
-    addFieldBtn.addEventListener('click', addFieldBuilder);
+    
+    // МОБИЛЬНАЯ ПОДДЕРЖКА: touch события для кнопок
+    ['click', 'touchend'].forEach(eventType => {
+        addFieldBtn.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📱 Add field button clicked/touched');
+            addFieldBuilder();
+        }, { passive: false });
+        
+        prevBtn.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📱 Prev button clicked/touched');
+            handlePrevCard();
+        }, { passive: false });
+        
+        nextBtn.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📱 Next button clicked/touched');
+            handleNextCard();
+        }, { passive: false });
+        
+        if (newAnalysisBtn) {
+            newAnalysisBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 New analysis button clicked/touched');
+                startNewAnalysis();
+            }, { passive: false });
+        }
+    });
     
     strategySelect.addEventListener('change', handleStrategySelection);
     
-    prevBtn.addEventListener('click', handlePrevCard);
-    nextBtn.addEventListener('click', handleNextCard);
-    if (newAnalysisBtn) {
-        newAnalysisBtn.addEventListener('click', startNewAnalysis);
-    }
-    
     const backToAnalysesBtn = document.getElementById('backToAnalysesBtn');
     if (backToAnalysesBtn) {
-        backToAnalysesBtn.addEventListener('click', () => {
-            openAnalysesModal();
+        ['click', 'touchend'].forEach(eventType => {
+            backToAnalysesBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Back to analyses button clicked/touched');
+                openAnalysesModal();
+            }, { passive: false });
         });
     }
     
     // My Analyses Modal Event Listeners
     if (myAnalysesBtn) {
-        myAnalysesBtn.addEventListener('click', openAnalysesModal);
+        ['click', 'touchend'].forEach(eventType => {
+            myAnalysesBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 My analyses button clicked/touched');
+                openAnalysesModal();
+            }, { passive: false });
+        });
         console.log('My Analyses button event listener added');
     } else {
         console.error('myAnalysesBtn not found');
     }
     
+    // МОБИЛЬНАЯ ПОДДЕРЖКА: touch события для модальных окон анализов
     if (closeAnalysesModalBtn) {
-        closeAnalysesModalBtn.addEventListener('click', closeAnalysesModal);
+        ['click', 'touchend'].forEach(eventType => {
+            closeAnalysesModalBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Close analyses modal button clicked/touched');
+                closeAnalysesModal();
+            }, { passive: false });
+        });
     }
     
     if (closeAnalysesBtn) {
-        closeAnalysesBtn.addEventListener('click', closeAnalysesModal);
+        ['click', 'touchend'].forEach(eventType => {
+            closeAnalysesBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Close analyses button clicked/touched');
+                closeAnalysesModal();
+            }, { passive: false });
+        });
     }
     
     if (analysesModal) {
@@ -722,31 +796,67 @@ function setupEventListeners() {
         });
     }
     
-    // Support Modal Event Listeners
+    // Support Modal Event Listeners - МОБИЛЬНАЯ ПОДДЕРЖКА
     if (supportProjectBtn) {
-        supportProjectBtn.addEventListener('click', openSupportModal);
+        ['click', 'touchend'].forEach(eventType => {
+            supportProjectBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Support project button (header) clicked/touched');
+                openSupportModal();
+            }, { passive: false });
+        });
         console.log('Support project button (header) event listener added');
     } else {
         console.error('supportProjectBtn not found');
     }
     
     if (supportProjectFooterBtn) {
-        supportProjectFooterBtn.addEventListener('click', openSupportModal);
+        ['click', 'touchend'].forEach(eventType => {
+            supportProjectFooterBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Support project button (footer) clicked/touched');
+                openSupportModal();
+            }, { passive: false });
+        });
         console.log('Support project button (footer) event listener added');
     } else {
         console.error('supportProjectFooterBtn not found');
     }
     
+    // МОБИЛЬНАЯ ПОДДЕРЖКА: touch события для кнопок поддержки
     if (closeSupportModalBtn) {
-        closeSupportModalBtn.addEventListener('click', closeSupportModal);
+        ['click', 'touchend'].forEach(eventType => {
+            closeSupportModalBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Close support modal button clicked/touched');
+                closeSupportModal();
+            }, { passive: false });
+        });
     }
     
     if (closeSupportBtn) {
-        closeSupportBtn.addEventListener('click', closeSupportModal);
+        ['click', 'touchend'].forEach(eventType => {
+            closeSupportBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Close support button clicked/touched');
+                closeSupportModal();
+            }, { passive: false });
+        });
     }
     
     if (copyAddressBtn) {
-        copyAddressBtn.addEventListener('click', copyWalletAddress);
+        ['click', 'touchend'].forEach(eventType => {
+            copyAddressBtn.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Copy address button clicked/touched');
+                copyWalletAddress();
+            }, { passive: false });
+        });
     }
     
     if (supportModal) {
@@ -755,10 +865,17 @@ function setupEventListeners() {
         });
     }
     
-    // Мобильная иконка поддержки
+    // Мобильная иконка поддержки - МОБИЛЬНАЯ ПОДДЕРЖКА
     const mobileSupportIcon = document.getElementById('mobileSupportIcon');
     if (mobileSupportIcon) {
-        mobileSupportIcon.addEventListener('click', openSupportModal);
+        ['click', 'touchend'].forEach(eventType => {
+            mobileSupportIcon.addEventListener(eventType, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('📱 Mobile support icon clicked/touched');
+                openSupportModal();
+            }, { passive: false });
+        });
         console.log('Mobile support icon event listener added');
     }
     
