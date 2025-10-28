@@ -1793,7 +1793,6 @@ function renderStrategies() {
         const totalInputs = fieldsArr.reduce((sum, field) => sum + (Array.isArray(field?.inputs) ? field.inputs.length : 0), 0);
         const strategyCard = document.createElement('div');
         strategyCard.className = 'strategy-card';
-        strategyCard.style.cursor = 'pointer';
         
         strategyCard.innerHTML = `
             <div class="strategy-card-content" data-strategy-id="${strategy.id}">
@@ -1801,6 +1800,9 @@ function renderStrategies() {
                 <p>${strategy.description || 'Без описания'}</p>
                 <div class="strategy-meta">
                     <span class="fields-count">${fieldsArr.length} пунктов, ${totalInputs} полей</span>
+                    <button class="btn-details" data-action="view" data-strategy-id="${strategy.id}" title="Подробнее">
+                        <i class="fas fa-eye"></i> Подробнее
+                    </button>
                 </div>
             </div>
             <div class="strategy-actions">
@@ -1810,16 +1812,16 @@ function renderStrategies() {
         `;
         
         // МОБИЛЬНАЯ ПОДДЕРЖКА: addEventListener вместо onclick
-        const cardContent = strategyCard.querySelector('.strategy-card-content');
+        const viewBtn = strategyCard.querySelector('[data-action="view"]');
         const editBtn = strategyCard.querySelector('[data-action="edit"]');
         const deleteBtn = strategyCard.querySelector('[data-action="delete"]');
         
-        // Клик по карточке - просмотр стратегии (поддержка touch)
+        // Кнопка "Подробнее" - просмотр стратегии (поддержка touch)
         ['click', 'touchend'].forEach(eventType => {
-            cardContent.addEventListener(eventType, (e) => {
+            viewBtn.addEventListener(eventType, (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('📱 Card clicked/touched:', strategy.id);
+                console.log('📱 View button clicked/touched:', strategy.id);
                 viewStrategy(strategy.id);
             }, { passive: false });
         });
