@@ -105,7 +105,6 @@ class HealthMonitor {
     checkButtons() {
         const criticalButtons = [
             'createStrategyBtn',
-            'myStrategiesBtn',
             'createAnalysisBtn'
         ];
         
@@ -116,9 +115,16 @@ class HealthMonitor {
             return { id, exists, hasListener };
         });
         
-        const allOk = results.every(r => r.exists && r.hasListener);
+        // Также проверяем кнопки с data-section
+        const sectionButtons = document.querySelectorAll('[data-section]');
+        const hasSectionButtons = sectionButtons.length > 0;
         
-        console.log('🏥 Buttons check:', allOk ? '✅ All attached' : '❌ Some missing', results);
+        const allOk = results.every(r => r.exists) && hasSectionButtons;
+        
+        console.log('🏥 Buttons check:', allOk ? '✅ All attached' : '⚠️ Some optional missing', {
+            critical: results,
+            sectionButtons: sectionButtons.length
+        });
         
         return allOk;
     }

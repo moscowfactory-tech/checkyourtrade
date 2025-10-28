@@ -1660,57 +1660,104 @@ function viewStrategy(strategyId) {
     const strategy = strategies.find(s => s.id === strategyId);
     if (!strategy) {
         console.error('❌ Strategy not found:', strategyId);
+        showNotification('Стратегия не найдена', 'error');
         return;
     }
     
+    console.log('📊 Strategy found:', strategy);
     const fieldsArr = parseStrategyFields(strategy);
+    console.log('📋 Fields parsed:', fieldsArr);
     
-    // Создаем модальное окно для просмотра
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3>📊 ${strategy.name}</h3>
-                <button class="close-modal" onclick="this.closest('.modal').remove()">&times;</button>
-            </div>
-            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
-                ${strategy.description ? `<p style="color: #a0aec0; margin-bottom: 1.5rem;">${strategy.description}</p>` : ''}
-                
-                ${fieldsArr.length > 0 ? `
-                    <div style="margin-top: 1rem;">
-                        <h4 style="color: #4fd1c7; margin-bottom: 1rem;">Основания для входа:</h4>
-                        ${fieldsArr.map((field, index) => `
-                            <div style="background: #1a1f2e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid #4fd1c7;">
-                                <strong style="color: #ffffff; display: block; margin-bottom: 0.5rem;">${index + 1}. ${field.name || field.title || 'Без названия'}</strong>
-                                ${field.subpoints && field.subpoints.length > 0 ? `
-                                    <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
-                                        ${field.subpoints.map(sub => `
-                                            <li style="color: #a0aec0; margin-bottom: 0.25rem;">${sub}</li>
-                                        `).join('')}
-                                    </ul>
-                                ` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : '<p style="color: #a0aec0;">Нет оснований</p>'}
-            </div>
-            <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: flex-end;">
-                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Закрыть</button>
-                <button class="btn btn-primary" onclick="this.closest('.modal').remove(); editStrategy('${strategy.id}')">Редактировать</button>
-            </div>
-        </div>
-    `;
+    // Используем существующее модальное окно или создаем новое
+    let viewModal = document.getElementById('viewStrategyModal');
     
-    document.body.appendChild(modal);
+    if (!viewModal) {
+        console.log('🔧 Creating new view modal...');
+        viewModal = document.createElement('div');
+        viewModal.id = 'viewStrategyModal';
+        viewModal.className = 'modal';
+        viewModal.innerHTML = `
+            <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+                <div class="modal-header">
+                    <h3 id="viewStrategyTitle">📊 Стратегия</h3>
+                    <button class="close-modal" onclick="document.getElementById('viewStrategyModal').style.display='none'">&times;</button>
+                </div>
+                <div id="viewStrategyBody" class="modal-body" style="flex: 1; overflow-y: auto; padding: 1.5rem;">
+                    <!-- Content will be inserted here -->
+                </div>
+                <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: flex-end; padding: 1rem; border-top: 1px solid #2d3748;">
+                    <button class="btn btn-secondary" onclick="document.getElementById('viewStrategyModal').style.display='none'">Закрыть</button>
+                    <button class="btn btn-primary" id="viewStrategyEditBtn">Редактировать</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(viewModal);
+        
+        // Закрытие по клику вне модального окна
+        viewModal.addEventListener('click', (e) => {
+            if (e.target === viewModal) {
+                viewModal.style.display = 'none';
+            }
+        });
+        
+        console.log('✅ View modal created');
+    }
     
-    // Закрытие по клику вне модального окна
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
+    // Заполняем контент
+    const titleEl = document.getElementById('viewStrategyTitle');
+    const bodyEl = document.getElementById('viewStrategyBody');
+    const editBtn = document.getElementById('viewStrategyEditBtn');
+    
+    if (titleEl) titleEl.textContent = `📊 ${strategy.name}`;
+    
+    if (bodyEl) {
+        let bodyHTML = '';
+        
+        if (strategy.description) {
+            bodyHTML += `<p style="color: #a0aec0; margin-bottom: 1.5rem; font-size: 1rem;">${strategy.description}</p>`;
         }
-    });
+        
+        if (fieldsArr.length > 0) {
+            bodyHTML += `
+                <div style="margin-top: 1rem;">
+                    <h4 style="color: #4fd1c7; margin-bottom: 1rem; font-size: 1.1rem;">Основания для входа:</h4>
+                    ${fieldsArr.map((field, index) => `
+                        <div style="background: #1a1f2e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid #4fd1c7;">
+                            <strong style="color: #ffffff; display: block; margin-bottom: 0.5rem; font-size: 1rem;">${index + 1}. ${field.name || field.title || 'Без названия'}</strong>
+                            ${field.subpoints && field.subpoints.length > 0 ? `
+                                <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0; list-style: disc;">
+                                    ${field.subpoints.map(sub => `
+                                        <li style="color: #a0aec0; margin-bottom: 0.25rem; font-size: 0.95rem;">${sub}</li>
+                                    `).join('')}
+                                </ul>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            bodyHTML += '<p style="color: #a0aec0; text-align: center; padding: 2rem;">Нет оснований</p>';
+        }
+        
+        bodyEl.innerHTML = bodyHTML;
+        console.log('✅ Modal content updated');
+    }
+    
+    if (editBtn) {
+        editBtn.onclick = () => {
+            viewModal.style.display = 'none';
+            editStrategy(strategy.id);
+        };
+    }
+    
+    // Показываем модальное окно
+    viewModal.style.display = 'flex';
+    console.log('✅ Modal displayed');
+    
+    // Трекаем событие
+    if (typeof trackEvent === 'function') {
+        trackEvent('strategy_viewed', { strategy_id: strategyId });
+    }
 }
 
 function renderStrategies() {
