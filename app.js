@@ -1808,7 +1808,7 @@ function viewStrategy(strategyId) {
                 <div id="viewStrategyBody" class="modal-body" style="flex: 1; overflow-y: auto; padding: 1.5rem;">
                     <!-- Content will be inserted here -->
                 </div>
-                <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: flex-end; padding: 1rem; border-top: 1px solid #2d3748;">
+                <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: center; padding: 1rem; border-top: 1px solid #2d3748;">
                     <button class="btn-edit-strategy" id="viewStrategyEditBtn">
                         <i class="fas fa-edit"></i> Редактировать
                     </button>
@@ -3175,6 +3175,9 @@ async function loadStrategiesFromDatabase() {
         if (error) {
             console.error('❌ Error loading strategies:', error);
             console.error('❌ Error details:', JSON.stringify(error, null, 2));
+            console.error('❌ Error message:', error.message);
+            console.error('❌ Error code:', error.code);
+            console.error('❌ Current API URL:', window.supabase?.config?.apiUrl || 'unknown');
             
             // Если есть кешированные данные, используем их
             const cachedData = localStorage.getItem(cacheKey);
@@ -3185,7 +3188,9 @@ async function loadStrategiesFromDatabase() {
             } else {
                 // Показываем ошибку только если нет кеша И данные не загрузились
                 if (!strategies.length) {
-                    showNotification('Не удалось загрузить стратегии. Проверьте подключение к интернету.', 'error');
+                    const errorMsg = error.message || error.code || 'Неизвестная ошибка';
+                    console.error('🚨 Showing error to user:', errorMsg);
+                    showNotification(`Ошибка подключения к серверу: ${errorMsg}`, 'error');
                 }
             }
         } else {

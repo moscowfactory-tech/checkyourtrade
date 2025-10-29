@@ -1209,20 +1209,28 @@ button,
   color: var(--color-text);
 }
 
-.modal-close {
+.modal-close,
+.btn-close {
   background: none;
   border: none;
   font-size: 32px; /* Увеличил размер крестика */
   cursor: pointer;
-  color: var(--color-text-secondary);
+  color: var(--color-primary); /* Голубой цвет как в других модальных окнах */
   padding: var(--space-2); /* Уменьшил отступы */
   border-radius: var(--radius-base);
   transition: all var(--duration-fast) var(--ease-standard);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.modal-close:hover {
+.modal-close:hover,
+.btn-close:hover {
   background: var(--color-secondary);
-  color: var(--color-text);
+  color: var(--color-primary-hover);
+  transform: rotate(90deg);
 }
 
 .modal-body {
