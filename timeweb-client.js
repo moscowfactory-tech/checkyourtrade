@@ -4,12 +4,11 @@
 const TIMEWEB_CONFIG = {
     // 🌐 МНОЖЕСТВЕННЫЕ API ENDPOINTS - автоматический выбор рабочего
     apiEndpoints: [
-        // ОСНОВНОЙ: Cloudflare Tunnel (HTTPS, работает с VPN)
-        'https://concerts-achievements-speak-wealth.trycloudflare.com/api',
+        // ОСНОВНОЙ: Timeweb API с SSL (HTTPS, работает в РФ без VPN!)
+        'https://api.tradeanalyzer.ru/api',
         
-        // РЕЗЕРВНЫЙ: Прямой Timeweb API (HTTP, только для десктопа)
-        // ВНИМАНИЕ: Не работает в Telegram из-за Mixed Content (HTTPS → HTTP)
-        // 'http://185.207.64.160:5000/api',
+        // РЕЗЕРВНЫЙ: Cloudflare Tunnel (HTTPS, работает с VPN)
+        'https://concerts-achievements-speak-wealth.trycloudflare.com/api',
     ],
     
     // Текущий активный endpoint (определяется автоматически)
