@@ -4,11 +4,8 @@
 const TIMEWEB_CONFIG = {
     // 🌐 МНОЖЕСТВЕННЫЕ API ENDPOINTS - автоматический выбор рабочего
     apiEndpoints: [
-        // ОСНОВНОЙ: Timeweb API с SSL (HTTPS, работает в РФ без VPN!)
+        // ЕДИНСТВЕННЫЙ: Timeweb API с SSL (HTTPS, работает в РФ без VPN!)
         'https://api.tradeanalyzer.ru/api',
-        
-        // РЕЗЕРВНЫЙ: Cloudflare Tunnel (HTTPS, работает с VPN)
-        'https://concerts-achievements-speak-wealth.trycloudflare.com/api',
     ],
     
     // Текущий активный endpoint (определяется автоматически)
@@ -29,11 +26,11 @@ const TIMEWEB_CONFIG = {
     isDevelopment: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 };
 
-// 🔍 АВТОМАТИЧЕСКИЙ ВЫБОР РАБОЧЕГО API ENDPOINT
+// 🔍 ИНИЦИАЛИЗАЦИЯ API ENDPOINT
 async function findWorkingEndpoint() {
-    console.log('🔍 Searching for working API endpoint...');
+    console.log('🚀 Initializing Timeweb API...');
     
-    // ВАЖНО: Очищаем старый сохраненный endpoint чтобы всегда проверять заново
+    // Очищаем старый Cloudflare endpoint из кеша (если был)
     try {
         const oldEndpoint = localStorage.getItem('preferred_api_endpoint');
         if (oldEndpoint && oldEndpoint.includes('trycloudflare.com')) {
@@ -44,53 +41,50 @@ async function findWorkingEndpoint() {
         console.warn('⚠️ Failed to clear old endpoint:', e);
     }
     
-    const endpoints = TIMEWEB_CONFIG.isDevelopment 
-        ? [TIMEWEB_CONFIG.development.apiUrl]
-        : TIMEWEB_CONFIG.apiEndpoints;
+    const endpoint = TIMEWEB_CONFIG.isDevelopment 
+        ? TIMEWEB_CONFIG.development.apiUrl
+        : TIMEWEB_CONFIG.apiEndpoints[0];
     
-    // Проверяем endpoints ПОСЛЕДОВАТЕЛЬНО (не параллельно!)
-    // Первый рабочий endpoint будет использован
-    for (const endpoint of endpoints) {
-        try {
-            console.log(`🔄 Testing endpoint: ${endpoint}`);
+    try {
+        console.log(`🔄 Testing endpoint: ${endpoint}`);
+        
+        // Проверка доступности (5 секунд timeout)
+        const response = await fetchWithTimeout(
+            `${endpoint}/health`,
+            { method: 'GET' },
+            5000
+        );
+        
+        if (response.ok) {
+            console.log(`✅ Timeweb API is ready: ${endpoint}`);
+            TIMEWEB_CONFIG.apiUrl = endpoint;
             
-            // Быстрая проверка доступности (3 секунды для Timeweb, 2 для остальных)
-            const timeout = endpoint.includes('api.tradeanalyzer.ru') ? 3000 : 2000;
-            const response = await fetchWithTimeout(
-                `${endpoint}/health`,
-                { method: 'GET' },
-                timeout
-            );
-            
-            if (response.ok) {
-                console.log(`✅ Working endpoint found: ${endpoint}`);
-                TIMEWEB_CONFIG.apiUrl = endpoint;
-                
-                // Сохраняем в localStorage для быстрого доступа
-                try {
-                    localStorage.setItem('preferred_api_endpoint', endpoint);
-                    console.log(`💾 Saved preferred endpoint: ${endpoint}`);
-                } catch (e) {
-                    console.warn('⚠️ Failed to save preferred endpoint:', e);
-                }
-                
-                return endpoint;
+            // Сохраняем в localStorage
+            try {
+                localStorage.setItem('preferred_api_endpoint', endpoint);
+                console.log(`💾 Endpoint saved to cache`);
+            } catch (e) {
+                console.warn('⚠️ Failed to save endpoint:', e);
             }
-        } catch (error) {
-            console.warn(`⚠️ Endpoint unavailable: ${endpoint}`, error.message);
+            
+            return endpoint;
+        } else {
+            throw new Error(`API returned status ${response.status}`);
         }
+    } catch (error) {
+        console.error(`❌ Timeweb API unavailable: ${endpoint}`, error.message);
+        
+        // Пробуем использовать сохраненный endpoint
+        const savedEndpoint = localStorage.getItem('preferred_api_endpoint');
+        if (savedEndpoint && !savedEndpoint.includes('trycloudflare.com')) {
+            console.log(`📦 Using cached endpoint: ${savedEndpoint}`);
+            TIMEWEB_CONFIG.apiUrl = savedEndpoint;
+            return savedEndpoint;
+        }
+        
+        console.error('❌ No working API endpoint available!');
+        return null;
     }
-    
-    // Если ни один endpoint не работает, пробуем использовать сохраненный
-    const savedEndpoint = localStorage.getItem('preferred_api_endpoint');
-    if (savedEndpoint) {
-        console.log(`📦 Using saved endpoint: ${savedEndpoint}`);
-        TIMEWEB_CONFIG.apiUrl = savedEndpoint;
-        return savedEndpoint;
-    }
-    
-    console.error('❌ No working API endpoint found!');
-    return null;
 }
 
 // Утилита для fetch с таймаутом
