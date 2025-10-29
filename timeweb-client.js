@@ -33,19 +33,33 @@ const TIMEWEB_CONFIG = {
 async function findWorkingEndpoint() {
     console.log('🔍 Searching for working API endpoint...');
     
+    // ВАЖНО: Очищаем старый сохраненный endpoint чтобы всегда проверять заново
+    try {
+        const oldEndpoint = localStorage.getItem('preferred_api_endpoint');
+        if (oldEndpoint && oldEndpoint.includes('trycloudflare.com')) {
+            console.log('🧹 Clearing old Cloudflare endpoint from cache');
+            localStorage.removeItem('preferred_api_endpoint');
+        }
+    } catch (e) {
+        console.warn('⚠️ Failed to clear old endpoint:', e);
+    }
+    
     const endpoints = TIMEWEB_CONFIG.isDevelopment 
         ? [TIMEWEB_CONFIG.development.apiUrl]
         : TIMEWEB_CONFIG.apiEndpoints;
     
+    // Проверяем endpoints ПОСЛЕДОВАТЕЛЬНО (не параллельно!)
+    // Первый рабочий endpoint будет использован
     for (const endpoint of endpoints) {
         try {
             console.log(`🔄 Testing endpoint: ${endpoint}`);
             
-            // Быстрая проверка доступности (2 секунды)
+            // Быстрая проверка доступности (3 секунды для Timeweb, 2 для остальных)
+            const timeout = endpoint.includes('api.tradeanalyzer.ru') ? 3000 : 2000;
             const response = await fetchWithTimeout(
                 `${endpoint}/health`,
                 { method: 'GET' },
-                TIMEWEB_CONFIG.healthCheckTimeout
+                timeout
             );
             
             if (response.ok) {
@@ -55,6 +69,7 @@ async function findWorkingEndpoint() {
                 // Сохраняем в localStorage для быстрого доступа
                 try {
                     localStorage.setItem('preferred_api_endpoint', endpoint);
+                    console.log(`💾 Saved preferred endpoint: ${endpoint}`);
                 } catch (e) {
                     console.warn('⚠️ Failed to save preferred endpoint:', e);
                 }
