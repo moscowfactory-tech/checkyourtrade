@@ -1261,6 +1261,11 @@ function addFieldBuilder(fieldData = null) {
     
     fieldsContainer.appendChild(fieldBuilder);
     updateFieldNumbers();
+    
+    // Добавляем кнопку "Изменить порядок" для подпунктов
+    if (typeof addReorderButtonToInputs === 'function') {
+        addReorderButtonToInputs(fieldBuilder);
+    }
 }
 
 function updateFieldNumbers() {

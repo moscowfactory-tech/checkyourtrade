@@ -3046,6 +3046,55 @@ button,
     left: auto !important;
   }
   
+  /* Drag & Drop стили */
+  .draggable-active {
+    cursor: move !important;
+    transition: all 0.2s ease;
+  }
+
+  .draggable-active:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(79, 209, 199, 0.3);
+  }
+
+  .dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+    box-shadow: 0 8px 24px rgba(79, 209, 199, 0.4);
+  }
+
+  .drag-over {
+    border: 2px dashed var(--color-primary);
+    background: rgba(79, 209, 199, 0.1);
+  }
+
+  .drag-placeholder {
+    opacity: 0.5;
+    background: var(--color-surface-secondary);
+    border: 2px dashed var(--color-border);
+  }
+
+  /* Кнопки изменения порядка */
+  .btn--secondary {
+    background: var(--color-surface-secondary);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+
+  .btn--secondary:hover {
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+  }
+
+  .btn--success {
+    background: var(--color-success);
+    color: white;
+  }
+
+  .btn--success:hover {
+    background: #2d8659;
+  }
+
   /* Мобильный подвал */
   .desktop-only {
     display: none !important;
