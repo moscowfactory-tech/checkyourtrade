@@ -1451,7 +1451,7 @@ button,
 .input-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: var(--space-12);
 }
 
