@@ -1863,18 +1863,30 @@ function viewStrategy(strategyId) {
             bodyHTML += `
                 <div style="margin-top: 1rem;">
                     <h4 style="color: #4fd1c7; margin-bottom: 1rem; font-size: 1.1rem;">Основания для входа:</h4>
-                    ${fieldsArr.map((field, index) => `
+                    ${fieldsArr.map((field, index) => {
+                        // Получаем подпункты из inputs
+                        const inputs = field.inputs || field.subpoints || [];
+                        const hasInputs = Array.isArray(inputs) && inputs.length > 0;
+                        
+                        return `
                         <div style="background: #1a1f2e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid #4fd1c7;">
                             <strong style="color: #ffffff; display: block; margin-bottom: 0.5rem; font-size: 1rem;">${index + 1}. ${field.name || field.title || 'Без названия'}</strong>
-                            ${field.subpoints && field.subpoints.length > 0 ? `
-                                <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0; list-style: disc;">
-                                    ${field.subpoints.map(sub => `
-                                        <li style="color: #a0aec0; margin-bottom: 0.25rem; font-size: 0.95rem;">${sub}</li>
-                                    `).join('')}
-                                </ul>
+                            ${field.description ? `<p style="color: #a0aec0; margin-bottom: 0.5rem; font-size: 0.9rem;">${field.description}</p>` : ''}
+                            ${hasInputs ? `
+                                <div style="margin-top: 0.75rem; padding-left: 1rem; border-left: 2px solid #4fd1c7;">
+                                    ${inputs.map((input, idx) => {
+                                        const label = typeof input === 'string' ? input : (input.label || input.name || `Подпункт ${idx + 1}`);
+                                        return `
+                                            <div style="color: #a0aec0; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                                <strong style="color: #4fd1c7;">•</strong> ${label}
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
                             ` : ''}
                         </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             `;
         } else {

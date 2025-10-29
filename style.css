@@ -3131,16 +3131,16 @@ button,
   .reorder-arrows {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-right: 12px;
+    gap: 2px;
+    margin-right: 8px;
   }
 
   .arrow-btn {
     background: var(--color-surface-secondary);
     border: 1px solid var(--color-border);
     color: var(--color-primary);
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
@@ -3161,7 +3161,7 @@ button,
   }
 
   .arrow-btn i {
-    font-size: 14px;
+    font-size: 10px;
   }
 
   /* Анимации перемещения */
