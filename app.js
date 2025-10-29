@@ -1808,8 +1808,8 @@ function viewStrategy(strategyId) {
                 <div id="viewStrategyBody" class="modal-body" style="flex: 1; overflow-y: auto; padding: 1.5rem;">
                     <!-- Content will be inserted here -->
                 </div>
-                <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: center; padding: 1rem; border-top: 1px solid #2d3748;">
-                    <button class="btn-edit-strategy" id="viewStrategyEditBtn">
+                <div class="modal-footer" style="display: flex !important; gap: 1rem; justify-content: center !important; align-items: center !important; padding: 1rem; border-top: 1px solid #2d3748;">
+                    <button class="btn-edit-strategy" id="viewStrategyEditBtn" style="margin: 0 auto;">
                         <i class="fas fa-edit"></i> Редактировать
                     </button>
                 </div>

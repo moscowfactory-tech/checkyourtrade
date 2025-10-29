@@ -1213,14 +1213,14 @@ button,
 .btn-close {
   background: none;
   border: none;
-  font-size: 32px; /* Увеличил размер крестика */
+  font-size: 20px; /* Уменьшенный размер крестика */
   cursor: pointer;
   color: var(--color-primary); /* Голубой цвет как в других модальных окнах */
   padding: var(--space-2); /* Уменьшил отступы */
   border-radius: var(--radius-base);
   transition: all var(--duration-fast) var(--ease-standard);
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
