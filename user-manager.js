@@ -173,7 +173,7 @@ class UnifiedUserManager {
             return false;
         }
 
-        const API_URL = 'https://concerts-achievements-speak-wealth.trycloudflare.com/api';
+        const API_URL = 'https://api.tradeanalyzer.ru/api';
         
         console.log('💾 Ensuring user exists in database via Timeweb API...');
         console.log('👤 Current user data:', this.currentUser);

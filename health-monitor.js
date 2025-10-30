@@ -79,7 +79,7 @@ class HealthMonitor {
     // Проверка подключения к API
     async checkAPIConnection() {
         try {
-            const API_URL = 'https://concerts-achievements-speak-wealth.trycloudflare.com/api';
+            const API_URL = 'https://api.tradeanalyzer.ru/api';
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000);
             

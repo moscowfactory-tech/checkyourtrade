@@ -454,9 +454,8 @@
     </div>
 
     <script>
-        // Конфигурация Supabase (ваши реальные данные)
-        const SUPABASE_URL = 'https://wpexepphsdzwopltunnn.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwZXhlcHBoc2R6d29wbHR1bm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzNTQ5MjIsImV4cCI6MjA3NDkzMDkyMn0.qrLKaW7zGNK6ak-Ll3VHq-Qr-2O9b9GOsMu87Lfm5M0';
+        // Конфигурация Timeweb API
+        const API_URL = 'https://api.tradeanalyzer.ru/api';
 
         class AdminDashboard {
             constructor() {
@@ -699,17 +698,7 @@
             }
 
             async setupCharts() {
-                // Авторизация по паролю (очень простая)
-                const ADMIN_PASSWORD = 'trade2024'; // Замените на свой сложный пароль
-                if (!window.sessionStorage.getItem('admin_auth')) {
-                    const entered = prompt('Введите пароль администратора:');
-                    if (entered !== ADMIN_PASSWORD) {
-                        alert('Доступ запрещён');
-                        window.location.href = '/';
-                        return;
-                    }
-                    window.sessionStorage.setItem('admin_auth', '1');
-                }
+                // Авторизация убрана - открытый доступ
                 
                 // Настройка фильтра периода
                 const periodSelector = document.getElementById('activityPeriod');
