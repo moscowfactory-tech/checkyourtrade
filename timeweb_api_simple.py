@@ -223,7 +223,7 @@ def get_analyses():
     
     # Получаем анализы через представление для совместимости
     sql = """
-    SELECT id, user_id, strategy_id, answers, 
+    SELECT id, user_id, strategy_id, coin, answers, 
            positive_factors, negative_factors, neutral_factors,
            recommendation, created_at
     FROM analysis_results 
