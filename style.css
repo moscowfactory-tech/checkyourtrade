@@ -1859,6 +1859,11 @@ button,
   border-left: 3px solid var(--color-primary);
 }
 
+/* Красная рамка для подпунктов в отрицательных факторах */
+.factor-item.negative .factor-answers {
+  border-left-color: var(--color-error);
+}
+
 .answer-item {
   margin-bottom: var(--space-8);
   font-size: var(--text-xs);

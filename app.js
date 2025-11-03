@@ -2778,6 +2778,9 @@ async function saveCurrentAnalysis() {
                 return;
             }
             
+            console.log('✅ Analysis saved, returned data:', savedAnalysis);
+            console.log('🪙 Coin in saved analysis:', savedAnalysis.coin);
+            
             // Обновляем ID анализа и название
             analysis.id = savedAnalysis.id;
             analysis.strategyName = currentAnalysisStrategy.name; // Правильное название стратегии
