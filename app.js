@@ -2627,13 +2627,15 @@ async function saveCurrentAnalysis() {
             field: field,
             answer: answer,
             hasAnswer: !!answer,
-            rating: answer?.rating
+            rating: answer?.rating,
+            answers: answer?.answers
         });
         
         if (answer && answer.rating) {
             const factor = {
                 name: field.name,
-                description: field.description
+                description: field.description,
+                answers: answer.answers || []  // ✅ Сохраняем ответы пользователя (подпункты)
             };
             
             if (answer.rating === 'positive') {
