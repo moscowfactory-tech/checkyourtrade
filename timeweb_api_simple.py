@@ -264,7 +264,7 @@ def create_analysis():
     INSERT INTO analyses (user_id, telegram_user_id, strategy_id, strategy_name, 
                          coin, answers, results, recommendation)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    RETURNING id, user_id, strategy_id, answers, results, recommendation, created_at
+    RETURNING id, user_id, strategy_id, coin, answers, results, recommendation, created_at
     """
     
     params = [
