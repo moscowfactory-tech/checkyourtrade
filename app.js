@@ -2447,6 +2447,8 @@ function displayAnalysisResults() {
 }
 
 function renderFactors(containerId, factors, category) {
+    console.log(`🎨 renderFactors called for ${containerId}:`, factors);
+    
     const container = document.getElementById(containerId);
     container.innerHTML = '';
     
@@ -2456,6 +2458,11 @@ function renderFactors(containerId, factors, category) {
     }
     
     factors.forEach((factor, index) => {
+        console.log(`🎨 Rendering factor ${index}:`, factor);
+        console.log(`🎨 Factor answers:`, factor.answers);
+        console.log(`🎨 Is array?`, Array.isArray(factor.answers));
+        console.log(`🎨 Length:`, factor.answers?.length);
+        
         const factorElement = document.createElement('div');
         factorElement.className = `factor-item ${category}`;
         factorElement.style.animationDelay = `${index * 0.1}s`;
@@ -2463,17 +2470,31 @@ function renderFactors(containerId, factors, category) {
         // Формируем HTML с ответами пользователя (подпунктами)
         let answersHtml = '';
         if (factor.answers && Array.isArray(factor.answers) && factor.answers.length > 0) {
+            console.log(`🎨 Processing ${factor.answers.length} answers for factor:`, factor.name);
             answersHtml = '<div class="factor-answers">';
-            factor.answers.forEach(answer => {
+            factor.answers.forEach((answer, answerIndex) => {
+                console.log(`🎨 Answer ${answerIndex}:`, answer);
+                
                 // Проверяем что есть значение
                 const value = answer.value || answer.answer || '';
                 const label = answer.label || answer.name || '';
                 
+                console.log(`🎨 Extracted - label: "${label}", value: "${value}"`);
+                
                 if (value && value.trim()) {
-                    answersHtml += `<div class="answer-item"><strong>${label}:</strong> ${value}</div>`;
+                    const answerHtml = `<div class="answer-item"><strong>${label}:</strong> ${value}</div>`;
+                    console.log(`🎨 Adding answer HTML:`, answerHtml);
+                    answersHtml += answerHtml;
                 }
             });
             answersHtml += '</div>';
+            console.log(`🎨 Final answersHtml:`, answersHtml);
+        } else {
+            console.log(`🎨 No answers for factor:`, factor.name, {
+                hasAnswers: !!factor.answers,
+                isArray: Array.isArray(factor.answers),
+                length: factor.answers?.length
+            });
         }
         
         factorElement.innerHTML = `
@@ -2485,6 +2506,8 @@ function renderFactors(containerId, factors, category) {
         
         container.appendChild(factorElement);
     });
+    
+    console.log(`✅ renderFactors completed for ${containerId}`);
 }
 
 function resetAnalysis() {
