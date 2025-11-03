@@ -2476,8 +2476,16 @@ function renderFactors(containerId, factors, category) {
                 console.log(`🎨 Answer ${answerIndex}:`, answer);
                 
                 // Проверяем что есть значение
-                const value = answer.value || answer.answer || '';
+                let value = answer.value || answer.answer || '';
                 const label = answer.label || answer.name || '';
+                
+                // Конвертируем boolean в строку
+                if (typeof value === 'boolean') {
+                    value = value ? 'Да' : 'Нет';
+                }
+                
+                // Конвертируем в строку если это не строка
+                value = String(value);
                 
                 console.log(`🎨 Extracted - label: "${label}", value: "${value}"`);
                 
