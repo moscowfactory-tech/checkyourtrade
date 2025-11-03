@@ -1312,13 +1312,6 @@ function addInputBuilder(container, inputData = null) {
                     <option value="textarea" ${inputData?.type === 'textarea' ? 'selected' : ''}>Многострочный текст</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label class="form-label">Обязательное</label>
-                <select class="form-control" name="inputRequired">
-                    <option value="true" ${inputData?.required ? 'selected' : ''}>Да</option>
-                    <option value="false" ${!inputData?.required ? 'selected' : ''}>Нет</option>
-                </select>
-            </div>
         </div>
         <div class="input-options ${isSelect ? '' : 'hidden'}">
             <label class="form-label">Варианты выбора (через запятую)</label>
@@ -1399,15 +1392,13 @@ async function handleStrategySubmit(e) {
         inputBuilders.forEach(inputBuilder => {
             const inputLabel = inputBuilder.querySelector('input[name="inputLabel"]').value;
             const inputType = inputBuilder.querySelector('select[name="inputType"]').value;
-            const inputRequired = inputBuilder.querySelector('select[name="inputRequired"]').value === 'true';
             const inputOptionsInput = inputBuilder.querySelector('input[name="inputOptions"]');
             
             if (!inputLabel.trim()) return;
             
             const input = {
                 type: inputType,
-                label: inputLabel,
-                required: inputRequired
+                label: inputLabel
             };
             
             if (inputType === 'select' && inputOptionsInput) {
