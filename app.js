@@ -2361,8 +2361,8 @@ function displayAnalysisResults() {
         if (answer && answer.rating) {
             const factor = {
                 name: field.name,
-                description: field.description,
-                answers: answer.answers || [], // Добавляем ответы пользователя
+                // Описание НЕ добавляем - оно нужно только в просмотре стратегии
+                answers: answer.answers || [], // Добавляем ответы пользователя (подпункты)
                 rating: answer.rating
             };
             analysis[answer.rating].push(factor);
@@ -2430,13 +2430,17 @@ function renderFactors(containerId, factors, category) {
         factorElement.className = `factor-item ${category}`;
         factorElement.style.animationDelay = `${index * 0.1}s`;
         
-        // Формируем HTML с ответами пользователя
+        // Формируем HTML с ответами пользователя (подпунктами)
         let answersHtml = '';
-        if (factor.answers && factor.answers.length > 0) {
+        if (factor.answers && Array.isArray(factor.answers) && factor.answers.length > 0) {
             answersHtml = '<div class="factor-answers">';
             factor.answers.forEach(answer => {
-                if (answer.value) {
-                    answersHtml += `<div class="answer-item"><strong>${answer.label}:</strong> ${answer.value}</div>`;
+                // Проверяем что есть значение
+                const value = answer.value || answer.answer || '';
+                const label = answer.label || answer.name || '';
+                
+                if (value && value.trim()) {
+                    answersHtml += `<div class="answer-item"><strong>${label}:</strong> ${value}</div>`;
                 }
             });
             answersHtml += '</div>';
@@ -2444,9 +2448,8 @@ function renderFactors(containerId, factors, category) {
         
         factorElement.innerHTML = `
             <div class="factor-header">
-                <strong>Основание: ${factor.name}</strong>
+                <strong>${factor.name}</strong>
             </div>
-            ${factor.description ? `<div class="factor-description">${factor.description}</div>` : ''}
             ${answersHtml}
         `;
         
