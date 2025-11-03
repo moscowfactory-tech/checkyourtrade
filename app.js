@@ -2617,16 +2617,16 @@ async function renderAnalysesList() {
         const positiveCount = (analysis.results && analysis.results.positive) ? analysis.results.positive.length : 0;
         const negativeCount = (analysis.results && analysis.results.negative) ? analysis.results.negative.length : 0;
         
-        const coinDisplay = analysis.coin ? ` (${analysis.coin})` : '';
         const strategyName = analysis.strategyName || 'Неизвестная стратегия';
+        const displayTitle = analysis.coin ? `${analysis.coin} - ${strategyName}` : strategyName;
         
-        console.log('🎨 Rendering coin:', { coin: analysis.coin, coinDisplay });
+        console.log('🎨 Rendering coin:', { coin: analysis.coin, displayTitle });
         
         console.log('📊 Rendering analysis:', { strategyName, coin: analysis.coin, positiveCount, negativeCount, analysis });
         
         analysisCard.innerHTML = `
             <div class="analysis-header">
-                <h4>${strategyName}${coinDisplay}</h4>
+                <h4>${displayTitle}</h4>
                 <span class="analysis-date">${date}</span>
             </div>
             <div class="analysis-summary">
