@@ -343,10 +343,13 @@ async function loadAnalysesFromDatabase(retryCount = 0) {
                 let coin = analysis.coin || results.coin || null;
                 
                 // Логируем для отладки
-                console.log('🪙 Coin detection:', {
+                console.log('🪙 Coin detection for analysis ID:', analysis.id, {
                     analysis_coin: analysis.coin,
+                    analysis_coin_type: typeof analysis.coin,
                     results_coin: results.coin,
-                    final_coin: coin
+                    results_coin_type: typeof results.coin,
+                    final_coin: coin,
+                    final_coin_type: typeof coin
                 });
                 
                 // Факторы могут быть в results или на верхнем уровне
@@ -2585,7 +2588,7 @@ function closeAnalysesModal() {
 async function renderAnalysesList() {
     analysesList.innerHTML = `
         <div class="loading-state">
-            <p>Анализы загружаются из базы данных...</p>
+            <p>Загружаем анализы...</p>
         </div>
     `;
     
@@ -2735,7 +2738,8 @@ async function saveCurrentAnalysis() {
                 type: typeof currentCoin,
                 isEmpty: currentCoin === '',
                 isNull: currentCoin === null,
-                isUndefined: currentCoin === undefined
+                isUndefined: currentCoin === undefined,
+                length: currentCoin ? currentCoin.length : 0
             });
             
             const dataToInsert = {
@@ -2759,6 +2763,8 @@ async function saveCurrentAnalysis() {
             };
             
             console.log('💾 Data to insert into DB:', dataToInsert);
+            console.log('💾 Coin field specifically:', dataToInsert.coin);
+            console.log('💾 Results.coin field:', dataToInsert.results.coin);
             
             const { data: savedAnalysis, error } = await window.supabase
                 .from('analysis_results')
