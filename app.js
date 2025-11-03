@@ -2348,6 +2348,10 @@ function completeAnalysis() {
 }
 
 function displayAnalysisResults() {
+    console.log('📊 displayAnalysisResults called');
+    console.log('📊 Current strategy:', currentAnalysisStrategy);
+    console.log('📊 Analysis answers:', analysisAnswers);
+    
     const analysis = {
         positive: [],
         neutral: [],
@@ -2356,8 +2360,12 @@ function displayAnalysisResults() {
     
     // Process answers by field names
     const fieldsArr = parseStrategyFields(currentAnalysisStrategy);
+    console.log('📊 Fields to process:', fieldsArr);
+    
     fieldsArr.forEach((field, index) => {
         const answer = analysisAnswers[index];
+        console.log(`📊 Processing field ${index}:`, { field, answer });
+        
         if (answer && answer.rating) {
             const factor = {
                 name: field.name,
@@ -2365,9 +2373,13 @@ function displayAnalysisResults() {
                 answers: answer.answers || [], // Добавляем ответы пользователя (подпункты)
                 rating: answer.rating
             };
+            console.log(`📊 Adding factor to ${answer.rating}:`, factor);
             analysis[answer.rating].push(factor);
         }
     });
+    
+    console.log('📊 Analysis results:', analysis);
+    console.log('📊 Positive:', analysis.positive.length, 'Negative:', analysis.negative.length);
     
     // Render results
     renderFactors('positiveFactors', analysis.positive, 'positive');
@@ -2379,17 +2391,24 @@ function displayAnalysisResults() {
     const positivePercent = total > 0 ? Math.round((analysis.positive.length / total) * 100) : 0;
     const negativePercent = total > 0 ? Math.round((analysis.negative.length / total) * 100) : 0;
     
+    console.log('📊 Statistics:', { total, positivePercent, negativePercent });
+    
     const summaryStats = document.getElementById('summaryStats');
-    summaryStats.innerHTML = `
-        <div class="stat-item">
-            <span class="stat-value" style="color: var(--color-success)">${positivePercent}%</span>
-            <span class="stat-label">Есть основания</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-value" style="color: var(--color-error)">${negativePercent}%</span>
-            <span class="stat-label">Отсутствуют основания</span>
-        </div>
-    `;
+    if (summaryStats) {
+        summaryStats.innerHTML = `
+            <div class="stat-item">
+                <span class="stat-value" style="color: var(--color-success)">${positivePercent}%</span>
+                <span class="stat-label">Есть основания</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" style="color: var(--color-error)">${negativePercent}%</span>
+                <span class="stat-label">Отсутствуют основания</span>
+            </div>
+        `;
+        console.log('📊 Summary stats updated');
+    } else {
+        console.error('❌ summaryStats element not found!');
+    }
     
     // Generate recommendation
     const recommendation = document.getElementById('recommendation');
@@ -2405,15 +2424,26 @@ function displayAnalysisResults() {
         recommendationText = '⚠️ Сделка требует дополнительного анализа. Недостаточно оснований для входа.';
     }
     
-    recommendation.textContent = recommendationText;
+    if (recommendation) {
+        recommendation.textContent = recommendationText;
+        console.log('📊 Recommendation updated:', recommendationText);
+    } else {
+        console.error('❌ recommendation element not found!');
+    }
     
-    analysisResults.classList.remove('hidden');
-    analysisResults.scrollIntoView({ behavior: 'smooth' });
+    if (analysisResults) {
+        analysisResults.classList.remove('hidden');
+        console.log('📊 Analysis results shown');
+        analysisResults.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        console.error('❌ analysisResults element not found!');
+    }
     
     // Сохраняем анализ
+    console.log('📊 Calling saveCurrentAnalysis...');
     saveCurrentAnalysis();
     
-    console.log('Analysis results displayed:', { analysis, positivePercent, negativePercent });
+    console.log('✅ displayAnalysisResults completed');
 }
 
 function renderFactors(containerId, factors, category) {
