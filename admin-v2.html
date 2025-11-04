@@ -433,7 +433,7 @@
                 const healthResponse = await fetch(`${API_URL}/health`);
                 const healthData = await healthResponse.json();
 
-                if (healthData.status === 'healthy') {
+                if (healthData.status === 'ok' || healthData.status === 'healthy') {
                     document.getElementById('statusDot').style.background = '#48bb78';
                     document.getElementById('statusText').textContent = 'API работает';
                 } else {
