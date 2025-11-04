@@ -109,7 +109,7 @@ async function fetchWithTimeout(url, options = {}, timeout = 10000) {
 }
 
 // Утилита для retry с экспоненциальной задержкой
-async function fetchWithRetry(url, options = {}, maxAttempts = 3, baseDelay = 1000, timeout = 10000) {
+async function fetchWithRetry(url, options = {}, maxAttempts = 3, baseDelay = 1000, timeout = 30000) {
     let lastError;
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -139,7 +139,7 @@ class TimewebClient {
     constructor(config) {
         this.config = config;
         this.apiUrl = config.isDevelopment ? config.development.apiUrl : config.apiUrl;
-        this.timeout = config.timeout || 10000;
+        this.timeout = config.timeout || 30000;
         this.retryAttempts = config.retryAttempts || 3;
         this.retryDelay = config.retryDelay || 1000;
         console.log('🔗 Timeweb API URL:', this.apiUrl);
